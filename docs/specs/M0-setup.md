@@ -40,7 +40,22 @@
 - [ ] Nenhum resto do mod de exemplo (`examplemod`, `EXAMPLE_BLOCK` etc.).
 
 ## Dúvidas do implementador
-_(preencher se houver)_
+Nenhuma dúvida.
 
 ## Relatório de implementação
-_(preencher ao terminar)_
+- **Arquivos criados/alterados:**
+  - `gradle.properties`: configurado `mod_id=wispborn`, `mod_name=Wispborn`, `mod_group_id=dev.eder.wispborn`, `mod_version=0.0.1`, `mod_license=MIT`, `mod_authors=Eder`, `neoforge_version=21.1.266` e `parchment_mappings_version=2024.11.17`.
+  - `build.gradle`: adicionada run configuration `client2` (`--username Player2`, `run-client2`), dependência JUnit 5 (`org.junit.jupiter:junit-jupiter:5.10.2` + `junit-platform-launcher`) e `test { useJUnitPlatform() }`.
+  - `.gitignore`: incluído `run-client2/`.
+  - `.github/workflows/build.yml`: configurado workflow com Temurin 21, `./gradlew build --no-daemon` e upload do artefato `build/libs/*.jar`.
+  - `src/main/templates/META-INF/neoforge.mods.toml`: limpo conteúdo de exemplo e vinculado `${mod_authors}`.
+  - `src/main/java/dev/eder/wispborn/WispbornMod.java` e `package-info.java` nos subpacotes (`config`, `registry`, `form`, `progress`, `host`, `network`, `event`, `command`, `client`).
+  - `src/main/resources/assets/wispborn/lang/en_us.json` e `pt_br.json` inicializados com `{}`.
+  - `src/test/java/dev/eder/wispborn/SanityTest.java`: teste unitário JUnit 5 validando `WispbornMod.MOD_ID`.
+- **Decisões tomadas:**
+  - Removido completamente o pacote `com.example.examplemod` e os recursos `assets/examplemod`.
+  - Mantido `neo_version` e `neoforge_version` sincronizados em `21.1.266` no `gradle.properties`.
+- **Saída de `./gradlew build test`:**
+  - `BUILD SUCCESSFUL` com todas as tasks (`compileJava`, `jar`, `compileTestJava`, `test`, `check`, `build`) executadas sem erros.
+- **Pendências manuais:**
+  - Validação visual do cliente (`./gradlew runClient`) e aceite do EULA em `./gradlew runServer`.
