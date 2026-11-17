@@ -8,12 +8,14 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 
 **Spec de referência:** `docs/specs/M1-wisp-form.md`  
 **Commits:**
-- `8d15478` — `feat(form): implementar FormType, FormState, WispTuning, FormManager, ModAttachments e wisp_essence`
-- `185326a` — `feat(net): adicionar SyncFormPayload, eventos de forma, restricoes do wisp e comando /wispborn`
-- `1e388f3` — `feat(client): implementar WispRenderHandler, texturas placeholder e traducoes do M1`
-- `7c415b2` — `test(form): adicionar FormStateTest e configurar classpath de testes no build.gradle`  
+- `c6ded5b` — `feat(form): implementar FormType, FormState, WispTuning, FormManager, ModAttachments e wisp_essence`
+- `3593c1b` — `feat(net): adicionar SyncFormPayload, eventos de forma, restricoes do wisp e comando /wispborn`
+- `adc4743` — `feat(client): implementar WispRenderHandler, texturas placeholder e traducoes do M1`
+- `c9c881a` — `test(form): adicionar FormStateTest e configurar classpath de testes no build.gradle`
+- `c930c67` — `docs(form): preencher relatorio da spec M1 e atualizar CHANGELOG.md`
 
 ### 1. Resumo das Alterações (`main..feat/M1-wisp-form`)
+- **Total:** 24 arquivos alterados (`741 insertions(+)`, `4 deletions(-)`), sem contar o próprio CHANGELOG.
 - Implementação do estado `FormState` (`FormType.HUMAN`, `WISP`, `HOST`) com `Codec` e `StreamCodec`, persistido via Data Attachment `ModAttachments.FORM` (`copyOnDeath`).
 - Aplicação idempotente dos 5 modificadores de atributo do wisp (`SCALE`, `MAX_HEALTH`, `GRAVITY`, `SAFE_FALL_DISTANCE`, `MOVEMENT_SPEED`) via `FormManager` e constantes em `WispTuning`.
 - Sincronização manual `S2C` via `SyncFormPayload` em login, respawn, troca de dimensão e `StartTracking`.
@@ -81,6 +83,7 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 
 ### 5. Pendências
 - [ ] **Checklist manual in-game (`./gradlew runClient` / `runClient2`):** validação visual e funcional a cargo de Eder.
+- [ ] **Balanceamento (revisão do M1):** voltar de wisp para humano soma +14 de vida sem considerar a vida do wisp, o que permite cura grátis alternando a forma (1 HP como humano → wisp → humano com 15 HP). Proposta: preservar a proporção `health / maxHealth` na troca. Decisão pendente de Eder.
 
 ---
 
@@ -94,8 +97,7 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 - `e80be54` — `docs: criar CHANGELOG.md detalhando implementacao da spec M0`
 - `9f562e0` — `docs(setup): corrigir pendencias da revisao do M0`
 - `c8ef424` — `fix(ci): marcar gradlew como executavel`
-- `9f562e0` — `docs(setup): corrigir pendencias da revisao do M0`
-- `c8ef424` — `fix(ci): marcar gradlew como executavel`
+- `9a40048` — `docs(setup): registrar CI verde e correcao do gradlew`
 
 ### 1. Resumo das Alterações (`main..feat/M0-setup`)
 - **Total:** 23 arquivos alterados (`136 insertions(+)`, `389 deletions(-)`)
