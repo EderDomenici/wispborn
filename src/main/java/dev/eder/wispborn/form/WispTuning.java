@@ -21,6 +21,9 @@ public final class WispTuning {
     public static final double SAFE_FALL_DISTANCE_MODIFIER = 20.0;
     public static final double MOVEMENT_SPEED_MODIFIER = 0.2;
 
+    /** Escala só do visual do modelo, multiplicada sobre a escala da hitbox (SCALE). Não altera colisão. */
+    public static final float MODEL_VISUAL_SCALE = 2.0F;
+
     private WispTuning() {
     }
 }
