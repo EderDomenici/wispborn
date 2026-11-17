@@ -35,7 +35,7 @@ EP fica em escala ×10 de propósito: com Eficiência +10%, `10 → 11` é visí
 
 ### Dados do jogador (`ModAttachments`, todos com `.serialize(CODEC)` e `.copyOnDeath()`, **sem sync** neste módulo)
 ```java
-public record WispProgress(int totalEp, int level) { START = (0, 1) }
+public record WispProgress(int totalEp) { START = (0) }   // nível NÃO é guardado: ProgressManager.level(p) = LevelCurve.levelFor(totalEp, thresholds)
 public record WispStats(int absorption, int efficiency, int reserve, int vitality) {
     ZERO; int spent(); int get(Stat s); WispStats with(Stat s, int value);
 }
@@ -112,6 +112,19 @@ Reserva de mana, Vitalidade), mensagens dos comandos e de `AllocateResult`.
 - [ ] Com pontos gastos, `/wispborn ep set 0` → atributos zerados automaticamente com aviso (nunca pontos negativos).
 - [ ] Relog e morte mantêm EP, nível, atributos e mana; a Vitalidade continua aplicada após respawn.
 - [ ] Editar `serverconfig/wispborn-server.toml` (em `run/saves/<mundo>/`) e recarregar: curva e valores mudam.
+
+## Ajustes pós-revisão (17/11/2026, Claude)
+Problemas achados na revisão do Claude, corrigidos a pedido de Eder:
+1. **Nível guardado ficava desatualizado ao mudar a curva.** `WispProgress` guardava `level`, que só era
+   recalculado ao ganhar EP; editar `levels.thresholds` deixava HUD, pontos e tier com o nível antigo
+   (falhava o último item do checklist). Agora `WispProgress` guarda só `totalEp` e o nível é sempre
+   `ProgressManager.level(p)` = `LevelCurve.levelFor(totalEp, thresholds)`. Saves com o campo `level`
+   continuam carregando (campo ignorado; teste `WispProgressTest`).
+2. **Pontos negativos após mudar a curva.** `ProgressManager.validateStats(p)` (o mesmo reset automático
+   do `ep set`) roda no tick de 20 em 20 ticks para todo jogador: cobre login e recarga do config.
+3. **Textos fora da lang no `/wispborn info` e `/wispborn form`.** O nome da forma usa
+   `wispborn.form.<human|wisp|host>` e o EP no nível máximo usa `wispborn.hud.max`.
+4. **`levels.thresholds` fora de ordem.** `WispbornConfig.levelThresholds()` devolve a lista ordenada e sem repetição.
 
 ## Fora de escopo
 Infestação, custo de mana em uso, drenagem, consumo, sync de progresso para o client, tela de atributos (M6).

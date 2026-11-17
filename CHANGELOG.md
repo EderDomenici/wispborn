@@ -11,9 +11,12 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 - `c1cd6bc` — `feat(config): adicionar WispbornConfig SERVER e tags de tier de entidade (M2)`
 - `266ff17` — `feat(progress): implementar nivel, EP, atributos, mana, funcoes puras e ProgressManager`
 - `a8a881d` — `feat(command): adicionar HUD na action bar, regeneracao de mana e comandos ep/stat/mana/info`
-- `0a5c766` — `test(progress): adicionar LevelCurveTest, TierResolverTest e StatMathTest`  
+- `0a5c766` — `test(progress): adicionar LevelCurveTest, TierResolverTest e StatMathTest`
+- `ccf0102` — `docs(progress): preencher relatorio da spec M2 e atualizar CHANGELOG.md`
+- `fac1c58` — `fix(progress): derivar nivel do EP e validar pontos apos mudanca da curva`
 
 ### 1. Resumo das Alterações (`main..feat/M2-level-stats`)
+- **Total (implementação original, até `0a5c766`):** 26 arquivos alterados (`1012 insertions(+)`, `5 deletions(-)`), contando CHANGELOG e spec.
 - Configuração completa de servidor (`WispbornConfig`, `ModConfig.Type.SERVER`) cobrindo `levels`, `tiers`, `stats`, `mana`, `drain` e `ep`.
 - Persistência de progresso (`WispProgress`), atributos (`WispStats`) e mana (`Float`) via Data Attachments (`ModAttachments.PROGRESS`, `STATS`, `MANA`) com `copyOnDeath`.
 - Funções puras testadas via JUnit 5: `LevelCurve`, `StatMath` e `TierResolver` (`maxTierFor`), além da resolução de tier por tags de entidade (`ModTags.TIER_1..3` e `data/wispborn/tags/entity_type/tier_1..3.json`).
@@ -77,8 +80,22 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 | `ProgressManager.java` | Composição do level-up com `wispborn.level_up` + `wispborn.level_up.tier_unlocked` opcional | Evita exibir texto de tier quando o novo nível não destrava um novo tier (ex.: Nv 1 → Nv 2 continua tier 1; Nv 2 → Nv 3 anexa `(Tier 2 liberado!)`). |
 | `ProgressManager.java` | Composição do HUD com `wispborn.hud.wisp`, `wispborn.hud.max` e `wispborn.hud.points` | Garante formatação idêntica aos exemplos da spec (`Wisp · Nv 1 · EP 0/300 · Mana 50/50`, `Wisp · Nv 2 · EP 450/800 · Mana 35/60 · 2 pts` e `EP 18450 · máx` no nível máximo). |
 
+### 4.1 Ajustes pós-revisão (`fac1c58`, Claude)
+Problemas achados na revisão do Claude e corrigidos a pedido de Eder. Detalhes na seção "Ajustes pós-revisão" da spec.
+
+| Arquivo | Alteração | Motivo / impacto |
+|---|---|---|
+| `WispProgress.java`, `ProgressManager.java`, `WispbornCommand.java` | `WispProgress` guarda só `totalEp`; o nível vem sempre de `ProgressManager.level(p)` = `LevelCurve.levelFor(totalEp, thresholds)` | Com o nível guardado, editar `levels.thresholds` deixava HUD, pontos e tier com o nível antigo até o próximo ganho de EP, o que falhava o último item do checklist. A falha vinha do contrato da spec (escrito pelo Claude), agora atualizado. Saves com o campo `level` continuam carregando. |
+| `ProgressManager.java`, `FormEvents.java` | `validateStats(p)` no tick de 20 em 20 ticks (mesmo reset automático do `ep set`) | Se a curva nova baixar o nível, os atributos excedentes são zerados com aviso no login ou na recarga do config. Nunca há pontos negativos. |
+| `WispbornCommand.java`, `lang/{en_us,pt_br}.json` | Nome da forma via `wispborn.form.<human\|wisp\|host>`; EP máximo via `wispborn.hud.max` | `/wispborn info` e `/wispborn form` mostravam `wisp` cru e `" (max)"` em inglês, fora da lang. |
+| `WispbornConfig.java` | `levelThresholds()` devolve a lista ordenada e sem repetição | `LevelCurve` assume limites crescentes; uma lista fora de ordem no config travava o nível. |
+| `WispProgressTest.java` (novo) | Round-trip do codec, save legado com `level` e nível seguindo a curva | 3 testes; suíte total: 19 testes verdes. |
+
+Fica como está (por decisão): a mana inicial do attachment é `50.0F` fixo, porque o config SERVER ainda não está carregado no registro. Com `mana.base` diferente, o jogador novo começa em 50 e regenera até o máximo.
+
 ### 5. Pendências
-- [ ] **Checklist manual in-game (`./gradlew runClient`):** validação do HUD, comandos, atributos e recarregamento de `wispborn-server.toml` a cargo de Eder.
+- [ ] **Checklist manual in-game (`./gradlew runClient`):** validação do HUD, comandos, atributos e recarregamento de `wispborn-server.toml` a cargo de Eder (repetir o item de recarregar config depois de `fac1c58`).
+- [ ] **CI:** depende do push da `feat/M2-level-stats`.
 
 ---
 
@@ -163,7 +180,7 @@ Primeiro teste de Eder em jogo: o modelo renderiza no jogador com `idle`/`walkin
 ### 5. Pendências
 - [x] **Prova de conceito do render no jogador:** confirmada por Eder no primeiro teste em jogo.
 - [ ] **Checklist manual in-game (`./gradlew runClient` / `runClient2`):** repetir depois de `ff98f9a`, com tamanho 2×, passos silenciosos e sem partículas, além dos itens originais (glowmask, translucidez, direção do movimento, multiplayer).
-- [ ] **CI:** a branch `feat/M1b-wisp-model` ainda não foi enviada ao GitHub.
+- [x] **CI:** verde em `82ab8ba` na `feat/M1b-wisp-model` (GitHub Actions, 17/11/2026).
 
 ---
 
@@ -248,6 +265,7 @@ Primeiro teste de Eder em jogo: o modelo renderiza no jogador com `idle`/`walkin
 
 ### 5. Pendências
 - [ ] **Checklist manual in-game (`./gradlew runClient` / `runClient2`):** validação visual e funcional a cargo de Eder.
+- [x] **CI:** verde em `ee30b2b` na `main` e na `feat/M1-wisp-form` (GitHub Actions).
 - [x] **Balanceamento (revisão do M1):** corrigido em `FormManager.setForm` para preservar a proporção `health / maxHealth` na troca de forma.
 
 ---
