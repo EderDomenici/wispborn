@@ -92,6 +92,23 @@ O teste usa só `WispAnimations` (sem carregar classes do GeckoLib).
 - [ ] Multiplayer (`runServer` + `runClient` + `runClient2`): Player2 vê o modelo, as animações e o `anim possess` do Dev.
 - [ ] `/wispborn form human`: volta ao jogador normal, sem resto do modelo.
 - [ ] Servidor dedicado sobe sem crash (`runServer`) — nenhuma classe de `client/` carregada.
+- [ ] Sem som de passo/queda andando ou caindo como wisp (você e Player2); como humano, os passos voltam.
+- [ ] Sem bolinhas brancas (`END_ROD`) em volta do wisp; o rastro vem só da animação.
+
+## Ajustes pós-teste (16/11/2026)
+Primeiro teste de Eder em jogo (prova de conceito ok: o modelo renderiza com `idle`/`walking`).
+Problemas vistos e decisões de Eder, aplicados por Claude:
+1. **Modelo pequeno demais.** A escala 0,48 da hitbox reduz o modelo inteiro (núcleo ~0,15 bloco).
+   Decisão: visual **2×** sobre a escala da hitbox, só no render (`WispTuning.MODEL_VISUAL_SCALE = 2.0F`,
+   aplicado com `withScale` no `WispPlayerRenderer`). A hitbox não muda: continua passando em vão de 1 bloco.
+   Isso substitui o "Sem `withScale`" da tarefa 6.
+2. **Som de passos.** O jogador toca o som de passo do bloco embaixo ao andar. `setSilent` não resolve
+   (o `Player#playSound` ignora a flag). Solução: `event/WispSounds` cancela `PlayLevelSoundEvent.AtPosition`
+   quando o som é `block.*.step`/`block.*.fall` (regra pura `form/WispSoundRules`, testada) e a posição é
+   a de um jogador em forma WISP. O evento dispara no client (passo próprio) e no servidor (transmissão aos outros).
+3. **"Fumaça" branca.** Eram as partículas `END_ROD` do M1, desenhadas no tamanho normal ao lado de um wisp
+   pequeno. Removidas do `WispRenderHandler`: o modelo já tem rastro próprio (`trail_1..4`).
+   Isso substitui o "manter partículas" da tarefa 6.
 
 ## Fora de escopo (não fazer)
 Voo, possessão (o M3 dispara a `attack`), modelo para outras criaturas, editar a arte, mudar as partículas.

@@ -11,9 +11,12 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 - `69f421d` — `build(deps): adicionar dependencia obrigatoria GeckoLib 4.9.3`
 - `f4451ed` — `feat(assets): copiar modelo, animacoes e texturas do wisp e remover billboards antigos`
 - `77c9c58` — `feat(form): implementar WispAnimations, WispAnimatable, ajuste de escala e /wispborn anim possess`
-- `a9ae193` — `feat(client): renderizar wisp com WispPlayerRenderer, WispModel e adicionar WispAnimationsTest`  
+- `a9ae193` — `feat(client): renderizar wisp com WispPlayerRenderer, WispModel e adicionar WispAnimationsTest`
+- `713d257` — `docs(form): preencher relatorio da spec M1b e atualizar CHANGELOG.md`
+- `ff98f9a` — `fix(wisp): aumentar visual 2x, silenciar passos e remover particulas END_ROD`
 
 ### 1. Resumo das Alterações (`main..feat/M1b-wisp-model`)
+- **Total:** 23 arquivos alterados (`2348 insertions(+)`, `105 deletions(-)`), sem contar CHANGELOG e docs; quase todo o volume são os JSONs do modelo e das animações.
 - Integração com **GeckoLib 4.9.3** (`software.bernie.geckolib:geckolib-neoforge-1.21.1:4.9.3`) no `build.gradle`, `gradle.properties` e `neoforge.mods.toml`.
 - Ajuste de `WispTuning.SCALE_MODIFIER` de `-0.6` para `-0.52` (escala `0.48`, ~20% maior que no M1).
 - Cópia dos assets exportados do Blockbench (`art/parasita-magico/`) para `assets/wispborn/` (`geo/entity/wisp.geo.json`, `animations/entity/wisp.animation.json`, `textures/entity/wisp.png`, `textures/entity/wisp_glowmask.png`) e remoção das texturas antigas `wisp_core.png` e `wisp_halo.png`.
@@ -69,8 +72,20 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 |---|---|---|
 | `WispModel.java` | Override de `getRenderType` retornando `RenderType.entityTranslucent(texture)` | O padrão de `GeoModel` é `entityCutoutNoCull` (que descarta alfa parcial). Como `wisp.png` possui feixes semitransparentes e o checklist exige translucidez frente a água/vidro/partículas, `entityTranslucent` habilita o blending alfa correto. |
 
+### 4.1 Ajustes pós-teste em jogo (`ff98f9a`, Claude)
+Primeiro teste de Eder em jogo: o modelo renderiza no jogador com `idle`/`walking` (prova de conceito ok), mas com três problemas. Detalhes e decisões na seção "Ajustes pós-teste" da spec.
+
+| Arquivo | Alteração | Motivo / impacto |
+|---|---|---|
+| `WispTuning.java`, `WispPlayerRenderer.java` | `MODEL_VISUAL_SCALE = 2.0F` aplicado com `withScale` | O modelo ficava pequeno demais (núcleo ~0,15 bloco). Decisão de Eder: visual 2× só no render; a hitbox (atributo `SCALE`, 0,48) não muda e continua passando em vão de 1 bloco. |
+| `event/WispSounds.java` (novo), `form/WispSoundRules.java` (novo), `WispbornMod.java` | Cancela `PlayLevelSoundEvent.AtPosition` de `block.*.step`/`block.*.fall` na posição de um jogador WISP | Passos de bípede quebravam a imersão. `setSilent` não serve porque `Player#playSound` ignora a flag. O evento dispara no client (passo próprio) e no servidor (transmissão aos outros). |
+| `WispRenderHandler.java` | Removidas as partículas `END_ROD` do `ClientTickEvent.Post` | Apareciam como "fumaça" branca grande ao lado do wisp pequeno. O modelo já tem rastro próprio (`trail_1..4`). |
+| `WispSoundRulesTest.java` (novo) | Testes JUnit da regra de som | 2 testes; total da suíte: 8 testes verdes. |
+
 ### 5. Pendências
-- [ ] **Checklist manual in-game (`./gradlew runClient` / `runClient2`):** validação visual do modelo, glowmask e animações a cargo de Eder.
+- [x] **Prova de conceito do render no jogador:** confirmada por Eder no primeiro teste em jogo.
+- [ ] **Checklist manual in-game (`./gradlew runClient` / `runClient2`):** repetir depois de `ff98f9a`, com tamanho 2×, passos silenciosos e sem partículas, além dos itens originais (glowmask, translucidez, direção do movimento, multiplayer).
+- [ ] **CI:** a branch `feat/M1b-wisp-model` ainda não foi enviada ao GitHub.
 
 ---
 
@@ -83,6 +98,8 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 - `adc4743` — `feat(client): implementar WispRenderHandler, texturas placeholder e traducoes do M1`
 - `c9c881a` — `test(form): adicionar FormStateTest e configurar classpath de testes no build.gradle`
 - `c930c67` — `docs(form): preencher relatorio da spec M1 e atualizar CHANGELOG.md`
+- `60ddc3a` — `docs(form): atualizar hashes do CHANGELOG apos rebase e registrar pendencia de vida`
+- `ee30b2b` — `fix(form): preservar proporcao de vida ao alternar forma em FormManager.setForm`
 
 ### 1. Resumo das Alterações (`main..feat/M1-wisp-form`)
 - **Total:** 24 arquivos alterados (`741 insertions(+)`, `4 deletions(-)`), sem contar o próprio CHANGELOG.
