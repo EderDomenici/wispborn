@@ -8,6 +8,8 @@ public final class WispTuning {
             ResourceLocation.fromNamespaceAndPath(WispbornMod.MOD_ID, "wisp_scale");
     public static final ResourceLocation MAX_HEALTH_ID =
             ResourceLocation.fromNamespaceAndPath(WispbornMod.MOD_ID, "wisp_max_health");
+    public static final ResourceLocation VITALITY_ID =
+            ResourceLocation.fromNamespaceAndPath(WispbornMod.MOD_ID, "wisp_vitality");
     public static final ResourceLocation GRAVITY_ID =
             ResourceLocation.fromNamespaceAndPath(WispbornMod.MOD_ID, "wisp_gravity");
     public static final ResourceLocation SAFE_FALL_DISTANCE_ID =

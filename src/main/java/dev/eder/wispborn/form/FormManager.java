@@ -1,6 +1,8 @@
 package dev.eder.wispborn.form;
 
+import dev.eder.wispborn.config.WispbornConfig;
 import dev.eder.wispborn.network.SyncFormPayload;
+import dev.eder.wispborn.progress.StatMath;
 import dev.eder.wispborn.registry.ModAttachments;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
@@ -31,6 +33,7 @@ public final class FormManager {
     public static void applyModifiers(ServerPlayer player) {
         removeModifier(player, Attributes.SCALE, WispTuning.SCALE_ID);
         removeModifier(player, Attributes.MAX_HEALTH, WispTuning.MAX_HEALTH_ID);
+        removeModifier(player, Attributes.MAX_HEALTH, WispTuning.VITALITY_ID);
         removeModifier(player, Attributes.GRAVITY, WispTuning.GRAVITY_ID);
         removeModifier(player, Attributes.SAFE_FALL_DISTANCE, WispTuning.SAFE_FALL_DISTANCE_ID);
         removeModifier(player, Attributes.MOVEMENT_SPEED, WispTuning.MOVEMENT_SPEED_ID);
@@ -40,6 +43,15 @@ public final class FormManager {
                     WispTuning.SCALE_MODIFIER, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
             addModifier(player, Attributes.MAX_HEALTH, WispTuning.MAX_HEALTH_ID,
                     WispTuning.MAX_HEALTH_MODIFIER, AttributeModifier.Operation.ADD_VALUE);
+
+            int vitalityPts = player.getData(ModAttachments.STATS).vitality();
+            double vitalityBonus = StatMath.vitalityBonusHealth(
+                    vitalityPts, WispbornConfig.VITALITY_HEARTS_PER_POINT.get());
+            if (vitalityBonus > 0.0D) {
+                addModifier(player, Attributes.MAX_HEALTH, WispTuning.VITALITY_ID,
+                        vitalityBonus, AttributeModifier.Operation.ADD_VALUE);
+            }
+
             addModifier(player, Attributes.GRAVITY, WispTuning.GRAVITY_ID,
                     WispTuning.GRAVITY_MODIFIER, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
             addModifier(player, Attributes.SAFE_FALL_DISTANCE, WispTuning.SAFE_FALL_DISTANCE_ID,
