@@ -4,16 +4,12 @@ import dev.eder.wispborn.form.FormManager;
 import dev.eder.wispborn.host.HostManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.Mob;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.EntityMountEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 import java.util.ArrayList;
@@ -21,26 +17,6 @@ import java.util.List;
 
 public final class HostEvents {
     private HostEvents() {
-    }
-
-    @SubscribeEvent
-    public static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
-        if (!FormManager.isParasite(event.getEntity())) {
-            return;
-        }
-
-        event.setCanceled(true);
-        event.setCancellationResult(InteractionResult.SUCCESS);
-
-        if (event.getLevel().isClientSide() || event.getHand() != InteractionHand.MAIN_HAND) {
-            return;
-        }
-
-        if (event.getEntity() instanceof ServerPlayer serverPlayer
-                && FormManager.isWisp(serverPlayer)
-                && event.getTarget() instanceof Mob targetMob) {
-            HostManager.tryInfest(serverPlayer, targetMob);
-        }
     }
 
     @SubscribeEvent
@@ -80,10 +56,15 @@ public final class HostEvents {
 
     @SubscribeEvent
     public static void onLivingIncomingDamage(LivingIncomingDamageEvent event) {
-        if (event.getEntity() instanceof ServerPlayer serverPlayer
-                && HostManager.isHost(serverPlayer)
-                && !event.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
-            event.setCanceled(true);
+        if (!(event.getEntity() instanceof ServerPlayer serverPlayer)) {
+            return;
+        }
+        if (HostManager.isHost(serverPlayer)) {
+            if (!event.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+                event.setCanceled(true);
+            }
+        } else if (FormManager.isWisp(serverPlayer)) {
+            HostManager.notifyDamageTaken(serverPlayer);
         }
     }
 

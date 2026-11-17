@@ -5,9 +5,13 @@ import dev.eder.wispborn.form.FormManager;
 import dev.eder.wispborn.form.FormState;
 import dev.eder.wispborn.form.FormType;
 import dev.eder.wispborn.form.WispAnimatable;
+import dev.eder.wispborn.form.WispTuning;
+import dev.eder.wispborn.network.CastStatePayload;
+import dev.eder.wispborn.network.TargetInfoPayload;
 import dev.eder.wispborn.progress.ProgressManager;
 import dev.eder.wispborn.progress.TierResolver;
 import dev.eder.wispborn.registry.ModAttachments;
+import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -20,18 +24,22 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class HostManager {
-    public static final int POSSESS_DELAY_TICKS = 16;
-    public static final double MAX_INFEST_DISTANCE_SQR = 4.0D * 4.0D;
 
     public enum Reason {
         SNEAK,
@@ -44,7 +52,9 @@ public final class HostManager {
     }
 
     private static final Map<UUID, PendingInfest> PENDING = new ConcurrentHashMap<>();
+    private static final Set<UUID> DAMAGED_DURING_CAST = ConcurrentHashMap.newKeySet();
     private static final Map<UUID, Vec3> PENDING_DISMOUNT_POS = new ConcurrentHashMap<>();
+    private static final Map<UUID, TargetInfoPayload> LAST_TARGET_INFO = new ConcurrentHashMap<>();
 
     private HostManager() {
     }
@@ -61,7 +71,26 @@ public final class HostManager {
         return vehicle instanceof LivingEntity living ? Optional.of(living) : Optional.empty();
     }
 
+    public static void handlePossessStart(ServerPlayer player, int targetEntityId) {
+        if (!FormManager.isWisp(player)) {
+            return;
+        }
+        Entity entity = player.serverLevel().getEntity(targetEntityId);
+        if (!(entity instanceof Mob target)) {
+            sendFailureMessageAndSound(player, Component.translatable("wispborn.infest.immune"));
+            return;
+        }
+        tryInfest(player, target);
+    }
+
     public static InfestResult tryInfest(ServerPlayer player, Mob target) {
+        double range = WispbornConfig.POSSESS_RANGE.getAsDouble();
+        double rangeSqr = range * range;
+        if (player.distanceToSqr(target) > rangeSqr || !player.hasLineOfSight(target)) {
+            sendFailureMessageAndSound(player, Component.translatable("wispborn.infest.cancelled"));
+            return InfestResult.NOT_A_MOB;
+        }
+
         OptionalInt tierOpt = TierResolver.tierOf(target.getType());
         int playerLevel = ProgressManager.level(player);
         List<Integer> minLevels = WispbornConfig.tiersMinLevel();
@@ -84,17 +113,39 @@ public final class HostManager {
             return result;
         }
 
-        PendingInfest currentPending = PENDING.get(player.getUUID());
+        int castTicks = WispbornConfig.POSSESS_CAST_TICKS.get();
         long now = player.serverLevel().getGameTime();
+        PendingInfest currentPending = PENDING.get(player.getUUID());
         if (currentPending != null
                 && currentPending.targetEntityId() == target.getId()
                 && now < currentPending.executeAtGameTime()) {
             return InfestResult.OK;
         }
 
-        PENDING.put(player.getUUID(), new PendingInfest(target.getId(), now + POSSESS_DELAY_TICKS));
+        DAMAGED_DURING_CAST.remove(player.getUUID());
+        PENDING.put(player.getUUID(), new PendingInfest(target.getId(), now + castTicks));
         WispAnimatable.playPossess(player);
+        PacketDistributor.sendToPlayer(player, new CastStatePayload(target.getId(), castTicks));
         return InfestResult.OK;
+    }
+
+    public static void notifyDamageTaken(ServerPlayer player) {
+        if (PENDING.containsKey(player.getUUID())) {
+            DAMAGED_DURING_CAST.add(player.getUUID());
+        }
+    }
+
+    public static void cancelCast(ServerPlayer player, boolean sendCancelledMessage) {
+        PendingInfest removed = PENDING.remove(player.getUUID());
+        DAMAGED_DURING_CAST.remove(player.getUUID());
+        if (removed == null) {
+            return;
+        }
+        WispAnimatable.stopPossess(player);
+        PacketDistributor.sendToPlayer(player, CastStatePayload.NONE);
+        if (sendCancelledMessage) {
+            sendFailureMessageAndSound(player, Component.translatable("wispborn.infest.cancelled"));
+        }
     }
 
     public static void tick(ServerPlayer player) {
@@ -104,8 +155,12 @@ public final class HostManager {
         }
 
         if (isHost(player)) {
+            syncTargetInfo(player, TargetInfoPayload.NONE);
             if (player.getRemainingFireTicks() > 0) {
                 player.clearFire();
+            }
+            if (player.tickCount % 10 == 0) {
+                hostOf(player).ifPresent(host -> spawnPossessedParticles(player.serverLevel(), host));
             }
             if (player.tickCount % 20 == 0) {
                 hostOf(player).ifPresent(host -> player.displayClientMessage(buildHostHud(host), true));
@@ -113,28 +168,54 @@ public final class HostManager {
             return;
         }
 
+        if (!FormManager.isWisp(player)) {
+            if (PENDING.containsKey(player.getUUID())) {
+                cancelCast(player, true);
+            }
+            syncTargetInfo(player, TargetInfoPayload.NONE);
+            return;
+        }
+
+        if (player.tickCount % 4 == 0) {
+            syncTargetInfo(player, computeTargetInfo(player));
+        }
+
         PendingInfest pending = PENDING.get(player.getUUID());
         if (pending == null) {
             return;
         }
 
-        if (!FormManager.isWisp(player)) {
-            PENDING.remove(player.getUUID());
+        ServerLevel serverLevel = player.serverLevel();
+        Entity targetEntity = serverLevel.getEntity(pending.targetEntityId());
+        Mob mob = (targetEntity instanceof Mob m) ? m : null;
+
+        double range = WispbornConfig.POSSESS_RANGE.getAsDouble();
+        double rangeSqr = range * range;
+        boolean targetAlive = mob != null && mob.isAlive();
+        double distSqr = mob != null ? player.distanceToSqr(mob) : Double.MAX_VALUE;
+        boolean hasLos = mob != null && player.hasLineOfSight(mob);
+        boolean tookDamage = DAMAGED_DURING_CAST.remove(player.getUUID());
+
+        Optional<CancelReason> cancel = CastRules.cancelReason(
+                FormManager.isWisp(player),
+                targetAlive,
+                distSqr,
+                rangeSqr,
+                hasLos,
+                tookDamage
+        );
+
+        if (cancel.isPresent()) {
+            cancelCast(player, true);
             return;
         }
 
-        ServerLevel serverLevel = player.serverLevel();
         if (serverLevel.getGameTime() < pending.executeAtGameTime()) {
             return;
         }
 
         PENDING.remove(player.getUUID());
-
-        Entity targetEntity = serverLevel.getEntity(pending.targetEntityId());
-        if (!(targetEntity instanceof Mob mob) || player.distanceToSqr(mob) > MAX_INFEST_DISTANCE_SQR) {
-            sendFailureMessageAndSound(player, Component.translatable("wispborn.infest.cancelled"));
-            return;
-        }
+        PacketDistributor.sendToPlayer(player, CastStatePayload.NONE);
 
         OptionalInt tierOpt = TierResolver.tierOf(mob.getType());
         int playerLevel = ProgressManager.level(player);
@@ -169,6 +250,7 @@ public final class HostManager {
         FormManager.setForm(player, FormState.host(entityTypeId));
         player.setInvisible(true);
         player.startRiding(mob, true);
+        syncTargetInfo(player, TargetInfoPayload.NONE);
 
         serverLevel.playSound(
                 null,
@@ -195,7 +277,8 @@ public final class HostManager {
     }
 
     public static void release(ServerPlayer player, Reason reason) {
-        PENDING.remove(player.getUUID());
+        cancelCast(player, false);
+        LAST_TARGET_INFO.remove(player.getUUID());
         if (!isHost(player)) {
             return;
         }
@@ -236,8 +319,7 @@ public final class HostManager {
     }
 
     public static void ensureValidHostState(ServerPlayer player) {
-        PENDING.remove(player.getUUID());
-        PENDING_DISMOUNT_POS.remove(player.getUUID());
+        clearPending(player);
         if (isHost(player) && player.getVehicle() == null) {
             FormManager.setForm(player, FormState.WISP);
             player.setInvisible(false);
@@ -246,13 +328,85 @@ public final class HostManager {
 
     public static void clearPending(ServerPlayer player) {
         PENDING.remove(player.getUUID());
+        DAMAGED_DURING_CAST.remove(player.getUUID());
         PENDING_DISMOUNT_POS.remove(player.getUUID());
+        LAST_TARGET_INFO.remove(player.getUUID());
     }
 
     public static Component buildHostHud(LivingEntity host) {
         float maxHealth = Math.max(1.0F, host.getMaxHealth());
         int healthPercent = Math.round((host.getHealth() / maxHealth) * 100.0F);
         return Component.translatable("wispborn.hud.host", host.getType().getDescription(), healthPercent);
+    }
+
+    private static void spawnPossessedParticles(ServerLevel serverLevel, LivingEntity host) {
+        serverLevel.sendParticles(
+                ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, WispTuning.POSSESSED_PARTICLE_COLOR),
+                host.getX(),
+                host.getY() + host.getBbHeight() * 0.5D,
+                host.getZ(),
+                3,
+                host.getBbWidth() * 0.35D,
+                host.getBbHeight() * 0.35D,
+                host.getBbWidth() * 0.35D,
+                1.0D
+        );
+    }
+
+    private static TargetInfoPayload computeTargetInfo(ServerPlayer player) {
+        double range = WispbornConfig.POSSESS_RANGE.getAsDouble();
+        Vec3 eyePos = player.getEyePosition();
+        Vec3 lookVec = player.getViewVector(1.0F);
+        Vec3 endPos = eyePos.add(lookVec.scale(range));
+
+        HitResult blockHit = player.pick(range, 1.0F, false);
+        double maxDistSqr = blockHit.getType() != HitResult.Type.MISS
+                ? blockHit.getLocation().distanceToSqr(eyePos)
+                : range * range;
+
+        AABB searchBox = player.getBoundingBox().expandTowards(lookVec.scale(range)).inflate(1.0D);
+        EntityHitResult entityHit = ProjectileUtil.getEntityHitResult(
+                player,
+                eyePos,
+                endPos,
+                searchBox,
+                e -> e instanceof Mob && e.isAlive() && !e.isSpectator(),
+                maxDistSqr
+        );
+
+        if (entityHit == null || !(entityHit.getEntity() instanceof Mob mob) || !player.hasLineOfSight(mob)) {
+            return TargetInfoPayload.NONE;
+        }
+
+        OptionalInt tierOpt = TierResolver.tierOf(mob.getType());
+        int tier = tierOpt.orElse(0);
+        int costPerTier = WispbornConfig.MANA_INFEST_COST_PER_TIER.get();
+        int manaCost = tier * costPerTier;
+        int maxTier = TierResolver.maxTierFor(ProgressManager.level(player), WispbornConfig.tiersMinLevel());
+
+        InfestResult result = InfestRules.check(
+                true,
+                mob.isAlive(),
+                !mob.getPassengers().isEmpty(),
+                tierOpt,
+                maxTier,
+                ProgressManager.getMana(player),
+                costPerTier
+        );
+
+        return new TargetInfoPayload(mob.getId(), result, tier, manaCost);
+    }
+
+    private static void syncTargetInfo(ServerPlayer player, TargetInfoPayload next) {
+        TargetInfoPayload previous = LAST_TARGET_INFO.get(player.getUUID());
+        if (!next.equals(previous)) {
+            if (next.equals(TargetInfoPayload.NONE)) {
+                LAST_TARGET_INFO.remove(player.getUUID());
+            } else {
+                LAST_TARGET_INFO.put(player.getUUID(), next);
+            }
+            PacketDistributor.sendToPlayer(player, next);
+        }
     }
 
     private static void sendInfestFailure(
@@ -274,7 +428,7 @@ public final class HostManager {
             case NO_MANA -> {
                 int tier = tierOpt.orElse(1);
                 int requiredMana = costPerTier * tier;
-                yield Component.translatable("wispborn.infest.no_mana", Math.round(mana), requiredMana);
+                yield Component.translatable("wispborn.infest.no_mana", Math.round(mana) + "/" + requiredMana);
             }
             case OK -> Component.empty();
         };

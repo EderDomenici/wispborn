@@ -1,6 +1,8 @@
 package dev.eder.wispborn.client;
 
+import dev.eder.wispborn.network.CastStatePayload;
 import dev.eder.wispborn.network.SyncFormPayload;
+import dev.eder.wispborn.network.TargetInfoPayload;
 import dev.eder.wispborn.registry.ModAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
@@ -20,5 +22,13 @@ public final class ClientPayloadHandler {
         if (entity != null) {
             entity.setData(ModAttachments.FORM, payload.state());
         }
+    }
+
+    public static void handleCastState(CastStatePayload payload, IPayloadContext context) {
+        ClientPossession.setCastState(payload);
+    }
+
+    public static void handleTargetInfo(TargetInfoPayload payload, IPayloadContext context) {
+        ClientPossession.setTargetInfo(payload);
     }
 }
