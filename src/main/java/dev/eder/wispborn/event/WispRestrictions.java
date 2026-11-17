@@ -49,4 +49,11 @@ public final class WispRestrictions {
             }
         }
     }
+
+    @SubscribeEvent
+    public static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
+        if (FormManager.isParasite(event.getEntity())) {
+            event.setCanceled(true);
+        }
+    }
 }

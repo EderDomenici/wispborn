@@ -65,6 +65,12 @@ public final class WispbornConfig {
     public static final ModConfigSpec.IntValue EP_CONSUME_BONUS_PER_TIER =
             BUILDER.defineInRange("ep.consumeBonusPerTier", 100, 0, 1000000);
 
+    public static final ModConfigSpec.IntValue POSSESS_CAST_TICKS =
+            BUILDER.defineInRange("possess.castTicks", 20, 1, 1200);
+
+    public static final ModConfigSpec.DoubleValue POSSESS_RANGE =
+            BUILDER.defineInRange("possess.range", 4.0D, 1.0D, 32.0D);
+
     public static final ModConfigSpec SPEC = BUILDER.build();
 
     private WispbornConfig() {

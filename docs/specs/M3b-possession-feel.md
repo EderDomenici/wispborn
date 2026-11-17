@@ -113,7 +113,44 @@ O servidor decide; o client só mostra.
 Drenagem (M4), consumo (M5), tela de atributos (M6), controlar o hospedeiro, som próprio em `.ogg`.
 
 ## Dúvidas do implementador
-_(preencher se houver)_
+Nenhuma dúvida.
 
 ## Relatório de implementação
-_(preencher ao terminar)_
+- **Arquivos criados/alterados:**
+  - `art/parasita-magico/` e `src/main/resources/assets/wispborn/`: copiados os novos `wisp.geo.json`, `wisp.animation.json`, `wisp.png` e `wisp_glowmask.png` (com raios volumétricos e clipe `animation.wisp.possess` de 1,0 s).
+  - `src/main/java/dev/eder/wispborn/form/WispAnimations.java` e `WispAnimatable.java`: `POSSESS` atualizado para `"animation.wisp.possess"` e adicionado `stopPossess(ServerPlayer)` (`stopTriggeredAnim`).
+  - `src/main/java/dev/eder/wispborn/registry/ModSounds.java` e `src/main/resources/assets/wispborn/sounds.json`: som `wispborn:entity.wisp.drift` mapeado para `block.amethyst_block.chime` (`volume 0.35`, `pitch 1.4`).
+  - `src/main/java/dev/eder/wispborn/form/WispSoundRules.java` e `event/WispSounds.java`: funções puras `classify` e `shouldPlayDrift`; listeners para `PlayLevelSoundEvent.AtEntity` e `AtPosition` cancelando `block.*.fall` e trocando `block.*.step` por `ModSounds.WISP_DRIFT` a cada `DRIFT_SOUND_INTERVAL_TICKS = 10` ticks.
+  - `src/main/java/dev/eder/wispborn/config/WispbornConfig.java`: adicionados `possess.castTicks` (20) e `possess.range` (4.0).
+  - `src/main/java/dev/eder/wispborn/host/CancelReason.java`, `CastRules.java` e `InfestResult.java`: regra pura `CastRules.cancelReason` e `StreamCodec` em `InfestResult`.
+  - `src/main/java/dev/eder/wispborn/network/`: criados `PossessStartPayload`, `PossessCancelPayload`, `CastStatePayload` e `TargetInfoPayload` registrados em `ModPayloads`.
+  - `src/main/java/dev/eder/wispborn/host/HostManager.java`, `event/HostEvents.java` e `event/WispRestrictions.java`: conjuração canalizada iniciada por payload, cancelamento por distância/visão/dano/soltar tecla, raycast de alvo a cada 4 ticks com delta-sync de `TargetInfoPayload`, partículas ciano `ENTITY_EFFECT` no mob possuído a cada 10 ticks e restauração do bloqueio de `EntityInteract` em `WispRestrictions`.
+  - `src/main/java/dev/eder/wispborn/client/`: `KeyBindings` (tecla `R`), `ClientPossession`, `ClientPayloadHandler` e `WispRenderHandler` (camada de HUD `wispborn:possess_target` com barra de conjuração e anel de 6 partículas `DustParticleOptions` nos pés do alvo).
+  - `src/test/java/dev/eder/wispborn/`: `WispSoundRulesTest`, `CastRulesTest`, `PossessionPayloadsTest` e `WispAnimationsTest`.
+- **Decisões tomadas:**
+  - `WispSounds` mantém mapas de timestamp separados para client e server (`CLIENT_LAST_DRIFT` e `SERVER_LAST_DRIFT`), garantindo que em singleplayer (servidor integrado) o evento `AtEntity` do jogador local e o `AtPosition` do servidor não colidam no controle de intervalo de 10 ticks.
+- **Saída final de `./gradlew build`:**
+  ```text
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  > Task :check
+  > Task :build
+  BUILD SUCCESSFUL in 14s
+  ```
+- **Saída final de `./gradlew test`:**
+  ```text
+  > Task :compileJava
+  > Task :classes
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  BUILD SUCCESSFUL in 13s
+  ```
+- **Saída final de `./gradlew runServer`:**
+  ```text
+  [09:29:43] [Server thread/INFO] [minecraft/DedicatedServer]: Done (3.712s)! For help, type "help"
+  [09:29:43] [Server thread/INFO] [ne.ne.ne.ga.GameTestHooks/]: Enabled Gametest Namespaces: [wispborn]
+  ```
+- **Pendências:**
+  - Validação do checklist manual in-game por Eder (`runClient` / `runClient2`).

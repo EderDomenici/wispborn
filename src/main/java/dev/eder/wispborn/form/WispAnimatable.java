@@ -50,4 +50,8 @@ public final class WispAnimatable implements GeoReplacedEntity {
     public static void playPossess(ServerPlayer player) {
         INSTANCE.triggerAnim(player, WispAnimations.CONTROLLER_POSSESS, WispAnimations.TRIGGER_POSSESS);
     }
+
+    public static void stopPossess(ServerPlayer player) {
+        INSTANCE.stopTriggeredAnim(player, WispAnimations.CONTROLLER_POSSESS, WispAnimations.TRIGGER_POSSESS);
+    }
 }

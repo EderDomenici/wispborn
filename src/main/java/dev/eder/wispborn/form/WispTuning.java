@@ -26,6 +26,14 @@ public final class WispTuning {
     /** Escala só do visual do modelo, multiplicada sobre a escala da hitbox (SCALE). Não altera colisão. */
     public static final float MODEL_VISUAL_SCALE = 2.0F;
 
+    /** Intervalo mínimo em ticks entre sons de cintilação do wisp ao andar. */
+    public static final int DRIFT_SOUND_INTERVAL_TICKS = 10;
+
+    /** Cores das partículas de indicador de alvo (RGB) e de mob possuído (ARGB). */
+    public static final int TARGET_OK_COLOR = 0x40E0D0;
+    public static final int TARGET_FAIL_COLOR = 0xFF4444;
+    public static final int POSSESSED_PARTICLE_COLOR = 0xFF40E0D0;
+
     private WispTuning() {
     }
 }

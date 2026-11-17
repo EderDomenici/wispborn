@@ -4,6 +4,77 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 
 ---
 
+## [M3b-possession-feel] — Tecla, Conjuração e Feedback da Possessão (`feat/M3b-possession-feel`)
+
+**Spec de referência:** `docs/specs/M3b-possession-feel.md`  
+**Commits:**
+- `0f42433` — `feat(art): atualizar modelo e animacao animation.wisp.possess e adicionar stopPossess`
+- `2e465c7` — `feat(sound): trocar passos do wisp por entity.wisp.drift em AtEntity e AtPosition`
+- `e2bc03f` — `feat(host): conjuracao canalizada com tecla R, indicador de alvo e particulas do host` (une os antigos `4995220` e `edd8716`, que nao compilavam separados)
+- `bad472c` — `docs(host): preencher relatorio da spec M3b e atualizar CHANGELOG.md`
+
+### 1. Resumo das Alterações (`main..feat/M3b-possession-feel`)
+- Atualização dos assets 3D do wisp (`art/parasita-magico/` → `assets/wispborn/`) com fragmentos volumétricos nos raios e clipe `animation.wisp.possess` (1,0 s, sem loop), além de `WispAnimatable.stopPossess(ServerPlayer)`.
+- Substituição dos sons de passo do wisp (`PlayLevelSoundEvent.AtEntity` e `AtPosition`) por `ModSounds.WISP_DRIFT` (`entity.wisp.drift` → `block.amethyst_block.chime`) a cada 10 ticks e cancelamento de `block.*.fall`, governados por `WispSoundRules`.
+- Substituição do clique direito na entidade pela tecla `R` (`KeyBindings.POSSESS`) com conjuração canalizada (`possess.castTicks = 20`, `possess.range = 4.0`), payloads `PossessStartPayload`, `PossessCancelPayload`, `CastStatePayload` e `TargetInfoPayload`, e regra pura `CastRules.cancelReason`.
+- Indicador de alvo no HUD (`wispborn:possess_target` via `RegisterGuiLayersEvent#registerAboveAll`) com nome, tier, custo de mana, status e barra de progresso, anel de 6 partículas `DustParticleOptions` nos pés do alvo e efeito `ColorParticleOption(ENTITY_EFFECT, 0xFF40E0D0)` no mob possuído a cada 10 ticks.
+
+### 2. Detalhamento por Arquivo
+
+| Arquivo | Ação | Detalhes da Implementação |
+|---|---|---|
+| `art/parasita-magico/*` e `assets/wispborn/{geo,animations,textures}/entity/wisp*` | Modificado | Arte atualizada do Prompt A1 (raios volumétricos e `animation.wisp.possess` substituindo `attack`). |
+| `src/main/java/dev/eder/wispborn/form/WispAnimations.java` | Modificado | `POSSESS` alterado para `"animation.wisp.possess"`. |
+| `src/main/java/dev/eder/wispborn/form/WispAnimatable.java` | Modificado | Adicionado `stopPossess(ServerPlayer)` chamando `INSTANCE.stopTriggeredAnim`. |
+| `src/main/java/dev/eder/wispborn/form/WispTuning.java` | Modificado | Adicionadas constantes `DRIFT_SOUND_INTERVAL_TICKS = 10`, `TARGET_OK_COLOR = 0x40E0D0`, `TARGET_FAIL_COLOR = 0xFF4444` e `POSSESSED_PARTICLE_COLOR = 0xFF40E0D0`. |
+| `src/main/java/dev/eder/wispborn/registry/ModSounds.java` e `assets/wispborn/sounds.json` | Criado | Registro de `WISP_DRIFT` (`entity.wisp.drift`) apontando para `block.amethyst_block.chime` (`volume 0.35`, `pitch 1.4`). |
+| `src/main/java/dev/eder/wispborn/form/WispSoundRules.java` e `event/WispSounds.java` | Modificado | `classify` (`STEP`, `FALL`, `OTHER`) e `shouldPlayDrift`; listeners para `AtEntity` e `AtPosition`. |
+| `src/main/java/dev/eder/wispborn/config/WispbornConfig.java` | Modificado | Adicionados `possess.castTicks` (20) e `possess.range` (4.0). |
+| `src/main/java/dev/eder/wispborn/host/{CancelReason,CastRules,InfestResult}.java` | Criado/Mod. | Enum `CancelReason`, função pura `CastRules.cancelReason` e `InfestResult.STREAM_CODEC`. |
+| `src/main/java/dev/eder/wispborn/network/{PossessStartPayload,PossessCancelPayload,CastStatePayload,TargetInfoPayload,ModPayloads}.java` | Criado/Mod. | Payloads C2S/S2C de conjuração e indicador de alvo registrados em `ModPayloads`. |
+| `src/main/java/dev/eder/wispborn/host/HostManager.java` | Modificado | `handlePossessStart`, `cancelCast`, `notifyDamageTaken`, raycast de alvo a cada 4 ticks com envio só quando muda, e partículas `ENTITY_EFFECT` no hospedeiro a cada 10 ticks. |
+| `src/main/java/dev/eder/wispborn/event/{HostEvents,WispRestrictions}.java` | Modificado | `EntityInteract` volta a ser apenas cancelado em `WispRestrictions`; `HostEvents.onLivingIncomingDamage` notifica dano no wisp durante conjuração. |
+| `src/main/java/dev/eder/wispborn/client/{KeyBindings,ClientPossession,ClientPayloadHandler,WispRenderHandler}.java` | Criado/Mod. | Tecla `R`, estado client-side, camada de HUD `wispborn:possess_target` e anel de partículas `DustParticleOptions` nos pés do alvo. |
+| `src/test/java/dev/eder/wispborn/{form/WispSoundRulesTest,host/CastRulesTest,network/PossessionPayloadsTest}.java` | Criado/Mod. | Testes JUnit 5 cobrindo regras de som, cancelamento de conjuração e `StreamCodec` dos 3 payloads. |
+| `docs/specs/M3b-possession-feel.md` | Modificado | Preenchido "Dúvidas do implementador" e "Relatório de implementação". |
+
+### 3. Evidências de Verificação
+
+- **`./gradlew build --no-daemon`:**
+  ```text
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  > Task :check
+  > Task :build
+  BUILD SUCCESSFUL in 14s
+  ```
+- **`./gradlew test --rerun-tasks --no-daemon`:**
+  ```text
+  > Task :compileJava
+  > Task :classes
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  BUILD SUCCESSFUL in 13s
+  ```
+- **`./gradlew runServer --no-daemon`:**
+  ```text
+  [09:29:43] [Server thread/INFO] [minecraft/DedicatedServer]: Done (3.712s)! For help, type "help"
+  [09:29:43] [Server thread/INFO] [ne.ne.ne.ga.GameTestHooks/]: Enabled Gametest Namespaces: [wispborn]
+  ```
+
+### 4. Alterações fora do escopo / Decisões de borda
+| Arquivo | Alteração / Decisão | Motivo / Impacto |
+|---|---|---|
+| `WispSounds.java` | Mapas de cooldown separados por lado (`CLIENT_LAST_DRIFT` e `SERVER_LAST_DRIFT`) | Em singleplayer, o cliente local dispara `AtEntity` e o servidor integrado dispara `AtPosition` no mesmo tick; separar os mapas evita que um lado consuma o cooldown do outro. |
+| `HostManager.java` | Clamping da distância do raycast de entidade pelo `player.pick(range, 1.0F, false)` de blocos | Garante que o indicador de alvo não selecione criaturas atrás de paredes/blocos sólidos antes mesmo do `hasLineOfSight`. |
+
+### 5. Pendências
+- [ ] **Checklist manual in-game (`./gradlew runClient` / `runClient2`):** validação visual dos novos raios, som de cintilação, indicador de alvo, barra de conjuração e partículas do hospedeiro a cargo de Eder.
+
+---
+
 ## [M3-possession] — Possessão como Passageiro (`feat/M3-possession`)
 
 **Spec de referência:** `docs/specs/M3-possession.md`  
