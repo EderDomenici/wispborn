@@ -4,6 +4,76 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 
 ---
 
+## [M1b-wisp-model] — Modelo e Animações do Wisp com GeckoLib (`feat/M1b-wisp-model`)
+
+**Spec de referência:** `docs/specs/M1b-wisp-model.md`  
+**Commits:**
+- `69f421d` — `build(deps): adicionar dependencia obrigatoria GeckoLib 4.9.3`
+- `f4451ed` — `feat(assets): copiar modelo, animacoes e texturas do wisp e remover billboards antigos`
+- `77c9c58` — `feat(form): implementar WispAnimations, WispAnimatable, ajuste de escala e /wispborn anim possess`
+- `a9ae193` — `feat(client): renderizar wisp com WispPlayerRenderer, WispModel e adicionar WispAnimationsTest`  
+
+### 1. Resumo das Alterações (`main..feat/M1b-wisp-model`)
+- Integração com **GeckoLib 4.9.3** (`software.bernie.geckolib:geckolib-neoforge-1.21.1:4.9.3`) no `build.gradle`, `gradle.properties` e `neoforge.mods.toml`.
+- Ajuste de `WispTuning.SCALE_MODIFIER` de `-0.6` para `-0.52` (escala `0.48`, ~20% maior que no M1).
+- Cópia dos assets exportados do Blockbench (`art/parasita-magico/`) para `assets/wispborn/` (`geo/entity/wisp.geo.json`, `animations/entity/wisp.animation.json`, `textures/entity/wisp.png`, `textures/entity/wisp_glowmask.png`) e remoção das texturas antigas `wisp_core.png` e `wisp_halo.png`.
+- Implementação de `WispAnimations` (constantes puras), `WispAnimatable` (`GeoReplacedEntity` singleton registrado com `SingletonGeoAnimatable.registerSyncedAnimatable`), `WispModel`, `WispPlayerRenderer` (com `AutoGlowingGeoLayer`), atualização de `WispRenderHandler`, subcomando `/wispborn anim possess [player]` e teste JUnit `WispAnimationsTest`.
+
+### 2. Detalhamento por Arquivo
+
+| Arquivo | Ação | Detalhes da Implementação |
+|---|---|---|
+| `gradle.properties` | Modificado | Adicionado `geckolib_version=4.9.3`. |
+| `build.gradle` | Modificado | Adicionado repositório Cloudsmith do GeckoLib, dependência `geckolib-neoforge-1.21.1:${geckolib_version}` e propriedade `geckolib_version` em `generateModMetadata`. |
+| `src/main/templates/META-INF/neoforge.mods.toml` | Modificado | Adicionado bloco `[[dependencies.${mod_id}]]` obrigatório para `geckolib` com `versionRange="[${geckolib_version},)"` e `side="BOTH"`. |
+| `src/main/java/dev/eder/wispborn/form/WispTuning.java` | Modificado | `SCALE_MODIFIER` alterado de `-0.6` para `-0.52`. |
+| `src/main/java/dev/eder/wispborn/form/WispAnimations.java` | Criado | Constantes `IDLE`, `WALK`, `POSSESS`, `CONTROLLER_MOVEMENT`, `CONTROLLER_POSSESS` e `TRIGGER_POSSESS` sem dependência do GeckoLib. |
+| `src/main/java/dev/eder/wispborn/form/WispAnimatable.java` | Criado | Singleton `GeoReplacedEntity` (`EntityType.PLAYER`) com controllers `movement` (transição 5 ticks, `WALK`/`IDLE`) e `possess` (transição 0, trigger `possess` → `POSSESS`), mais `playPossess(ServerPlayer)`. |
+| `src/main/java/dev/eder/wispborn/WispbornMod.java` | Modificado | Adicionada chamada `SingletonGeoAnimatable.registerSyncedAnimatable(WispAnimatable.INSTANCE)` no construtor. |
+| `src/main/java/dev/eder/wispborn/client/WispModel.java` | Criado | Subclasse de `DefaultedEntityGeoModel<WispAnimatable>` (`wispborn:wisp`) com `getRenderType` retornando `RenderType.entityTranslucent(texture)`. |
+| `src/main/java/dev/eder/wispborn/client/WispPlayerRenderer.java` | Criado | Subclasse de `GeoReplacedEntityRenderer<AbstractClientPlayer, WispAnimatable>` adicionando `AutoGlowingGeoLayer`. |
+| `src/main/java/dev/eder/wispborn/client/WispRenderHandler.java` | Modificado | Instancia `WispPlayerRenderer` em `EntityRenderersEvent.AddLayers` e renderiza o modelo 3D em `RenderPlayerEvent.Pre` (removendo os quads billboard do M1); ignora render se `renderer == null` ou `player.isInvisible()`. |
+| `src/main/java/dev/eder/wispborn/command/WispbornCommand.java` | Modificado | Adicionado `/wispborn anim possess [player]` (permissão 2) chamando `WispAnimatable.playPossess(target)`. |
+| `src/main/resources/assets/wispborn/` | Modificado | Copiados `geo/entity/wisp.geo.json`, `animations/entity/wisp.animation.json`, `textures/entity/wisp.png` e `textures/entity/wisp_glowmask.png`; removidos `textures/entity/wisp_core.png` e `wisp_halo.png`; adicionada chave `commands.wispborn.anim.success` em `en_us.json` e `pt_br.json`. |
+| `src/test/java/dev/eder/wispborn/form/WispAnimationsTest.java` | Criado | Teste JUnit 5 que lê `/assets/wispborn/animations/entity/wisp.animation.json` via Gson e valida existência e flag `loop` de `IDLE`, `WALK` e `POSSESS`. |
+| `docs/specs/M1b-wisp-model.md` | Modificado | Preenchido "Dúvidas do implementador" e "Relatório de implementação". |
+
+### 3. Evidências de Verificação
+
+- **`./gradlew build --no-daemon`:**
+  ```text
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  > Task :check
+  > Task :build
+  BUILD SUCCESSFUL in 44s
+  ```
+- **`./gradlew test --rerun-tasks --no-daemon`:**
+  ```text
+  > Task :compileJava
+  > Task :classes
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  BUILD SUCCESSFUL in 16s
+  ```
+- **`./gradlew runServer --no-daemon`:**
+  ```text
+  [22:15:00] [Server thread/INFO] [minecraft/DedicatedServer]: Done (3.136s)! For help, type "help"
+  [22:15:00] [Server thread/INFO] [ne.ne.ne.ga.GameTestHooks/]: Enabled Gametest Namespaces: [wispborn]
+  ```
+
+### 4. Alterações fora do escopo / Decisões de borda
+| Arquivo | Alteração / Decisão | Motivo / Impacto |
+|---|---|---|
+| `WispModel.java` | Override de `getRenderType` retornando `RenderType.entityTranslucent(texture)` | O padrão de `GeoModel` é `entityCutoutNoCull` (que descarta alfa parcial). Como `wisp.png` possui feixes semitransparentes e o checklist exige translucidez frente a água/vidro/partículas, `entityTranslucent` habilita o blending alfa correto. |
+
+### 5. Pendências
+- [ ] **Checklist manual in-game (`./gradlew runClient` / `runClient2`):** validação visual do modelo, glowmask e animações a cargo de Eder.
+
+---
+
 ## [M1-wisp-form] — Forma Wisp (`feat/M1-wisp-form`)
 
 **Spec de referência:** `docs/specs/M1-wisp-form.md`  

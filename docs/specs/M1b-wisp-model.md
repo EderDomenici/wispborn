@@ -97,7 +97,47 @@ O teste usa só `WispAnimations` (sem carregar classes do GeckoLib).
 Voo, possessão (o M3 dispara a `attack`), modelo para outras criaturas, editar a arte, mudar as partículas.
 
 ## Dúvidas do implementador
-_(preencher)_
+Nenhuma dúvida.
 
 ## Relatório de implementação
-_(preencher: arquivos, decisões, saídas de `./gradlew build`, `test` e `runServer`, o que não foi feito)_
+- **Arquivos criados/alterados:**
+  - `gradle.properties`: adicionado `geckolib_version=4.9.3`.
+  - `build.gradle`: adicionado repositório Cloudsmith do GeckoLib, dependência `software.bernie.geckolib:geckolib-neoforge-1.21.1:${geckolib_version}` e `geckolib_version` em `generateModMetadata`.
+  - `src/main/templates/META-INF/neoforge.mods.toml`: adicionada dependência obrigatória `geckolib` (`[${geckolib_version},)`, `side="BOTH"`).
+  - `src/main/java/dev/eder/wispborn/form/WispTuning.java`: `SCALE_MODIFIER` atualizado de `-0.6` para `-0.52`.
+  - `src/main/java/dev/eder/wispborn/form/WispAnimations.java`: constantes de nomes de clipes (`IDLE`, `WALK`, `POSSESS`) e controllers/triggers (`CONTROLLER_MOVEMENT`, `CONTROLLER_POSSESS`, `TRIGGER_POSSESS`).
+  - `src/main/java/dev/eder/wispborn/form/WispAnimatable.java`: singleton `GeoReplacedEntity` substituindo `EntityType.PLAYER` com controllers `movement` (transição 5 ticks) e `possess` (transição 0, triggerable `possess`), além do helper `playPossess(ServerPlayer)`.
+  - `src/main/java/dev/eder/wispborn/WispbornMod.java`: registrado `SingletonGeoAnimatable.registerSyncedAnimatable(WispAnimatable.INSTANCE)`.
+  - `src/main/java/dev/eder/wispborn/client/WispModel.java`: `DefaultedEntityGeoModel<WispAnimatable>` (`wispborn:wisp`) sobrescrevendo `getRenderType` com `RenderType.entityTranslucent(texture)`.
+  - `src/main/java/dev/eder/wispborn/client/WispPlayerRenderer.java`: `GeoReplacedEntityRenderer<AbstractClientPlayer, WispAnimatable>` com `AutoGlowingGeoLayer`.
+  - `src/main/java/dev/eder/wispborn/client/WispRenderHandler.java`: substituídos os quads billboard do M1 pelo `WispPlayerRenderer` instanciado em `EntityRenderersEvent.AddLayers`, mantendo ocultação para `HOST`/`isInvisible()`, ocultação de mão e partículas `END_ROD`.
+  - `src/main/java/dev/eder/wispborn/command/WispbornCommand.java`: subcomando `/wispborn anim possess [player]` (permissão 2).
+  - `src/main/resources/assets/wispborn/`: copiados `geo/entity/wisp.geo.json`, `animations/entity/wisp.animation.json`, `textures/entity/wisp.png` e `textures/entity/wisp_glowmask.png` de `art/parasita-magico/`; removidos `wisp_core.png` e `wisp_halo.png`; adicionada chave `commands.wispborn.anim.success` em `lang/en_us.json` e `pt_br.json`.
+  - `src/test/java/dev/eder/wispborn/form/WispAnimationsTest.java`: teste JUnit validando a existência e configuração de `loop` de `IDLE`, `WALK` e `POSSESS` em `wisp.animation.json`.
+- **Decisões tomadas:**
+  - `WispModel.getRenderType` retorna `RenderType.entityTranslucent(texture)` para renderizar corretamente os feixes translúcidos da textura `wisp.png` sobre água, vidro e partículas (item 5 do checklist manual).
+- **Saída final de `./gradlew build`:**
+  ```text
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  > Task :check
+  > Task :build
+  BUILD SUCCESSFUL in 44s
+  ```
+- **Saída final de `./gradlew test`:**
+  ```text
+  > Task :compileJava
+  > Task :classes
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  BUILD SUCCESSFUL in 16s
+  ```
+- **Saída final de `./gradlew runServer`:**
+  ```text
+  [22:15:00] [Server thread/INFO] [minecraft/DedicatedServer]: Done (3.136s)! For help, type "help"
+  [22:15:00] [Server thread/INFO] [ne.ne.ne.ga.GameTestHooks/]: Enabled Gametest Namespaces: [wispborn]
+  ```
+- **Pendências:**
+  - Validação visual do checklist manual in-game por Eder (`runClient` / `runClient2`).
