@@ -9,9 +9,9 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 **Spec de referência:** `docs/specs/M3b-possession-feel.md`  
 **Commits:**
 - `0f42433` — `feat(art): atualizar modelo e animacao animation.wisp.possess e adicionar stopPossess`
-- `9b079d3` — `feat(sound): trocar passos do wisp por entity.wisp.drift em AtEntity e AtPosition`
-- `4995220` — `feat(host): implementar conjuracao canalizada, CastRules, payloads, raycast de alvo e particulas do host`
-- `edd8716` — `feat(client): adicionar KeyBindings (R), HUD de alvo/conjuracao, anel de particulas e testes JUnit`  
+- `2e465c7` — `feat(sound): trocar passos do wisp por entity.wisp.drift em AtEntity e AtPosition`
+- `e2bc03f` — `feat(host): conjuracao canalizada com tecla R, indicador de alvo e particulas do host` (une os antigos `4995220` e `edd8716`, que nao compilavam separados)
+- `bad472c` — `docs(host): preencher relatorio da spec M3b e atualizar CHANGELOG.md`
 
 ### 1. Resumo das Alterações (`main..feat/M3b-possession-feel`)
 - Atualização dos assets 3D do wisp (`art/parasita-magico/` → `assets/wispborn/`) com fragmentos volumétricos nos raios e clipe `animation.wisp.possess` (1,0 s, sem loop), além de `WispAnimatable.stopPossess(ServerPlayer)`.
