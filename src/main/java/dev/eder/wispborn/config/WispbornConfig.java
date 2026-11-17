@@ -71,7 +71,8 @@ public final class WispbornConfig {
     }
 
     public static List<Integer> levelThresholds() {
-        return LEVEL_THRESHOLDS.get().stream().map(Integer::intValue).toList();
+        // Ordenada e sem repetição: LevelCurve assume limites crescentes.
+        return LEVEL_THRESHOLDS.get().stream().map(Integer::intValue).sorted().distinct().toList();
     }
 
     public static List<Integer> tiersMinLevel() {

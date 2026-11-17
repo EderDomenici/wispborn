@@ -16,6 +16,19 @@ public final class ProgressManager {
     private ProgressManager() {
     }
 
+    /** Nível atual, sempre derivado do EP total e da curva do config. */
+    public static int level(ServerPlayer player) {
+        return LevelCurve.levelFor(player.getData(ModAttachments.PROGRESS).totalEp(), WispbornConfig.levelThresholds());
+    }
+
+    public static int availablePoints(ServerPlayer player) {
+        return StatMath.availablePoints(
+                level(player),
+                WispbornConfig.POINTS_PER_LEVEL.get(),
+                player.getData(ModAttachments.STATS).spent()
+        );
+    }
+
     public static int addEp(ServerPlayer player, int baseEp) {
         if (baseEp <= 0) {
             return 0;
@@ -28,10 +41,10 @@ public final class ProgressManager {
         WispProgress current = player.getData(ModAttachments.PROGRESS);
         int newTotalEp = Math.max(0, current.totalEp() + gainedEp);
         List<Integer> thresholds = WispbornConfig.levelThresholds();
-        int oldLevel = current.level();
+        int oldLevel = LevelCurve.levelFor(current.totalEp(), thresholds);
         int newLevel = LevelCurve.levelFor(newTotalEp, thresholds);
 
-        player.setData(ModAttachments.PROGRESS, new WispProgress(newTotalEp, newLevel));
+        player.setData(ModAttachments.PROGRESS, new WispProgress(newTotalEp));
 
         if (newLevel > oldLevel) {
             int pointsGained = (newLevel - oldLevel) * WispbornConfig.POINTS_PER_LEVEL.get();
@@ -61,28 +74,29 @@ public final class ProgressManager {
     }
 
     public static void setEp(ServerPlayer player, int total) {
-        int clampedTotal = Math.max(0, total);
-        int newLevel = LevelCurve.levelFor(clampedTotal, WispbornConfig.levelThresholds());
-        player.setData(ModAttachments.PROGRESS, new WispProgress(clampedTotal, newLevel));
+        player.setData(ModAttachments.PROGRESS, new WispProgress(Math.max(0, total)));
+        validateStats(player);
+    }
 
-        WispStats stats = player.getData(ModAttachments.STATS);
-        int available = StatMath.availablePoints(newLevel, WispbornConfig.POINTS_PER_LEVEL.get(), stats.spent());
-        if (available < 0) {
+    /**
+     * Garante que nunca haja pontos negativos: se o nível caiu (por {@code ep set} ou por mudança na curva
+     * do config), zera os atributos e avisa o jogador.
+     */
+    public static void validateStats(ServerPlayer player) {
+        if (availablePoints(player) < 0) {
             resetStats(player);
             player.sendSystemMessage(Component.translatable("wispborn.stat.auto_reset"));
         }
     }
 
     public static AllocateResult allocate(ServerPlayer player, Stat stat) {
-        WispProgress progress = player.getData(ModAttachments.PROGRESS);
         WispStats stats = player.getData(ModAttachments.STATS);
         int currentPoints = stats.get(stat);
         if (currentPoints >= WispbornConfig.MAX_PER_STAT.get()) {
             return AllocateResult.MAXED;
         }
 
-        int available = StatMath.availablePoints(progress.level(), WispbornConfig.POINTS_PER_LEVEL.get(), stats.spent());
-        if (available <= 0) {
+        if (availablePoints(player) <= 0) {
             return AllocateResult.NO_POINTS;
         }
 
@@ -145,31 +159,25 @@ public final class ProgressManager {
         return true;
     }
 
+    /** EP para exibição: {@code 450/800}, ou {@code 18450 · máx} no nível máximo. */
+    public static Component epDisplay(ServerPlayer player) {
+        int totalEp = player.getData(ModAttachments.PROGRESS).totalEp();
+        OptionalInt nextThreshold = LevelCurve.nextThreshold(totalEp, WispbornConfig.levelThresholds());
+        return nextThreshold.isPresent()
+                ? Component.literal(totalEp + "/" + nextThreshold.getAsInt())
+                : Component.translatable("wispborn.hud.max", totalEp);
+    }
+
     public static Component buildWispHud(ServerPlayer player) {
-        WispProgress progress = player.getData(ModAttachments.PROGRESS);
-        WispStats stats = player.getData(ModAttachments.STATS);
-        OptionalInt nextThreshold = LevelCurve.nextThreshold(progress.totalEp(), WispbornConfig.levelThresholds());
-
-        Component epComponent = nextThreshold.isPresent()
-                ? Component.literal(progress.totalEp() + "/" + nextThreshold.getAsInt())
-                : Component.translatable("wispborn.hud.max", progress.totalEp());
-
-        int currentMana = Math.round(getMana(player));
-        int maxMana = getMaxMana(player);
-
         MutableComponent hud = Component.translatable(
                 "wispborn.hud.wisp",
-                progress.level(),
-                epComponent,
-                currentMana,
-                maxMana
+                level(player),
+                epDisplay(player),
+                Math.round(getMana(player)),
+                getMaxMana(player)
         );
 
-        int availablePoints = StatMath.availablePoints(
-                progress.level(),
-                WispbornConfig.POINTS_PER_LEVEL.get(),
-                stats.spent()
-        );
+        int availablePoints = availablePoints(player);
         if (availablePoints > 0) {
             hud.append(Component.translatable("wispborn.hud.points", availablePoints));
         }

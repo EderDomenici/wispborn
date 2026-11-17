@@ -21,5 +21,8 @@
   "commands.wispborn.stat.reset.success": "Atributos de %s zerados",
   "commands.wispborn.mana.set.success": "Mana de %s definida para %s/%s",
   "commands.wispborn.info.header": "[%s] Forma: %s | Nv: %s | EP: %s | Pontos: %s | Mana: %s/%s | Tier máx: %s",
-  "commands.wispborn.info.stats": "%s: %s/%s (%s) | %s: %s/%s (%s) | %s: %s/%s (%s máx) | %s: %s/%s (+%s corações)"
+  "commands.wispborn.info.stats": "%s: %s/%s (%s) | %s: %s/%s (%s) | %s: %s/%s (%s máx) | %s: %s/%s (+%s corações)",
+  "wispborn.form.human": "Humano",
+  "wispborn.form.wisp": "Wisp",
+  "wispborn.form.host": "Hospedeiro"
 }

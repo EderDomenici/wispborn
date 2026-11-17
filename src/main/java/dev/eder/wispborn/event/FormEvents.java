@@ -55,6 +55,8 @@ public final class FormEvents {
         if (serverPlayer.tickCount % 20 != 0) {
             return;
         }
+        // Cobre login e recarga do config: se a curva nova baixou o nível, zera os atributos excedentes.
+        ProgressManager.validateStats(serverPlayer);
         if (FormManager.isWisp(serverPlayer)) {
             float regen = (float) WispbornConfig.MANA_REGEN_PER_SECOND.getAsDouble();
             ProgressManager.addMana(serverPlayer, regen);

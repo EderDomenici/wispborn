@@ -11,7 +11,6 @@ import dev.eder.wispborn.form.FormState;
 import dev.eder.wispborn.form.WispAnimatable;
 import dev.eder.wispborn.form.WispAnimations;
 import dev.eder.wispborn.progress.AllocateResult;
-import dev.eder.wispborn.progress.LevelCurve;
 import dev.eder.wispborn.progress.ProgressManager;
 import dev.eder.wispborn.progress.Stat;
 import dev.eder.wispborn.progress.StatMath;
@@ -31,7 +30,6 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.OptionalInt;
 
 public final class WispbornCommand {
     private static final SuggestionProvider<CommandSourceStack> STAT_SUGGESTIONS =
@@ -104,9 +102,13 @@ public final class WispbornCommand {
         source.sendSuccess(() -> Component.translatable(
                 "commands.wispborn.form.success",
                 target.getDisplayName(),
-                state.type().getSerializedName()
+                Component.translatable(formKey(state))
         ), true);
         return 1;
+    }
+
+    private static String formKey(FormState state) {
+        return "wispborn.form." + state.type().getSerializedName();
     }
 
     private static int playPossess(CommandSourceStack source, ServerPlayer target) {
@@ -122,12 +124,13 @@ public final class WispbornCommand {
     private static int addEp(CommandSourceStack source, ServerPlayer target, int baseEp) {
         int gained = ProgressManager.addEp(target, baseEp);
         WispProgress progress = target.getData(ModAttachments.PROGRESS);
+        int level = ProgressManager.level(target);
         source.sendSuccess(() -> Component.translatable(
                 "commands.wispborn.ep.add.success",
                 gained,
                 target.getDisplayName(),
                 progress.totalEp(),
-                progress.level()
+                level
         ), true);
         return 1;
     }
@@ -135,11 +138,12 @@ public final class WispbornCommand {
     private static int setEp(CommandSourceStack source, ServerPlayer target, int totalEp) {
         ProgressManager.setEp(target, totalEp);
         WispProgress progress = target.getData(ModAttachments.PROGRESS);
+        int level = ProgressManager.level(target);
         source.sendSuccess(() -> Component.translatable(
                 "commands.wispborn.ep.set.success",
                 target.getDisplayName(),
                 progress.totalEp(),
-                progress.level()
+                level
         ), true);
         return 1;
     }
@@ -204,23 +208,15 @@ public final class WispbornCommand {
 
     private static int showInfo(CommandSourceStack source, ServerPlayer target) {
         FormState form = target.getData(ModAttachments.FORM);
-        WispProgress progress = target.getData(ModAttachments.PROGRESS);
         WispStats stats = target.getData(ModAttachments.STATS);
 
-        OptionalInt nextThreshold = LevelCurve.nextThreshold(progress.totalEp(), WispbornConfig.levelThresholds());
-        String epDisplay = nextThreshold.isPresent()
-                ? progress.totalEp() + "/" + nextThreshold.getAsInt()
-                : progress.totalEp() + " (max)";
-
-        int availablePoints = StatMath.availablePoints(
-                progress.level(),
-                WispbornConfig.POINTS_PER_LEVEL.get(),
-                stats.spent()
-        );
+        int level = ProgressManager.level(target);
+        Component epDisplay = ProgressManager.epDisplay(target);
+        int availablePoints = ProgressManager.availablePoints(target);
         int maxStat = WispbornConfig.MAX_PER_STAT.get();
         int currentMana = Math.round(ProgressManager.getMana(target));
         int maxMana = ProgressManager.getMaxMana(target);
-        int maxTier = TierResolver.maxTierFor(progress.level(), WispbornConfig.tiersMinLevel());
+        int maxTier = TierResolver.maxTierFor(level, WispbornConfig.tiersMinLevel());
 
         double drainPct = StatMath.drainPercent(
                 WispbornConfig.DRAIN_BASE_PERCENT_PER_PULSE.get(),
@@ -236,8 +232,8 @@ public final class WispbornCommand {
         source.sendSuccess(() -> Component.translatable(
                 "commands.wispborn.info.header",
                 target.getDisplayName(),
-                form.type().getSerializedName(),
-                progress.level(),
+                Component.translatable(formKey(form)),
+                level,
                 epDisplay,
                 availablePoints,
                 currentMana,

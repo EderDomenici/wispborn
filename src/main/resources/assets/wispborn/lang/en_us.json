@@ -21,5 +21,8 @@
   "commands.wispborn.stat.reset.success": "Reset all stats for %s",
   "commands.wispborn.mana.set.success": "Set %s mana to %s/%s",
   "commands.wispborn.info.header": "[%s] Form: %s | Lv: %s | EP: %s | Points: %s | Mana: %s/%s | Max Tier: %s",
-  "commands.wispborn.info.stats": "%s: %s/%s (%s) | %s: %s/%s (%s) | %s: %s/%s (%s max) | %s: %s/%s (+%s hearts)"
+  "commands.wispborn.info.stats": "%s: %s/%s (%s) | %s: %s/%s (%s) | %s: %s/%s (%s max) | %s: %s/%s (+%s hearts)",
+  "wispborn.form.human": "Human",
+  "wispborn.form.wisp": "Wisp",
+  "wispborn.form.host": "Host"
 }
