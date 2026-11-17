@@ -10,6 +10,7 @@ import dev.eder.wispborn.form.FormManager;
 import dev.eder.wispborn.form.FormState;
 import dev.eder.wispborn.form.WispAnimatable;
 import dev.eder.wispborn.form.WispAnimations;
+import dev.eder.wispborn.host.HostManager;
 import dev.eder.wispborn.progress.AllocateResult;
 import dev.eder.wispborn.progress.ProgressManager;
 import dev.eder.wispborn.progress.Stat;
@@ -98,6 +99,11 @@ public final class WispbornCommand {
     }
 
     private static int setForm(CommandSourceStack source, ServerPlayer target, FormState state) {
+        if (HostManager.isHost(target)) {
+            HostManager.release(target, HostManager.Reason.LOGOUT);
+        } else {
+            HostManager.clearPending(target);
+        }
         FormManager.setForm(target, state);
         source.sendSuccess(() -> Component.translatable(
                 "commands.wispborn.form.success",

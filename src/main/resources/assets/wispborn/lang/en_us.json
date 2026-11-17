@@ -1,5 +1,8 @@
 {
   "item.wispborn.wisp_essence": "Wisp Essence",
+  "wispborn.form.human": "Human",
+  "wispborn.form.wisp": "Wisp",
+  "wispborn.form.host": "Host",
   "wispborn.stat.absorption": "Absorption",
   "wispborn.stat.efficiency": "Efficiency",
   "wispborn.stat.reserve": "Mana Reserve",
@@ -12,6 +15,15 @@
   "wispborn.hud.wisp": "Wisp · Lv %s · EP %s · Mana %s/%s",
   "wispborn.hud.max": "%s · max",
   "wispborn.hud.points": " · %s pts",
+  "wispborn.hud.host": "Host: %s · %s%%",
+  "wispborn.infest.immune": "This creature is immune to possession.",
+  "wispborn.infest.has_passenger": "This creature is already occupied.",
+  "wispborn.infest.too_strong": "Too strong (Tier %s, requires Lv %s)",
+  "wispborn.infest.no_mana": "Not enough mana: %s/%s",
+  "wispborn.infest.cancelled": "Possession interrupted.",
+  "wispborn.infest.ok": "Possessing %s",
+  "wispborn.host.died": "Your host died! You were expelled.",
+  "wispborn.host.left": "You left the host.",
   "commands.wispborn.form.success": "Set %s form to %s",
   "commands.wispborn.anim.success": "Triggered animation '%s' on %s",
   "commands.wispborn.ep.add.success": "Added %s EP to %s (Total: %s, Level: %s)",
@@ -21,8 +33,5 @@
   "commands.wispborn.stat.reset.success": "Reset all stats for %s",
   "commands.wispborn.mana.set.success": "Set %s mana to %s/%s",
   "commands.wispborn.info.header": "[%s] Form: %s | Lv: %s | EP: %s | Points: %s | Mana: %s/%s | Max Tier: %s",
-  "commands.wispborn.info.stats": "%s: %s/%s (%s) | %s: %s/%s (%s) | %s: %s/%s (%s max) | %s: %s/%s (+%s hearts)",
-  "wispborn.form.human": "Human",
-  "wispborn.form.wisp": "Wisp",
-  "wispborn.form.host": "Host"
+  "commands.wispborn.info.stats": "%s: %s/%s (%s) | %s: %s/%s (%s) | %s: %s/%s (%s max) | %s: %s/%s (+%s hearts)"
 }

@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import dev.eder.wispborn.command.WispbornCommand;
 import dev.eder.wispborn.config.WispbornConfig;
 import dev.eder.wispborn.event.FormEvents;
+import dev.eder.wispborn.event.HostEvents;
 import dev.eder.wispborn.event.WispRestrictions;
 import dev.eder.wispborn.event.WispSounds;
 import dev.eder.wispborn.form.WispAnimatable;
@@ -35,6 +36,7 @@ public class WispbornMod {
         modEventBus.addListener(ModPayloads::register);
 
         NeoForge.EVENT_BUS.register(FormEvents.class);
+        NeoForge.EVENT_BUS.register(HostEvents.class);
         NeoForge.EVENT_BUS.register(WispRestrictions.class);
         NeoForge.EVENT_BUS.register(WispSounds.class);
         NeoForge.EVENT_BUS.register(WispbornCommand.class);

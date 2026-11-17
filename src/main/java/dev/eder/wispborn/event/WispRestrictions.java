@@ -28,26 +28,25 @@ public final class WispRestrictions {
 
     @SubscribeEvent
     public static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
-        if (FormManager.isParasite(event.getEntity()) && !event.getItemStack().is(ModItems.WISP_ESSENCE.get())) {
-            event.setCanceled(true);
-        }
-    }
-
-    @SubscribeEvent
-    public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
         if (FormManager.isParasite(event.getEntity())) {
-            if (event.getItemStack().is(ModItems.WISP_ESSENCE.get())) {
-                event.setUseBlock(TriState.FALSE);
-            } else {
+            boolean canUseEssence = FormManager.isWisp(event.getEntity())
+                    && event.getItemStack().is(ModItems.WISP_ESSENCE.get());
+            if (!canUseEssence) {
                 event.setCanceled(true);
             }
         }
     }
 
     @SubscribeEvent
-    public static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
+    public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
         if (FormManager.isParasite(event.getEntity())) {
-            event.setCanceled(true);
+            boolean canUseEssence = FormManager.isWisp(event.getEntity())
+                    && event.getItemStack().is(ModItems.WISP_ESSENCE.get());
+            if (canUseEssence) {
+                event.setUseBlock(TriState.FALSE);
+            } else {
+                event.setCanceled(true);
+            }
         }
     }
 }

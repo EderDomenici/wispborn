@@ -1,5 +1,8 @@
 {
   "item.wispborn.wisp_essence": "Essência de Wisp",
+  "wispborn.form.human": "Humano",
+  "wispborn.form.wisp": "Wisp",
+  "wispborn.form.host": "Hospedeiro",
   "wispborn.stat.absorption": "Absorção",
   "wispborn.stat.efficiency": "Eficiência",
   "wispborn.stat.reserve": "Reserva de mana",
@@ -12,6 +15,15 @@
   "wispborn.hud.wisp": "Wisp · Nv %s · EP %s · Mana %s/%s",
   "wispborn.hud.max": "%s · máx",
   "wispborn.hud.points": " · %s pts",
+  "wispborn.hud.host": "Hospedeiro: %s · %s%%",
+  "wispborn.infest.immune": "Esta criatura é imune à possessão.",
+  "wispborn.infest.has_passenger": "Esta criatura já possui um passageiro.",
+  "wispborn.infest.too_strong": "Forte demais (tier %s, Nv %s)",
+  "wispborn.infest.no_mana": "Mana insuficiente: %s/%s",
+  "wispborn.infest.cancelled": "Possessão interrompida.",
+  "wispborn.infest.ok": "Possuindo %s",
+  "wispborn.host.died": "O hospedeiro morreu! Você foi expulso.",
+  "wispborn.host.left": "Você saiu do hospedeiro.",
   "commands.wispborn.form.success": "Forma de %s alterada para %s",
   "commands.wispborn.anim.success": "Animação '%s' disparada em %s",
   "commands.wispborn.ep.add.success": "+%s EP para %s (Total: %s, Nível: %s)",
@@ -21,8 +33,5 @@
   "commands.wispborn.stat.reset.success": "Atributos de %s zerados",
   "commands.wispborn.mana.set.success": "Mana de %s definida para %s/%s",
   "commands.wispborn.info.header": "[%s] Forma: %s | Nv: %s | EP: %s | Pontos: %s | Mana: %s/%s | Tier máx: %s",
-  "commands.wispborn.info.stats": "%s: %s/%s (%s) | %s: %s/%s (%s) | %s: %s/%s (%s máx) | %s: %s/%s (+%s corações)",
-  "wispborn.form.human": "Humano",
-  "wispborn.form.wisp": "Wisp",
-  "wispborn.form.host": "Hospedeiro"
+  "commands.wispborn.info.stats": "%s: %s/%s (%s) | %s: %s/%s (%s) | %s: %s/%s (%s máx) | %s: %s/%s (+%s corações)"
 }

@@ -3,6 +3,7 @@ package dev.eder.wispborn.event;
 import dev.eder.wispborn.config.WispbornConfig;
 import dev.eder.wispborn.form.FormManager;
 import dev.eder.wispborn.form.FormState;
+import dev.eder.wispborn.host.HostManager;
 import dev.eder.wispborn.network.SyncFormPayload;
 import dev.eder.wispborn.progress.ProgressManager;
 import dev.eder.wispborn.registry.ModAttachments;
@@ -19,6 +20,7 @@ public final class FormEvents {
     @SubscribeEvent
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer serverPlayer) {
+            HostManager.ensureValidHostState(serverPlayer);
             FormManager.applyModifiers(serverPlayer);
             FormManager.sync(serverPlayer);
         }
@@ -27,6 +29,7 @@ public final class FormEvents {
     @SubscribeEvent
     public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
         if (event.getEntity() instanceof ServerPlayer serverPlayer) {
+            HostManager.ensureValidHostState(serverPlayer);
             FormManager.applyModifiers(serverPlayer);
             FormManager.sync(serverPlayer);
         }
