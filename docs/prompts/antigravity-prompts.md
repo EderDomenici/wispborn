@@ -56,6 +56,34 @@ Não faça merge.
 
 ---
 
+## Prompt 2b — M1b (modelo e animações do wisp com GeckoLib)
+
+Só depois do merge do M1 na `main`.
+
+```
+Implemente a spec docs/specs/M1b-wisp-model.md do mod Wispborn.
+
+Antes de editar, releia AGENTS.md, .agents/rules/neoforge-1.21.1.md, .agents/rules/geckolib-4.9.md
+e docs/ART_PIPELINE.md. As seções PROIBIDO das duas regras são obrigatórias. O GeckoLib muda muito
+de API entre versões: use só o que existe na 4.9.3 (se não achar no jar, pare e escreva a dúvida).
+
+Execute o workflow /implement-spec para M1b-wisp-model.
+
+Pontos críticos desta spec:
+- Faça PRIMEIRO a tarefa 0 (prova de conceito: modelo + idle no lugar do jogador). Se falhar,
+  pare e registre em "Dúvidas do implementador" com log/print, sem tentar contornar com outra lib.
+- WispAnimatable e WispAnimations são código comum: nada de import de client/.
+  Renderer e modelo ficam em client/. Confirme com ./gradlew runServer.
+- Copie os assets de art/parasita-magico/ sem editar o conteúdo e remova wisp_core.png/wisp_halo.png.
+- Não use withScale para compensar a hitbox: o renderer já aplica o atributo SCALE.
+
+Ao terminar: ./gradlew build, ./gradlew test e ./gradlew runServer (até "Done") sem erro.
+Preencha o "Relatório de implementação" e abra o PR com o checklist manual da spec no corpo.
+Não faça merge.
+```
+
+---
+
 ## Prompts 3 a 7 — M2 a M6 (mesmo modelo)
 
 Troque `<SPEC>` por `M2-level-stats`, `M3-possession`, `M4-drain`, `M5-consume` ou `M6-stats-screen`, sempre em ordem

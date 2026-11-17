@@ -38,6 +38,7 @@ Todos os números ficam em config de servidor.
 |---|---|---|
 | M0 | `specs/M0-setup.md` | Projeto, CI, AGENTS.md, client2 |
 | M1 | `specs/M1-wisp-form.md` | Forma wisp + sync |
+| M1b | `specs/M1b-wisp-model.md` | GeckoLib, modelo e animações do wisp, tamanho +20% |
 | M2 | `specs/M2-level-stats.md` | EP, nível, tiers, pontos, atributos, mana, config, HUD |
 | M3 | `specs/M3-possession.md` | Possessão como passageiro, custo de mana, saídas |
 | M4 | `specs/M4-drain.md` | Drenagem até 20% + EP passivo |

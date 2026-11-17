@@ -13,7 +13,13 @@ de forma limpa.
    - `TierResolver.tierOf(alvo)` presente → senão `wispborn.infest.immune`;
    - `tier ≤ maxTierFor(nível)` → senão `wispborn.infest.too_strong` (mostra tier e nível necessário);
    - `mana ≥ infestCostPerTier × tier` → senão `wispborn.infest.no_mana` (`Mana insuficiente: 12/30`).
-3. Sucesso:
+3. Animação de possessão (M1b): validações ok → `WispAnimatable.playPossess(player)` (animação `attack`, 0,8 s)
+   e a possessão só se completa **16 ticks depois** (o render da forma HOST esconde o wisp, então a
+   animação precisa tocar antes). No fim da espera, revalidar tudo da regra 2 (mob vivo, sem passageiro,
+   distância ≤ 4 blocos, mana) e o jogador continuar WISP; se algo falhar, cancela sem gastar mana.
+   Uma possessão pendente por jogador (guardar alvo + tick de início no servidor, não em attachment).
+   Detalhes (onde guardar o pendente, mensagem de cancelamento) ficam com o implementador do M3.
+   Sucesso:
    - `ProgressManager.spendMana(player, custo)`;
    - `player.startRiding(mob, true)`;
    - `FormManager.setForm(player, FormState.host(<id do tipo do mob>))`;
