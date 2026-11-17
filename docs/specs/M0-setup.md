@@ -34,7 +34,7 @@
     Um teste trivial (`SanityTest`) para provar que `./gradlew test` roda.
 
 ## Critérios de aceite
-- [x] `./gradlew build` verde localmente e no CI.
+- [ ] `./gradlew build` verde localmente e no CI. (local OK; CI ainda não executado — repositório sem remote)
 - [ ] `./gradlew runClient` abre o jogo; o mod "Wispborn" aparece na lista de mods.
 - [x] `./gradlew runServer` sobe sem crash (aceitar EULA em `run/eula.txt`).
 - [x] Nenhum resto do mod de exemplo (`examplemod`, `EXAMPLE_BLOCK` etc.).
@@ -54,7 +54,8 @@ Nenhuma dúvida.
   - `src/test/java/dev/eder/wispborn/SanityTest.java`: teste unitário JUnit 5 validando `WispbornMod.MOD_ID`.
 - **Decisões tomadas:**
   - Removido completamente o pacote `com.example.examplemod` e os recursos `assets/examplemod`.
-  - Mantido `neo_version` e `neoforge_version` sincronizados em `21.1.266` no `gradle.properties`.
+  - `neoforge_version=21.1.266` é a única fonte da versão do NeoForge; `neo_version` foi removido do `gradle.properties` e o `build.gradle` repassa `neoforge_version` ao template do `neoforge.mods.toml` como `neo_version`.
+  - Fora do escopo da spec (documentado no CHANGELOG): `org.gradle.jvmargs` de `-Xmx1G` para `-Xmx2G`, remoção dos comentários do MDK em `build.gradle`/`gradle.properties` e `.gradle` → `.gradle/` no `.gitignore`.
 - **Saída final de `./gradlew build`:**
   ```text
   > Task :jar
@@ -82,3 +83,4 @@ Nenhuma dúvida.
   ```
 - **Pendências manuais:**
   - Validação visual do cliente (`./gradlew runClient`) por Eder.
+  - Primeira execução do workflow de CI (requer configurar remote e fazer push).

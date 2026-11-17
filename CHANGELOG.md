@@ -21,9 +21,9 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 
 | Arquivo | Ação | Detalhes da Implementação |
 |---|---|---|
-| `gradle.properties` | Modificado | Configurado `mod_id=wispborn`, `mod_name=Wispborn`, `mod_group_id=dev.eder.wispborn`, `mod_version=0.0.1`, `mod_license=MIT`, `mod_authors=Eder`, `minecraft_version=1.21.1`, `neo_version=21.1.266`, `neoforge_version=21.1.266`, `parchment_minecraft_version=1.21.1` e `parchment_mappings_version=2024.11.17`. |
-| `build.gradle` | Modificado | Adicionada run config `client2` (`--username Player2`, diretório `run-client2`); configuradas dependências `org.junit.jupiter:junit-jupiter:5.10.2` e `org.junit.platform:junit-platform-launcher` com `test { useJUnitPlatform() }`; incluído `mod_authors` no `generateModMetadata`. |
-| `.gitignore` | Modificado | Mantidos padrões do MDK (`run/`, `.idea/`, `*.iml`, `.gradle/`, `build/`) e adicionado `run-client2/`. |
+| `gradle.properties` | Modificado | Configurado `mod_id=wispborn`, `mod_name=Wispborn`, `mod_group_id=dev.eder.wispborn`, `mod_version=0.0.1`, `mod_license=MIT`, `mod_authors=Eder`, `minecraft_version=1.21.1`, `neoforge_version=21.1.266`, `parchment_minecraft_version=1.21.1` e `parchment_mappings_version=2024.11.17`. A antiga `neo_version` foi removida: `neoforge_version` é a única fonte da versão do NeoForge. |
+| `build.gradle` | Modificado | `neoForge.version` passa a ler `neoforge_version`, que é repassada ao template do `mods.toml` como `neo_version`; adicionada run config `client2` (`--username Player2`, diretório `run-client2`); configuradas dependências `org.junit.jupiter:junit-jupiter:5.10.2` e `org.junit.platform:junit-platform-launcher` com `test { useJUnitPlatform() }`; incluído `mod_authors` no `generateModMetadata`. |
+| `.gitignore` | Modificado | Mantidos padrões do MDK (`run/`, `.idea/`, `*.iml`, `build/`), `.gradle` passou a `.gradle/` e adicionado `run-client2/`. |
 | `.github/workflows/build.yml` | Modificado | Configurado com `actions/checkout@v4`, `actions/setup-java@v4` (Temurin 21), `gradle/actions/setup-gradle@v4`, comando `./gradlew build --no-daemon` e upload de `build/libs/*.jar` via `actions/upload-artifact@v4`. |
 | `src/main/templates/META-INF/neoforge.mods.toml` | Modificado | Removidos comentários e referências a `examplemod`; vinculado `authors="${mod_authors}"` e descrição do mod Wispborn. |
 | `src/main/java/dev/eder/wispborn/WispbornMod.java` | Criado | Classe principal `@Mod(WispbornMod.MOD_ID)` com `public static final String MOD_ID = "wispborn";` sem blocos/itens/configs de exemplo. |
@@ -58,4 +58,17 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
   [20:58:18] [Server thread/INFO] [minecraft/DedicatedServer]: Done (4.337s)! For help, type "help"
   [20:58:18] [Server thread/INFO] [ne.ne.ne.ga.GameTestHooks/]: Enabled Gametest Namespaces: [wispborn]
   ```
-- **Varredura de resíduos (`git grep -i example`):** zero ocorrências em código, recursos ou configs.
+- **Varredura de resíduos (`git grep -i example`):** zero ocorrências em código, recursos ou configs do mod (a única ocorrência restante é texto do script `gradlew`, do wrapper do Gradle).
+
+### 4. Alterações fora do escopo da spec
+Feitas durante a implementação sem estarem na spec M0. Registradas aqui para auditoria; nenhuma altera comportamento do mod.
+
+| Arquivo | Alteração | Motivo / impacto |
+|---|---|---|
+| `gradle.properties` | `org.gradle.jvmargs` de `-Xmx1G` para `-Xmx2G` | Motivo não registrado pelo implementador; provavelmente dar mais memória ao Gradle na decompilação/recompilação do Minecraft. Afeta só o ambiente de build. |
+| `build.gradle`, `gradle.properties` | Remoção de todos os comentários explicativos do MDK | Limpeza de template. Sem efeito funcional; os comentários continuam disponíveis no MDK original. |
+| `.gitignore` | `.gradle` → `.gradle/` | Ignora só o diretório. Sem efeito prático no repositório. |
+
+### 5. Pendências
+- [ ] **CI:** o workflow nunca foi executado — o repositório ainda não tem remote. O critério "build verde no CI" da spec continua em aberto até o primeiro push.
+- [ ] **`./gradlew runClient`:** validação visual (mod "Wispborn" na lista de mods) a cargo de Eder.
