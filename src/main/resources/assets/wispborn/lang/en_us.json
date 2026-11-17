@@ -1,1 +1,4 @@
-{}
+{
+  "item.wispborn.wisp_essence": "Wisp Essence",
+  "commands.wispborn.form.success": "Set %s form to %s"
+}
