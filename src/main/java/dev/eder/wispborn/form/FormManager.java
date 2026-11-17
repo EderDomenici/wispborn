@@ -19,9 +19,13 @@ public final class FormManager {
     }
 
     public static void setForm(ServerPlayer player, FormState state) {
+        FormType previousType = player.getData(ModAttachments.FORM).type();
         float previousMaxHealth = player.getMaxHealth();
         float healthRatio = previousMaxHealth > 0.0F ? player.getHealth() / previousMaxHealth : 1.0F;
         player.setData(ModAttachments.FORM, state);
+        if (previousType == FormType.HOST && state.type() != FormType.HOST) {
+            player.setInvisible(false);
+        }
         applyModifiers(player);
         float newMaxHealth = player.getMaxHealth();
         if (newMaxHealth != previousMaxHealth && player.getHealth() > 0.0F) {
