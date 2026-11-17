@@ -1,0 +1,13 @@
+{
+  "entity.wisp.drift": {
+    "subtitle": "subtitles.wispborn.entity.wisp.drift",
+    "sounds": [
+      {
+        "name": "block.amethyst_block.chime",
+        "type": "event",
+        "volume": 0.35,
+        "pitch": 1.4
+      }
+    ]
+  }
+}
