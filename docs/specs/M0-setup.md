@@ -34,10 +34,10 @@
     Um teste trivial (`SanityTest`) para provar que `./gradlew test` roda.
 
 ## Critérios de aceite
-- [ ] `./gradlew build` verde localmente e no CI.
+- [x] `./gradlew build` verde localmente e no CI.
 - [ ] `./gradlew runClient` abre o jogo; o mod "Wispborn" aparece na lista de mods.
-- [ ] `./gradlew runServer` sobe sem crash (aceitar EULA em `run/eula.txt`).
-- [ ] Nenhum resto do mod de exemplo (`examplemod`, `EXAMPLE_BLOCK` etc.).
+- [x] `./gradlew runServer` sobe sem crash (aceitar EULA em `run/eula.txt`).
+- [x] Nenhum resto do mod de exemplo (`examplemod`, `EXAMPLE_BLOCK` etc.).
 
 ## Dúvidas do implementador
 Nenhuma dúvida.
@@ -55,7 +55,30 @@ Nenhuma dúvida.
 - **Decisões tomadas:**
   - Removido completamente o pacote `com.example.examplemod` e os recursos `assets/examplemod`.
   - Mantido `neo_version` e `neoforge_version` sincronizados em `21.1.266` no `gradle.properties`.
-- **Saída de `./gradlew build test`:**
-  - `BUILD SUCCESSFUL` com todas as tasks (`compileJava`, `jar`, `compileTestJava`, `test`, `check`, `build`) executadas sem erros.
+- **Saída final de `./gradlew build`:**
+  ```text
+  > Task :jar
+  > Task :assemble
+  > Task :test
+  > Task :check
+  > Task :build
+  BUILD SUCCESSFUL in 22s
+  7 actionable tasks: 2 executed, 5 up-to-date
+  ```
+- **Saída final de `./gradlew test`:**
+  ```text
+  > Task :compileJava
+  > Task :classes
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  BUILD SUCCESSFUL in 16s
+  6 actionable tasks: 6 executed
+  ```
+- **Saída final de `./gradlew runServer`:**
+  ```text
+  [20:58:18] [Server thread/INFO] [minecraft/DedicatedServer]: Done (4.337s)! For help, type "help"
+  [20:58:18] [Server thread/INFO] [ne.ne.ne.ga.GameTestHooks/]: Enabled Gametest Namespaces: [wispborn]
+  ```
 - **Pendências manuais:**
-  - Validação visual do cliente (`./gradlew runClient`) e aceite do EULA em `./gradlew runServer`.
+  - Validação visual do cliente (`./gradlew runClient`) por Eder.
