@@ -1,7 +1,5 @@
 package dev.eder.wispborn.client;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import dev.eder.wispborn.WispbornMod;
 import dev.eder.wispborn.form.FormManager;
 import dev.eder.wispborn.form.FormState;
@@ -9,34 +7,28 @@ import dev.eder.wispborn.form.FormType;
 import dev.eder.wispborn.registry.ModAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
-import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RenderHandEvent;
 import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 
 @EventBusSubscriber(modid = WispbornMod.MOD_ID, value = Dist.CLIENT)
 public final class WispRenderHandler {
-    private static final ResourceLocation WISP_CORE_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(WispbornMod.MOD_ID, "textures/entity/wisp_core.png");
-    private static final ResourceLocation WISP_HALO_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(WispbornMod.MOD_ID, "textures/entity/wisp_halo.png");
-
-    private static final float CORE_RADIUS = 0.15F;
-    private static final float HALO_RADIUS = 0.35F;
-    private static final int HALO_ALPHA = 128;
+    private static WispPlayerRenderer renderer;
 
     private WispRenderHandler() {
+    }
+
+    @SubscribeEvent
+    public static void onAddLayers(EntityRenderersEvent.AddLayers event) {
+        renderer = new WispPlayerRenderer(event.getContext());
     }
 
     @SubscribeEvent
@@ -53,27 +45,20 @@ public final class WispRenderHandler {
 
         event.setCanceled(true);
 
+        if (renderer == null || player.isInvisible() || !(player instanceof AbstractClientPlayer clientPlayer)) {
+            return;
+        }
+
         float partialTick = event.getPartialTick();
-        float time = (player.tickCount + partialTick) * 0.12F;
-        float bobOffset = Mth.sin(time) * 0.08F;
-        float pulseScale = 1.0F + Mth.sin(time * 1.5F) * 0.08F;
-
-        PoseStack poseStack = event.getPoseStack();
-        MultiBufferSource bufferSource = event.getMultiBufferSource();
-        EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-
-        poseStack.pushPose();
-        poseStack.translate(0.0F, 0.35F + bobOffset, 0.0F);
-        poseStack.scale(pulseScale, pulseScale, pulseScale);
-        poseStack.mulPose(dispatcher.cameraOrientation());
-
-        PoseStack.Pose pose = poseStack.last();
-        drawBillboardQuad(bufferSource.getBuffer(RenderType.entityTranslucentEmissive(WISP_HALO_TEXTURE)),
-                pose, HALO_RADIUS, 0.0F, HALO_ALPHA);
-        drawBillboardQuad(bufferSource.getBuffer(RenderType.entityTranslucentEmissive(WISP_CORE_TEXTURE)),
-                pose, CORE_RADIUS, 0.005F, 255);
-
-        poseStack.popPose();
+        float yaw = Mth.lerp(partialTick, clientPlayer.yRotO, clientPlayer.getYRot());
+        renderer.render(
+                clientPlayer,
+                yaw,
+                partialTick,
+                event.getPoseStack(),
+                event.getMultiBufferSource(),
+                event.getPackedLight()
+        );
     }
 
     @SubscribeEvent
@@ -126,23 +111,5 @@ public final class WispRenderHandler {
                 );
             }
         }
-    }
-
-    private static void drawBillboardQuad(VertexConsumer consumer, PoseStack.Pose pose,
-                                          float radius, float zOffset, int alpha) {
-        addQuadVertex(consumer, pose, -radius, -radius, zOffset, 0.0F, 1.0F, alpha);
-        addQuadVertex(consumer, pose, radius, -radius, zOffset, 1.0F, 1.0F, alpha);
-        addQuadVertex(consumer, pose, radius, radius, zOffset, 1.0F, 0.0F, alpha);
-        addQuadVertex(consumer, pose, -radius, radius, zOffset, 0.0F, 0.0F, alpha);
-    }
-
-    private static void addQuadVertex(VertexConsumer consumer, PoseStack.Pose pose,
-                                      float x, float y, float z, float u, float v, int alpha) {
-        consumer.addVertex(pose, x, y, z)
-                .setColor(255, 255, 255, alpha)
-                .setUv(u, v)
-                .setOverlay(OverlayTexture.NO_OVERLAY)
-                .setLight(LightTexture.FULL_BRIGHT)
-                .setNormal(pose, 0.0F, 1.0F, 0.0F);
     }
 }
