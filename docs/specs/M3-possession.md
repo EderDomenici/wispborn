@@ -79,7 +79,45 @@ de forma limpa.
 Drenagem, EP por tempo, consumo, controlar o mob.
 
 ## Dúvidas do implementador
-_(preencher se houver)_
+Nenhuma dúvida.
 
 ## Relatório de implementação
-_(preencher ao terminar)_
+- **Arquivos criados/alterados:**
+  - `src/main/java/dev/eder/wispborn/host/InfestResult.java`: enum `OK, NOT_A_MOB, HAS_PASSENGER, IMMUNE, TOO_STRONG, NO_MANA`.
+  - `src/main/java/dev/eder/wispborn/host/InfestRules.java`: função pura `check(boolean isMob, boolean alive, boolean hasPassenger, OptionalInt tier, int maxTier, float mana, int costPerTier) → InfestResult`.
+  - `src/main/java/dev/eder/wispborn/host/HostManager.java`: `tryInfest` (validação inicial, disparo de `WispAnimatable.playPossess` e agendamento de 16 ticks em mapa em memória por `UUID`), `tick` (revalidação de distância ≤ 4 blocos, vida, passageiro, tier e mana ao fim dos 16 ticks; cobrança de mana, `startRiding(mob, true)`, `setForm(FormState.host(id))`, `setInvisible(true)`, som `ALLAY_ITEM_GIVEN`, partículas `END_ROD` e HUD da forma `HOST`), `release(ServerPlayer, Reason)` (idempotente, restaura `WISP`, `setInvisible(false)` e posiciona em `mob.getY() + mob.getBbHeight() + 0.1`), `hostOf(Player)` e `ensureValidHostState`.
+  - `src/main/java/dev/eder/wispborn/event/HostEvents.java`: listeners para `PlayerInteractEvent.EntityInteract`, `EntityMountEvent` (`SNEAK`), `LivingDeathEvent` (`HOST_DIED`), `PlayerLoggedOutEvent` (`LOGOUT`), `LivingIncomingDamageEvent` (invulnerabilidade exceto `BYPASSES_INVULNERABILITY`) e `PlayerTickEvent.Post`.
+  - `src/main/java/dev/eder/wispborn/event/WispRestrictions.java`: removido o listener de `EntityInteract` (transferido para `HostEvents`) e bloqueado o uso de `wisp_essence` enquanto na forma `HOST` (permitido apenas na forma `WISP`).
+  - `src/main/java/dev/eder/wispborn/event/FormEvents.java`: chamada a `HostManager.ensureValidHostState` em login e respawn (rede de segurança da regra 7).
+  - `src/main/java/dev/eder/wispborn/form/FormManager.java` e `command/WispbornCommand.java`: limpeza de invisibilidade/montaria caso a forma seja alterada via comando estando em `HOST`.
+  - `src/main/java/dev/eder/wispborn/WispbornMod.java`: registro de `HostEvents.class` no `NeoForge.EVENT_BUS`.
+  - `src/main/resources/assets/wispborn/lang/en_us.json` e `pt_br.json`: chaves `wispborn.infest.*`, `wispborn.host.died`, `wispborn.host.left` e `wispborn.hud.host`.
+  - `src/test/java/dev/eder/wispborn/host/InfestRulesTest.java`: suíte JUnit 5 cobrindo todos os casos e a precedência das validações de `InfestRules.check`.
+- **Decisões tomadas:**
+  - Quando o jogador sai com Shift (`Reason.SNEAK`), o `EntityMountEvent` dispara antes de `LivingEntity.dismountVehicle` reposicionar o passageiro no chão; por isso o `HostManager.release` agenda a coordenada do topo da hitbox (`mob.getY() + mob.getBbHeight() + 0.1`) para ser aplicada no `PlayerTickEvent.Post` do mesmo tick, garantindo que o wisp sempre apareça sobre o mob.
+  - Enquanto `HOST`, chamas residuais no jogador (`remainingFireTicks > 0`) são limpas em `HostManager.tick` para evitar overlay de fogo em primeira pessoa quando o hospedeiro queima ao sol ou passa por lava.
+- **Saída final de `./gradlew build`:**
+  ```text
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  > Task :check
+  > Task :build
+  BUILD SUCCESSFUL in 12s
+  ```
+- **Saída final de `./gradlew test`:**
+  ```text
+  > Task :compileJava
+  > Task :classes
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  BUILD SUCCESSFUL in 12s
+  ```
+- **Saída final de `./gradlew runServer`:**
+  ```text
+  [08:55:16] [Server thread/INFO] [minecraft/DedicatedServer]: Done (3.094s)! For help, type "help"
+  [08:55:16] [Server thread/INFO] [ne.ne.ne.ga.GameTestHooks/]: Enabled Gametest Namespaces: [wispborn]
+  ```
+- **Pendências:**
+  - Validação do checklist manual in-game por Eder (`runClient` / `runClient2`).

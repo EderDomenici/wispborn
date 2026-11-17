@@ -4,6 +4,74 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 
 ---
 
+## [M3-possession] — Possessão como Passageiro (`feat/M3-possession`)
+
+**Spec de referência:** `docs/specs/M3-possession.md`  
+**Commits:**
+- `580ae66` — `feat(host): implementar InfestResult, InfestRules e HostManager com animacao de 16 ticks`
+- `f5d36d3` — `feat(event): adicionar HostEvents, seguranca de login/respawn e traducoes de possessao`
+- `fd3c4d3` — `test(host): adicionar InfestRulesTest cobrindo precedencia das validacoes`  
+
+### 1. Resumo das Alterações (`main..feat/M3-possession`)
+- Implementação da validação pura de possessão (`InfestRules.check` → `InfestResult`) respeitando a ordem exata da spec (mob vivo → sem passageiro → tier presente → tier ≤ maxTier → mana suficiente), coberta por `InfestRulesTest`.
+- Implementação de `HostManager`: validação inicial em `tryInfest`, disparo de `WispAnimatable.playPossess(player)` com espera de 16 ticks em memória (`Map<UUID, PendingInfest>`), revalidação completa ao fim dos 16 ticks (incluindo distância ≤ 4 blocos), gasto de mana (`infestCostPerTier × tier`), montagem como passageiro invisível (`startRiding(mob, true)`, `FormState.host(id)`, `setInvisible(true)`), HUD na action bar (`Hospedeiro: <Mob> · <Vida>%`) e expulsão idempotente via `release(ServerPlayer, Reason)`.
+- Tratamento de todas as saídas e proteções em `HostEvents` e `FormEvents`: `SNEAK` (`EntityMountEvent`), `HOST_DIED` (`LivingDeathEvent`), `LOGOUT` (`PlayerLoggedOutEvent`), rede de segurança em login/respawn (`ensureValidHostState`) e invulnerabilidade na forma `HOST` (exceto `DamageTypeTags.BYPASSES_INVULNERABILITY`).
+
+### 2. Detalhamento por Arquivo
+
+| Arquivo | Ação | Detalhes da Implementação |
+|---|---|---|
+| `src/main/java/dev/eder/wispborn/host/InfestResult.java` | Criado | Enum `OK`, `NOT_A_MOB`, `HAS_PASSENGER`, `IMMUNE`, `TOO_STRONG`, `NO_MANA`. |
+| `src/main/java/dev/eder/wispborn/host/InfestRules.java` | Criado | Função pura `check(boolean isMob, boolean alive, boolean hasPassenger, OptionalInt tier, int maxTier, float mana, int costPerTier) → InfestResult`. |
+| `src/main/java/dev/eder/wispborn/host/HostManager.java` | Criado | `tryInfest`, `tick` (conclusão após 16 ticks + HUD a cada 20 ticks), `release(ServerPlayer, Reason)` (idempotente), `hostOf(Player)`, `isHost(Player)`, `ensureValidHostState` e `clearPending`. |
+| `src/main/java/dev/eder/wispborn/event/HostEvents.java` | Criado | Listeners no `NeoForge.EVENT_BUS` para `EntityInteract`, `EntityMountEvent`, `LivingDeathEvent`, `PlayerLoggedOutEvent`, `LivingIncomingDamageEvent` e `PlayerTickEvent.Post`. |
+| `src/main/java/dev/eder/wispborn/event/WispRestrictions.java` | Modificado | Removido `onEntityInteract` (substituído por `HostEvents.onEntityInteract`); restringido o uso de `wisp_essence` apenas à forma `WISP` (bloqueado em `HOST`). |
+| `src/main/java/dev/eder/wispborn/event/FormEvents.java` | Modificado | Adicionado `HostManager.ensureValidHostState(serverPlayer)` em `onPlayerLoggedIn` e `onPlayerRespawn`. |
+| `src/main/java/dev/eder/wispborn/form/FormManager.java` | Modificado | `setForm` limpa `setInvisible(false)` quando sai da forma `HOST`. |
+| `src/main/java/dev/eder/wispborn/command/WispbornCommand.java` | Modificado | `/wispborn form` chama `HostManager.release` se o alvo estiver em `HOST` antes de trocar a forma. |
+| `src/main/java/dev/eder/wispborn/WispbornMod.java` | Modificado | Registrado `HostEvents.class` no `NeoForge.EVENT_BUS`. |
+| `src/main/resources/assets/wispborn/lang/{en_us,pt_br}.json` | Modificado | Adicionadas chaves `wispborn.infest.*`, `wispborn.host.died`, `wispborn.host.left` e `wispborn.hud.host`. |
+| `src/test/java/dev/eder/wispborn/host/InfestRulesTest.java` | Criado | Testes unitários JUnit 5 validando todos os resultados e a ordem de avaliação de `InfestRules.check`. |
+| `docs/specs/M3-possession.md` | Modificado | Preenchido "Dúvidas do implementador" e "Relatório de implementação". |
+
+### 3. Evidências de Verificação
+
+- **`./gradlew build --no-daemon`:**
+  ```text
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  > Task :check
+  > Task :build
+  BUILD SUCCESSFUL in 12s
+  ```
+- **`./gradlew test --rerun-tasks --no-daemon`:**
+  ```text
+  > Task :compileJava
+  > Task :classes
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  BUILD SUCCESSFUL in 12s
+  ```
+- **`./gradlew runServer --no-daemon`:**
+  ```text
+  [08:55:16] [Server thread/INFO] [minecraft/DedicatedServer]: Done (3.094s)! For help, type "help"
+  [08:55:16] [Server thread/INFO] [ne.ne.ne.ga.GameTestHooks/]: Enabled Gametest Namespaces: [wispborn]
+  ```
+
+### 4. Alterações fora do escopo / Decisões de borda
+| Arquivo | Alteração / Decisão | Motivo / Impacto |
+|---|---|---|
+| `HostManager.java` | Aplicação da posição de saída de `Reason.SNEAK` no `PlayerTickEvent.Post` do mesmo tick (`PENDING_DISMOUNT_POS`) | No Minecraft 1.21.1, `EntityMountEvent` dispara dentro de `Entity.removeVehicle()` antes de `LivingEntity.dismountVehicle(vehicle)` calcular a posição lateral/chão do dismount. Reaplicar `teleportTo(mob.getX(), mob.getY() + mob.getBbHeight() + 0.1, mob.getZ())` no `PlayerTickEvent.Post` garante que o wisp sempre saia no topo da hitbox do mob. |
+| `HostManager.java` | `player.clearFire()` enquanto `isHost(player)` | Evita que o passageiro invisível fique com chamas visuais na tela ao possuir um zumbi queimando ao sol ou um mob em lava/fogo. |
+| `WispRestrictions.java` | `wisp_essence` liberada apenas quando `FormManager.isWisp`, não quando `HOST` | Impede que o jogador volte à forma humana ainda montado e invisível dentro de um hospedeiro. |
+
+### 5. Pendências
+- [ ] **Checklist manual in-game (`./gradlew runClient` / `runClient2`):** validação da possessão, IA do hospedeiro, invulnerabilidade e saídas a cargo de Eder.
+
+---
+
 ## [M2-level-stats] — Nível, Atributos e Mana (`feat/M2-level-stats`)
 
 **Spec de referência:** `docs/specs/M2-level-stats.md`  
