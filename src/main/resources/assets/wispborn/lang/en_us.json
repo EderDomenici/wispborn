@@ -1,5 +1,25 @@
 {
   "item.wispborn.wisp_essence": "Wisp Essence",
+  "wispborn.stat.absorption": "Absorption",
+  "wispborn.stat.efficiency": "Efficiency",
+  "wispborn.stat.reserve": "Mana Reserve",
+  "wispborn.stat.vitality": "Vitality",
+  "wispborn.level_up": "Level %s! +%s attribute points",
+  "wispborn.level_up.tier_unlocked": " (Tier %s unlocked!)",
+  "wispborn.stat.auto_reset": "Your level decreased; allocated attributes were reset.",
+  "wispborn.stat.allocate.no_points": "No available attribute points.",
+  "wispborn.stat.allocate.maxed": "%s is already at maximum (%s).",
+  "wispborn.hud.wisp": "Wisp · Lv %s · EP %s · Mana %s/%s",
+  "wispborn.hud.max": "%s · max",
+  "wispborn.hud.points": " · %s pts",
   "commands.wispborn.form.success": "Set %s form to %s",
-  "commands.wispborn.anim.success": "Triggered animation '%s' on %s"
+  "commands.wispborn.anim.success": "Triggered animation '%s' on %s",
+  "commands.wispborn.ep.add.success": "Added %s EP to %s (Total: %s, Level: %s)",
+  "commands.wispborn.ep.set.success": "Set %s EP to %s (Level: %s)",
+  "commands.wispborn.stat.invalid": "Unknown stat: %s",
+  "commands.wispborn.stat.add.success": "Allocated %s (%s/%s) for %s",
+  "commands.wispborn.stat.reset.success": "Reset all stats for %s",
+  "commands.wispborn.mana.set.success": "Set %s mana to %s/%s",
+  "commands.wispborn.info.header": "[%s] Form: %s | Lv: %s | EP: %s | Points: %s | Mana: %s/%s | Max Tier: %s",
+  "commands.wispborn.info.stats": "%s: %s/%s (%s) | %s: %s/%s (%s) | %s: %s/%s (%s max) | %s: %s/%s (+%s hearts)"
 }

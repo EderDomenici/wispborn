@@ -1,5 +1,25 @@
 {
   "item.wispborn.wisp_essence": "Essência de Wisp",
+  "wispborn.stat.absorption": "Absorção",
+  "wispborn.stat.efficiency": "Eficiência",
+  "wispborn.stat.reserve": "Reserva de mana",
+  "wispborn.stat.vitality": "Vitalidade",
+  "wispborn.level_up": "Nível %s! +%s pontos de atributo",
+  "wispborn.level_up.tier_unlocked": " (Tier %s liberado!)",
+  "wispborn.stat.auto_reset": "Seu nível diminuiu; os atributos distribuídos foram zerados.",
+  "wispborn.stat.allocate.no_points": "Sem pontos de atributo disponíveis.",
+  "wispborn.stat.allocate.maxed": "%s já está no máximo (%s).",
+  "wispborn.hud.wisp": "Wisp · Nv %s · EP %s · Mana %s/%s",
+  "wispborn.hud.max": "%s · máx",
+  "wispborn.hud.points": " · %s pts",
   "commands.wispborn.form.success": "Forma de %s alterada para %s",
-  "commands.wispborn.anim.success": "Animação '%s' disparada em %s"
+  "commands.wispborn.anim.success": "Animação '%s' disparada em %s",
+  "commands.wispborn.ep.add.success": "+%s EP para %s (Total: %s, Nível: %s)",
+  "commands.wispborn.ep.set.success": "EP de %s definido para %s (Nível: %s)",
+  "commands.wispborn.stat.invalid": "Atributo inválido: %s",
+  "commands.wispborn.stat.add.success": "%s aumentado para %s/%s em %s",
+  "commands.wispborn.stat.reset.success": "Atributos de %s zerados",
+  "commands.wispborn.mana.set.success": "Mana de %s definida para %s/%s",
+  "commands.wispborn.info.header": "[%s] Forma: %s | Nv: %s | EP: %s | Pontos: %s | Mana: %s/%s | Tier máx: %s",
+  "commands.wispborn.info.stats": "%s: %s/%s (%s) | %s: %s/%s (%s) | %s: %s/%s (%s máx) | %s: %s/%s (+%s corações)"
 }

@@ -1,12 +1,15 @@
 package dev.eder.wispborn.event;
 
+import dev.eder.wispborn.config.WispbornConfig;
 import dev.eder.wispborn.form.FormManager;
 import dev.eder.wispborn.form.FormState;
 import dev.eder.wispborn.network.SyncFormPayload;
+import dev.eder.wispborn.progress.ProgressManager;
 import dev.eder.wispborn.registry.ModAttachments;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public final class FormEvents {
@@ -41,6 +44,21 @@ public final class FormEvents {
         if (event.getTarget() instanceof ServerPlayer target && event.getEntity() instanceof ServerPlayer tracker) {
             FormState state = target.getData(ModAttachments.FORM);
             PacketDistributor.sendToPlayer(tracker, new SyncFormPayload(target.getId(), state));
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerTickPost(PlayerTickEvent.Post event) {
+        if (!(event.getEntity() instanceof ServerPlayer serverPlayer)) {
+            return;
+        }
+        if (serverPlayer.tickCount % 20 != 0) {
+            return;
+        }
+        if (FormManager.isWisp(serverPlayer)) {
+            float regen = (float) WispbornConfig.MANA_REGEN_PER_SECOND.getAsDouble();
+            ProgressManager.addMana(serverPlayer, regen);
+            serverPlayer.displayClientMessage(ProgressManager.buildWispHud(serverPlayer), true);
         }
     }
 }
