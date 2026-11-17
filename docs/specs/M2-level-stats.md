@@ -117,7 +117,53 @@ Reserva de mana, Vitalidade), mensagens dos comandos e de `AllocateResult`.
 Infestação, custo de mana em uso, drenagem, consumo, sync de progresso para o client, tela de atributos (M6).
 
 ## Dúvidas do implementador
-_(preencher se houver)_
+Nenhuma dúvida.
 
 ## Relatório de implementação
-_(preencher ao terminar)_
+- **Arquivos criados/alterados:**
+  - `src/main/java/dev/eder/wispborn/config/WispbornConfig.java`: `ModConfigSpec` (`SERVER`) com todas as chaves das seções `levels`, `tiers`, `stats`, `mana`, `drain` e `ep`.
+  - `src/main/java/dev/eder/wispborn/WispbornMod.java`: registro de `WispbornConfig.SPEC` como `ModConfig.Type.SERVER`.
+  - `src/main/java/dev/eder/wispborn/progress/Stat.java`: enum `ABSORPTION`, `EFFICIENCY`, `RESERVE`, `VITALITY` (`StringRepresentable`, `CODEC`, `STREAM_CODEC`, `translationKey()`, `byName(String)`).
+  - `src/main/java/dev/eder/wispborn/progress/WispProgress.java`: record `(int totalEp, int level)` com `START = (0, 1)` e `CODEC`.
+  - `src/main/java/dev/eder/wispborn/progress/WispStats.java`: record `(int absorption, int efficiency, int reserve, int vitality)` com `ZERO`, `spent()`, `get(Stat)`, `with(Stat, int)` e `CODEC`.
+  - `src/main/java/dev/eder/wispborn/progress/AllocateResult.java`: enum `OK, NO_POINTS, MAXED`.
+  - `src/main/java/dev/eder/wispborn/progress/LevelCurve.java`: funções puras `levelFor` e `nextThreshold`.
+  - `src/main/java/dev/eder/wispborn/progress/StatMath.java`: funções puras `availablePoints`, `drainPercent`, `epMultiplier`, `applyEp`, `maxMana` e `vitalityBonusHealth`.
+  - `src/main/java/dev/eder/wispborn/progress/TierResolver.java`: `maxTierFor(level, minLevels)` (puro) e `tierOf(EntityType<?>)` via tags `ModTags`.
+  - `src/main/java/dev/eder/wispborn/progress/ProgressManager.java`: `addEp`, `setEp`, `allocate`, `resetStats`, `refreshStats`, `addMana`, `spendMana`, `getMana`, `setMana`, `getMaxMana` e `buildWispHud`.
+  - `src/main/java/dev/eder/wispborn/registry/ModAttachments.java`: adicionados attachments `PROGRESS`, `STATS` e `MANA` com `.serialize(...)` e `.copyOnDeath()`.
+  - `src/main/java/dev/eder/wispborn/registry/ModTags.java` e `src/main/resources/data/wispborn/tags/entity_type/tier_1..3.json`: tags de tier dos mobs vanilla do MVP.
+  - `src/main/java/dev/eder/wispborn/form/WispTuning.java` e `FormManager.java`: adicionado modificador `wispborn:wisp_vitality` (`ADD_VALUE` em `MAX_HEALTH`) nas formas `WISP` e `HOST`.
+  - `src/main/java/dev/eder/wispborn/event/FormEvents.java`: `PlayerTickEvent.Post` regenerando mana (1/s na forma `WISP`) e exibindo o HUD na action bar a cada 20 ticks.
+  - `src/main/java/dev/eder/wispborn/command/WispbornCommand.java`: subcomandos `/wispborn ep add|set`, `/wispborn stat add|reset`, `/wispborn mana set` e `/wispborn info`.
+  - `src/main/resources/assets/wispborn/lang/en_us.json` e `pt_br.json`: chaves de HUD, level up, atributos e comandos.
+  - `src/test/java/dev/eder/wispborn/progress/LevelCurveTest.java`, `TierResolverTest.java` e `StatMathTest.java`: suíte JUnit 5 cobrindo todas as funções puras do M2.
+- **Decisões tomadas:**
+  - `ProgressManager.refreshStats` cura a diferença positiva de `MAX_HEALTH` quando a Vitalidade sobe, conforme especificado em "Vitalidade: Ao subir, curar a diferença".
+  - `ProgressManager.setEp` verifica se `availablePoints < 0` após recalcular o nível e chama `resetStats` automaticamente com aviso no chat (`wispborn.stat.auto_reset`).
+- **Saída final de `./gradlew build`:**
+  ```text
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  > Task :check
+  > Task :build
+  BUILD SUCCESSFUL in 32s
+  ```
+- **Saída final de `./gradlew test`:**
+  ```text
+  > Task :compileJava
+  > Task :classes
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  BUILD SUCCESSFUL in 16s
+  ```
+- **Saída final de `./gradlew runServer`:**
+  ```text
+  [08:19:04] [Server thread/DEBUG] [ne.ne.fm.co.ConfigTracker/CONFIG]: Loaded TOML config file D:\Projetos\Mine Mod\run\config\wispborn-server.toml
+  [08:19:07] [Server thread/INFO] [minecraft/DedicatedServer]: Done (3.238s)! For help, type "help"
+  [08:19:07] [Server thread/INFO] [ne.ne.ne.ga.GameTestHooks/]: Enabled Gametest Namespaces: [wispborn]
+  ```
+- **Pendências:**
+  - Validação do checklist manual in-game por Eder (`runClient`).

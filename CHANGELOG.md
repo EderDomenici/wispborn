@@ -4,6 +4,84 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 
 ---
 
+## [M2-level-stats] — Nível, Atributos e Mana (`feat/M2-level-stats`)
+
+**Spec de referência:** `docs/specs/M2-level-stats.md`  
+**Commits:**
+- `c1cd6bc` — `feat(config): adicionar WispbornConfig SERVER e tags de tier de entidade (M2)`
+- `266ff17` — `feat(progress): implementar nivel, EP, atributos, mana, funcoes puras e ProgressManager`
+- `a8a881d` — `feat(command): adicionar HUD na action bar, regeneracao de mana e comandos ep/stat/mana/info`
+- `0a5c766` — `test(progress): adicionar LevelCurveTest, TierResolverTest e StatMathTest`  
+
+### 1. Resumo das Alterações (`main..feat/M2-level-stats`)
+- Configuração completa de servidor (`WispbornConfig`, `ModConfig.Type.SERVER`) cobrindo `levels`, `tiers`, `stats`, `mana`, `drain` e `ep`.
+- Persistência de progresso (`WispProgress`), atributos (`WispStats`) e mana (`Float`) via Data Attachments (`ModAttachments.PROGRESS`, `STATS`, `MANA`) com `copyOnDeath`.
+- Funções puras testadas via JUnit 5: `LevelCurve`, `StatMath` e `TierResolver` (`maxTierFor`), além da resolução de tier por tags de entidade (`ModTags.TIER_1..3` e `data/wispborn/tags/entity_type/tier_1..3.json`).
+- Gerenciamento no servidor via `ProgressManager` (`addEp`, `setEp`, `allocate`, `resetStats`, `refreshStats`, `addMana`, `spendMana`, `getMaxMana`, `buildWispHud`), aplicação do bônus de Vitalidade (`wispborn:wisp_vitality`) em `FormManager.applyModifiers`, regeneração de mana e HUD na action bar a cada 20 ticks na forma `WISP`, e extensão de `/wispborn` com `ep`, `stat`, `mana` e `info`.
+
+### 2. Detalhamento por Arquivo
+
+| Arquivo | Ação | Detalhes da Implementação |
+|---|---|---|
+| `src/main/java/dev/eder/wispborn/config/WispbornConfig.java` | Criado | `ModConfigSpec` (`SERVER`) com todas as 16 chaves da tabela da spec (`levels.thresholds`, `tiers.minLevel`, `stats.*`, `mana.*`, `drain.*`, `ep.*`). |
+| `src/main/java/dev/eder/wispborn/WispbornMod.java` | Modificado | Registrado `modContainer.registerConfig(ModConfig.Type.SERVER, WispbornConfig.SPEC)`. |
+| `src/main/java/dev/eder/wispborn/progress/Stat.java` | Criado | Enum `ABSORPTION`, `EFFICIENCY`, `RESERVE`, `VITALITY` com `StringRepresentable`, `CODEC`, `STREAM_CODEC`, `translationKey()` (`wispborn.stat.<id>`) e `byName(String)`. |
+| `src/main/java/dev/eder/wispborn/progress/WispProgress.java` | Criado | Record `(int totalEp, int level)` com `START = new WispProgress(0, 1)` e `CODEC`. |
+| `src/main/java/dev/eder/wispborn/progress/WispStats.java` | Criado | Record `(int absorption, int efficiency, int reserve, int vitality)` com `ZERO`, `spent()`, `get(Stat)`, `with(Stat, int)` e `CODEC`. |
+| `src/main/java/dev/eder/wispborn/progress/AllocateResult.java` | Criado | Enum `OK`, `NO_POINTS`, `MAXED`. |
+| `src/main/java/dev/eder/wispborn/progress/LevelCurve.java` | Criado | Funções puras `levelFor(int totalEp, List<Integer> thresholds)` e `nextThreshold(int totalEp, List<Integer> thresholds) → OptionalInt`. |
+| `src/main/java/dev/eder/wispborn/progress/StatMath.java` | Criado | Funções puras `availablePoints`, `drainPercent`, `epMultiplier`, `applyEp`, `maxMana` e `vitalityBonusHealth`. |
+| `src/main/java/dev/eder/wispborn/progress/TierResolver.java` | Criado | `maxTierFor(int level, List<Integer> minLevels)` (puro) e `tierOf(EntityType<?>) → OptionalInt` (maior tier entre `TIER_3`, `TIER_2`, `TIER_1`). |
+| `src/main/java/dev/eder/wispborn/progress/ProgressManager.java` | Criado | `addEp` (com Eficiência, level-up, mensagem e som), `setEp` (com auto-reset se pontos disponíveis < 0), `allocate`, `resetStats`, `refreshStats` (reaplica Vitalidade curando a diferença e limita mana), `getMana`/`setMana`/`addMana`/`spendMana`/`getMaxMana` e `buildWispHud`. |
+| `src/main/java/dev/eder/wispborn/registry/ModAttachments.java` | Modificado | Adicionados `PROGRESS` (`WispProgress.START`), `STATS` (`WispStats.ZERO`) e `MANA` (`50.0F`), todos com `.serialize(...)` e `.copyOnDeath()`. |
+| `src/main/java/dev/eder/wispborn/registry/ModTags.java` | Criado | Tags `TIER_1`, `TIER_2`, `TIER_3` (`Registries.ENTITY_TYPE`). |
+| `src/main/resources/data/wispborn/tags/entity_type/tier_1..3.json` | Criado | JSONs de tags para mobs tier 1 (galinha, porco, vaca, ovelha, coelho), tier 2 (zumbi, esqueleto, aranha) e tier 3 (creeper, enderman). |
+| `src/main/java/dev/eder/wispborn/form/WispTuning.java` | Modificado | Adicionado `VITALITY_ID = wispborn:wisp_vitality`. |
+| `src/main/java/dev/eder/wispborn/form/FormManager.java` | Modificado | `applyModifiers` remove e reaplica `wispborn:wisp_vitality` (`ADD_VALUE` `+vitalityBonusHealth`) nas formas `WISP` e `HOST`. |
+| `src/main/java/dev/eder/wispborn/event/FormEvents.java` | Modificado | `onPlayerTickPost` (servidor, a cada 20 ticks): se `isWisp`, regenera mana (`mana.regenPerSecond`) e envia HUD para a action bar. |
+| `src/main/java/dev/eder/wispborn/command/WispbornCommand.java` | Modificado | Adicionados `/wispborn ep add\|set <n> [player]`, `/wispborn stat add <stat> [player]` (com tab-complete), `/wispborn stat reset [player]`, `/wispborn mana set <n> [player]` e `/wispborn info [player]`. |
+| `src/main/resources/assets/wispborn/lang/{en_us,pt_br}.json` | Modificado | Adicionadas traduções de atributos (`wispborn.stat.*`), level-up, HUD (`wispborn.hud.*`) e comandos. |
+| `src/test/java/dev/eder/wispborn/progress/{LevelCurveTest,TierResolverTest,StatMathTest}.java` | Criado | Testes unitários JUnit 5 cobrindo todos os cenários da spec M2. |
+| `docs/specs/M2-level-stats.md` | Modificado | Preenchido "Dúvidas do implementador" e "Relatório de implementação". |
+
+### 3. Evidências de Verificação
+
+- **`./gradlew build --no-daemon`:**
+  ```text
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  > Task :check
+  > Task :build
+  BUILD SUCCESSFUL in 32s
+  ```
+- **`./gradlew test --rerun-tasks --no-daemon`:**
+  ```text
+  > Task :compileJava
+  > Task :classes
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  BUILD SUCCESSFUL in 16s
+  ```
+- **`./gradlew runServer --no-daemon`:**
+  ```text
+  [08:19:04] [Server thread/DEBUG] [ne.ne.fm.co.ConfigTracker/CONFIG]: Loaded TOML config file D:\Projetos\Mine Mod\run\config\wispborn-server.toml
+  [08:19:07] [Server thread/INFO] [minecraft/DedicatedServer]: Done (3.238s)! For help, type "help"
+  [08:19:07] [Server thread/INFO] [ne.ne.ne.ga.GameTestHooks/]: Enabled Gametest Namespaces: [wispborn]
+  ```
+
+### 4. Alterações fora do escopo / Decisões de borda
+| Arquivo | Alteração / Decisão | Motivo / Impacto |
+|---|---|---|
+| `ProgressManager.java` | Composição do level-up com `wispborn.level_up` + `wispborn.level_up.tier_unlocked` opcional | Evita exibir texto de tier quando o novo nível não destrava um novo tier (ex.: Nv 1 → Nv 2 continua tier 1; Nv 2 → Nv 3 anexa `(Tier 2 liberado!)`). |
+| `ProgressManager.java` | Composição do HUD com `wispborn.hud.wisp`, `wispborn.hud.max` e `wispborn.hud.points` | Garante formatação idêntica aos exemplos da spec (`Wisp · Nv 1 · EP 0/300 · Mana 50/50`, `Wisp · Nv 2 · EP 450/800 · Mana 35/60 · 2 pts` e `EP 18450 · máx` no nível máximo). |
+
+### 5. Pendências
+- [ ] **Checklist manual in-game (`./gradlew runClient`):** validação do HUD, comandos, atributos e recarregamento de `wispborn-server.toml` a cargo de Eder.
+
+---
+
 ## [M1b-wisp-model] — Modelo e Animações do Wisp com GeckoLib (`feat/M1b-wisp-model`)
 
 **Spec de referência:** `docs/specs/M1b-wisp-model.md`  
