@@ -34,7 +34,7 @@
     Um teste trivial (`SanityTest`) para provar que `./gradlew test` roda.
 
 ## Critérios de aceite
-- [ ] `./gradlew build` verde localmente e no CI. (local OK; CI ainda não executado — repositório sem remote)
+- [x] `./gradlew build` verde localmente e no CI (https://github.com/EderDomenici/wispborn/actions/runs/43986805343).
 - [ ] `./gradlew runClient` abre o jogo; o mod "Wispborn" aparece na lista de mods.
 - [x] `./gradlew runServer` sobe sem crash (aceitar EULA em `run/eula.txt`).
 - [x] Nenhum resto do mod de exemplo (`examplemod`, `EXAMPLE_BLOCK` etc.).
@@ -55,6 +55,7 @@ Nenhuma dúvida.
 - **Decisões tomadas:**
   - Removido completamente o pacote `com.example.examplemod` e os recursos `assets/examplemod`.
   - `neoforge_version=21.1.266` é a única fonte da versão do NeoForge; `neo_version` foi removido do `gradle.properties` e o `build.gradle` repassa `neoforge_version` ao template do `neoforge.mods.toml` como `neo_version`.
+  - `gradlew` marcado como executável (modo 100755): o primeiro run do CI falhou com exit code 126.
   - Fora do escopo da spec (documentado no CHANGELOG): `org.gradle.jvmargs` de `-Xmx1G` para `-Xmx2G`, remoção dos comentários do MDK em `build.gradle`/`gradle.properties` e `.gradle` → `.gradle/` no `.gitignore`.
 - **Saída final de `./gradlew build`:**
   ```text
@@ -83,4 +84,3 @@ Nenhuma dúvida.
   ```
 - **Pendências manuais:**
   - Validação visual do cliente (`./gradlew runClient`) por Eder.
-  - Primeira execução do workflow de CI (requer configurar remote e fazer push).
