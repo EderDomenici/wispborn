@@ -13,7 +13,9 @@ Use este guia ao planejar, criar ou revisar modelos, animações, efeitos e estr
 | --- | --- | --- |
 | `animation.wisp.idle` | 4 s, loop | Flutuação, pulsação e órbita em repouso. |
 | `animation.wisp.walking` | 1 s, loop | Deslocamento no chão, com inclinação e rastro. |
-| `animation.wisp.attack` | 0,8 s, uma execução | Antecipação visual da possessão no [M3](specs/M3-possession.md). O nome é o ID do clipe exportado. O wisp do MVP não ataca. |
+| `animation.wisp.attack` | 0,8 s, uma execução | Antecipação visual da possessão no [M3](specs/M3-possession.md). **Vai ser substituído** por `animation.wisp.possess` (1,0 s, igual à conjuração) no [prompt A1](prompts/codex-art-prompts.md), usado pela [M3b](specs/M3b-possession-feel.md). |
+
+**Revisão de 17/11/2026 (teste em jogo):** os raios feitos de dois planos grandes cruzados (`ray_xy`, `ray_yz`) aparecem de perto como um "X" de papel translúcido. Regra daqui em diante: evite planos grandes e chatos com transparência em criaturas 3D. Prefira fragmentos com volume, opacos no corpo e transparentes só nas pontas, e deixe o brilho para a glowmask.
 
 ## Direção visual
 

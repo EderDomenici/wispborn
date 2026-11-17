@@ -84,6 +84,35 @@ Não faça merge.
 
 ---
 
+## Prompt 4b — M3b (tecla, conjuração e feedback da possessão)
+
+Só depois do merge do M3 na `main` **e** da entrega de arte do prompt A1 (`docs/prompts/codex-art-prompts.md`).
+
+```
+Implemente a spec docs/specs/M3b-possession-feel.md do mod Wispborn.
+
+Antes de editar, releia AGENTS.md, .agents/rules/neoforge-1.21.1.md, .agents/rules/geckolib-4.9.md
+e docs/ART_PIPELINE.md. As seções PROIBIDO são obrigatórias.
+
+Execute o workflow /implement-spec para M3b-possession-feel.
+
+Pontos críticos desta spec:
+- Comece pela seção 1: se art/parasita-magico/wisp.animation.json não tiver animation.wisp.possess,
+  pare e registre a dúvida.
+- O som de passo do jogador local dispara PlayLevelSoundEvent.AtEntity, não AtPosition. Trate os dois.
+- O servidor decide tudo: alvo, validação e cancelamento são do servidor. O client só manda
+  start/cancel da tecla e desenha o HUD com o que o servidor enviou.
+- KeyBindings, ClientPossession e a camada de HUD ficam em client/ e não podem ser carregados no
+  servidor dedicado. Confirme com ./gradlew runServer.
+- Regras de cancelamento e de som em funções puras com JUnit (CastRules, WispSoundRules).
+
+Ao terminar: ./gradlew build, ./gradlew test e ./gradlew runServer (até "Done") sem erro.
+Preencha o "Relatório de implementação" e abra o PR com o checklist manual da spec no corpo.
+Não faça merge.
+```
+
+---
+
 ## Prompts 3 a 7 — M2 a M6 (mesmo modelo)
 
 Troque `<SPEC>` por `M2-level-stats`, `M3-possession`, `M4-drain`, `M5-consume` ou `M6-stats-screen`, sempre em ordem
