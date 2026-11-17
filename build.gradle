@@ -79,6 +79,8 @@ neoForge {
 
 configurations {
     runtimeClasspath.extendsFrom localRuntime
+    testCompileClasspath.extendsFrom compileClasspath
+    testRuntimeClasspath.extendsFrom runtimeClasspath
 }
 
 dependencies {
