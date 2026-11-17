@@ -15,7 +15,7 @@ public final class WispTuning {
     public static final ResourceLocation MOVEMENT_SPEED_ID =
             ResourceLocation.fromNamespaceAndPath(WispbornMod.MOD_ID, "wisp_movement_speed");
 
-    public static final double SCALE_MODIFIER = -0.6;
+    public static final double SCALE_MODIFIER = -0.52;
     public static final double MAX_HEALTH_MODIFIER = -14.0;
     public static final double GRAVITY_MODIFIER = -0.75;
     public static final double SAFE_FALL_DISTANCE_MODIFIER = 20.0;

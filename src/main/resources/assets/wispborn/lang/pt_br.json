@@ -1,4 +1,5 @@
 {
   "item.wispborn.wisp_essence": "Essência de Wisp",
-  "commands.wispborn.form.success": "Forma de %s alterada para %s"
+  "commands.wispborn.form.success": "Forma de %s alterada para %s",
+  "commands.wispborn.anim.success": "Animação '%s' disparada em %s"
 }

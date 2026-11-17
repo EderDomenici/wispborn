@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import dev.eder.wispborn.command.WispbornCommand;
 import dev.eder.wispborn.event.FormEvents;
 import dev.eder.wispborn.event.WispRestrictions;
+import dev.eder.wispborn.form.WispAnimatable;
 import dev.eder.wispborn.network.ModPayloads;
 import dev.eder.wispborn.registry.ModAttachments;
 import dev.eder.wispborn.registry.ModItems;
@@ -12,6 +13,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 import org.slf4j.Logger;
+import software.bernie.geckolib.animatable.SingletonGeoAnimatable;
 
 @Mod(WispbornMod.MOD_ID)
 public class WispbornMod {
@@ -21,6 +23,8 @@ public class WispbornMod {
     public WispbornMod(IEventBus modEventBus, ModContainer modContainer) {
         ModAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
+
+        SingletonGeoAnimatable.registerSyncedAnimatable(WispAnimatable.INSTANCE);
 
         modEventBus.addListener(ModItems::addCreative);
         modEventBus.addListener(ModPayloads::register);
