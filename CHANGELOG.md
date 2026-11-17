@@ -78,12 +78,12 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 | Arquivo | Alteração / Decisão | Motivo / Impacto |
 |---|---|---|
 | `build.gradle` | `testCompileClasspath.extendsFrom compileClasspath` e `testRuntimeClasspath.extendsFrom runtimeClasspath` | No ModDevGradle 2.0.x, o sourceSet `test` não herda automaticamente as bibliotecas do Minecraft/DFU (`com.mojang.serialization.Codec`, `JsonOps`, `ResourceLocation`) exigidas por `FormStateTest`. |
-| `FormManager.java` | Soma do delta de `MAX_HEALTH` (`+14`) à vida atual quando `getMaxHealth()` aumenta em `setForm` | Atende ao item do checklist *"Usar `wisp_essence` como wisp volta a humano com vida e tamanho normais"* (sem isso, o jogador voltaria a humano com 3/10 corações preenchidos). Também segue o padrão previsto no M2 (*"Ao subir, curar a diferença"*). |
+| `FormManager.java` | Preservação da proporção `health / maxHealth` em `setForm` | Atende ao item do checklist *"Usar `wisp_essence` como wisp volta a humano com vida e tamanho normais"* (6/6 HP → 20/20 HP) sem permitir cura grátis ao alternar formas com vida baixa. |
 | `WispRestrictions.java` | `event.setUseBlock(TriState.FALSE)` em `RightClickBlock` quando segurando `wisp_essence` | Garante que clicar com o botão direito olhando para um baú/bloco segurando `wisp_essence` não abra o baú, mas permita que o item `wisp_essence` seja ativado normalmente. |
 
 ### 5. Pendências
 - [ ] **Checklist manual in-game (`./gradlew runClient` / `runClient2`):** validação visual e funcional a cargo de Eder.
-- [ ] **Balanceamento (revisão do M1):** voltar de wisp para humano soma +14 de vida sem considerar a vida do wisp, o que permite cura grátis alternando a forma (1 HP como humano → wisp → humano com 15 HP). Proposta: preservar a proporção `health / maxHealth` na troca. Decisão pendente de Eder.
+- [x] **Balanceamento (revisão do M1):** corrigido em `FormManager.setForm` para preservar a proporção `health / maxHealth` na troca de forma.
 
 ---
 

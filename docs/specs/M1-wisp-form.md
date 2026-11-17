@@ -136,7 +136,7 @@ Nenhuma dúvida.
   - `src/main/resources/assets/wispborn/`: modelo `models/item/wisp_essence.json`, texturas PNG geradas (`textures/item/wisp_essence.png` 16×16, `textures/entity/wisp_core.png` 32×32, `textures/entity/wisp_halo.png` 32×32) e traduções em `lang/en_us.json` e `pt_br.json`.
   - `src/test/java/dev/eder/wispborn/form/FormStateTest.java` e `build.gradle`: testes JUnit de serialização de `FormType` e round-trip de `FormState.CODEC` (`HUMAN`, `WISP`, `HOST` com `minecraft:cow`), expondo `compileClasspath` ao `testCompileClasspath`.
 - **Decisões tomadas:**
-  - Ao voltar de `WISP` para `HUMAN` em `FormManager.setForm`, a diferença de `MAX_HEALTH` recuperada (`+14`) é somada à vida atual (limitada ao máximo) para restaurar os 10 corações quando o wisp estava com vida cheia (3 corações).
+  - Ao alternar formas em `FormManager.setForm`, a proporção `health / maxHealth` é preservada (evitando cura grátis ao alternar humano ↔ wisp e restaurando 10 corações quando o wisp estava com 100% de vida).
   - Em `WispRestrictions.onRightClickBlock`, quando o parasita segura `wisp_essence`, `event.setUseBlock(TriState.FALSE)` bloqueia a abertura de containers/blocos mas permite que o uso do item prossiga.
 - **Saída final de `./gradlew build`:**
   ```text

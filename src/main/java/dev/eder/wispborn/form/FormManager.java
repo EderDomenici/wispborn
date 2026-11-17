@@ -18,11 +18,12 @@ public final class FormManager {
 
     public static void setForm(ServerPlayer player, FormState state) {
         float previousMaxHealth = player.getMaxHealth();
+        float healthRatio = previousMaxHealth > 0.0F ? player.getHealth() / previousMaxHealth : 1.0F;
         player.setData(ModAttachments.FORM, state);
         applyModifiers(player);
-        if (player.getMaxHealth() > previousMaxHealth) {
-            float healthDelta = player.getMaxHealth() - previousMaxHealth;
-            player.setHealth(Math.min(player.getMaxHealth(), player.getHealth() + healthDelta));
+        float newMaxHealth = player.getMaxHealth();
+        if (newMaxHealth != previousMaxHealth && player.getHealth() > 0.0F) {
+            player.setHealth(Math.clamp(healthRatio * newMaxHealth, 0.01F, newMaxHealth));
         }
         sync(player);
     }
