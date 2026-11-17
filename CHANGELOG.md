@@ -8,11 +8,13 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 
 **Spec de referência:** `docs/specs/M3-possession.md`  
 **Commits:**
-- `580ae66` — `feat(host): implementar InfestResult, InfestRules e HostManager com animacao de 16 ticks`
-- `f5d36d3` — `feat(event): adicionar HostEvents, seguranca de login/respawn e traducoes de possessao`
-- `fd3c4d3` — `test(host): adicionar InfestRulesTest cobrindo precedencia das validacoes`  
+- `d91a9e2` — `feat(host): implementar InfestResult, InfestRules e HostManager com animacao de 16 ticks`
+- `5ff8646` — `feat(event): adicionar HostEvents, seguranca de login/respawn e traducoes de possessao`
+- `1b6b8d8` — `test(host): adicionar InfestRulesTest cobrindo precedencia das validacoes`
+- `6a5ce04` — `docs(host): preencher relatorio da spec M3 e atualizar CHANGELOG.md`
 
 ### 1. Resumo das Alterações (`main..feat/M3-possession`)
+- **Total:** 12 arquivos alterados (`560 insertions(+)`, `18 deletions(-)`), sem contar CHANGELOG e docs. Os hashes acima são os de depois do rebase sobre `372d365` (spec M3b).
 - Implementação da validação pura de possessão (`InfestRules.check` → `InfestResult`) respeitando a ordem exata da spec (mob vivo → sem passageiro → tier presente → tier ≤ maxTier → mana suficiente), coberta por `InfestRulesTest`.
 - Implementação de `HostManager`: validação inicial em `tryInfest`, disparo de `WispAnimatable.playPossess(player)` com espera de 16 ticks em memória (`Map<UUID, PendingInfest>`), revalidação completa ao fim dos 16 ticks (incluindo distância ≤ 4 blocos), gasto de mana (`infestCostPerTier × tier`), montagem como passageiro invisível (`startRiding(mob, true)`, `FormState.host(id)`, `setInvisible(true)`), HUD na action bar (`Hospedeiro: <Mob> · <Vida>%`) e expulsão idempotente via `release(ServerPlayer, Reason)`.
 - Tratamento de todas as saídas e proteções em `HostEvents` e `FormEvents`: `SNEAK` (`EntityMountEvent`), `HOST_DIED` (`LivingDeathEvent`), `LOGOUT` (`PlayerLoggedOutEvent`), rede de segurança em login/respawn (`ensureValidHostState`) e invulnerabilidade na forma `HOST` (exceto `DamageTypeTags.BYPASSES_INVULNERABILITY`).
@@ -69,6 +71,11 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 
 ### 5. Pendências
 - [ ] **Checklist manual in-game (`./gradlew runClient` / `runClient2`):** validação da possessão, IA do hospedeiro, invulnerabilidade e saídas a cargo de Eder.
+- [ ] **CI:** `main` enviada em `6a5ce04` (com a M3 mergeada); acompanhar o run.
+- [ ] **Merge antes do checklist:** a M3 foi mergeada na `main` antes do checklist in-game. O primeiro teste de Eder (17/11/2026) gerou a [M3b](docs/specs/M3b-possession-feel.md): tecla com conjuração no lugar do clique direito, indicador de alvo, efeito no mob possuído e correção do som de passos.
+
+### 6. Revisão (Claude, 17/11/2026)
+Código conferido sem bugs: `release` é idempotente (o `stopRiding` reentra no `EntityMountEvent`, mas a forma já é WISP); logout e morte do hospedeiro soltam o wisp no topo do mob; a rede de segurança de login/respawn cobre save com HOST sem veículo; a invulnerabilidade só deixa passar `BYPASSES_INVULNERABILITY`; um mob removido sem morrer (conversão, `discard`) cai no `release` pelo dismount do vanilla. O gatilho por clique direito e o atraso fixo de 16 ticks serão substituídos na M3b.
 
 ---
 
