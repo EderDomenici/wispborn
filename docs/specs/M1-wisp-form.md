@@ -117,7 +117,50 @@ JUnit (`src/test/java/dev/eder/wispborn/form/FormStateTest.java`):
 Infestação, host, EP, níveis, HUD, keybinds, voo real (`mayfly`).
 
 ## Dúvidas do implementador
-_(preencher se houver)_
+Nenhuma dúvida.
 
 ## Relatório de implementação
-_(preencher ao terminar)_
+- **Arquivos criados/alterados:**
+  - `src/main/java/dev/eder/wispborn/form/FormType.java`: enum `HUMAN`, `WISP`, `HOST` com `StringRepresentable`, `CODEC` e `STREAM_CODEC`.
+  - `src/main/java/dev/eder/wispborn/form/FormState.java`: record `(FormType type, Optional<ResourceLocation> hostEntity)` com `HUMAN`, `WISP`, `host(id)`, `CODEC` e `STREAM_CODEC`.
+  - `src/main/java/dev/eder/wispborn/form/WispTuning.java`: IDs `wispborn:wisp_*` e valores dos 5 modificadores (`SCALE`, `MAX_HEALTH`, `GRAVITY`, `SAFE_FALL_DISTANCE`, `MOVEMENT_SPEED`).
+  - `src/main/java/dev/eder/wispborn/form/FormManager.java`: `setForm`, `applyModifiers` (idempotente via `removeModifier` + `addOrReplacePermanentModifier`), `sync`, `isWisp` e `isParasite`.
+  - `src/main/java/dev/eder/wispborn/form/WispEssenceItem.java`: item com stack 16 que alterna `HUMAN ↔ WISP`, toca `SoundEvents.ALLAY_ITEM_TAKEN`, gera partículas `END_ROD` e consome 1 unidade fora do criativo.
+  - `src/main/java/dev/eder/wispborn/registry/ModAttachments.java`: attachment `FORM` (`FormState.HUMAN`, `.serialize(FormState.CODEC)`, `.copyOnDeath()`).
+  - `src/main/java/dev/eder/wispborn/registry/ModItems.java`: registro do item `wisp_essence` e inclusão na aba criativa `CreativeModeTabs.INGREDIENTS`.
+  - `src/main/java/dev/eder/wispborn/network/SyncFormPayload.java` e `ModPayloads.java`: pacote `wispborn:sync_form` (`S2C`) isolando `ClientPayloadHandler` via lambda para não carregar classes `Dist.CLIENT` no servidor dedicado.
+  - `src/main/java/dev/eder/wispborn/event/FormEvents.java`: sincronização e reaplicação de modificadores em login, respawn, troca de dimensão e `StartTracking`.
+  - `src/main/java/dev/eder/wispborn/event/WispRestrictions.java`: cancelamento de ataque, quebra de bloco, interação com entidade e clique direito em bloco/item (permitindo uso de `wisp_essence` sem acionar blocos como baús via `TriState.FALSE`).
+  - `src/main/java/dev/eder/wispborn/command/WispbornCommand.java`: comando `/wispborn form <human|wisp> [player]` (permissão 2).
+  - `src/main/java/dev/eder/wispborn/client/ClientPayloadHandler.java` e `WispRenderHandler.java`: handler `S2C` e renderização em `Dist.CLIENT` (2 quads billboard emissivos `wisp_core` + `wisp_halo` com flutuação senoidal e pulso ±8%, partículas `END_ROD` a cada 2 ticks e ocultação da mão em 1ª pessoa).
+  - `src/main/resources/assets/wispborn/`: modelo `models/item/wisp_essence.json`, texturas PNG geradas (`textures/item/wisp_essence.png` 16×16, `textures/entity/wisp_core.png` 32×32, `textures/entity/wisp_halo.png` 32×32) e traduções em `lang/en_us.json` e `pt_br.json`.
+  - `src/test/java/dev/eder/wispborn/form/FormStateTest.java` e `build.gradle`: testes JUnit de serialização de `FormType` e round-trip de `FormState.CODEC` (`HUMAN`, `WISP`, `HOST` com `minecraft:cow`), expondo `compileClasspath` ao `testCompileClasspath`.
+- **Decisões tomadas:**
+  - Ao voltar de `WISP` para `HUMAN` em `FormManager.setForm`, a diferença de `MAX_HEALTH` recuperada (`+14`) é somada à vida atual (limitada ao máximo) para restaurar os 10 corações quando o wisp estava com vida cheia (3 corações).
+  - Em `WispRestrictions.onRightClickBlock`, quando o parasita segura `wisp_essence`, `event.setUseBlock(TriState.FALSE)` bloqueia a abertura de containers/blocos mas permite que o uso do item prossiga.
+- **Saída final de `./gradlew build`:**
+  ```text
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  > Task :check
+  > Task :build
+  BUILD SUCCESSFUL in 15s
+  ```
+- **Saída final de `./gradlew test`:**
+  ```text
+  > Task :compileJava
+  > Task :classes
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  BUILD SUCCESSFUL in 13s
+  ```
+- **Saída final de `./gradlew runServer`:**
+  ```text
+  [16nov.2026 21:29:50.697] [modloading-worker-0/INFO] [dev.eder.wispborn.WispbornMod/]: Inicializando Wispborn (wispborn)
+  [16nov.2026 21:29:55.870] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (3.096s)! For help, type "help"
+  [16nov.2026 21:29:55.898] [Server thread/INFO] [net.neoforged.neoforge.gametest.GameTestHooks/]: Enabled Gametest Namespaces: [wispborn]
+  ```
+- **Pendências:**
+  - Execução do checklist manual in-game por Eder (`runClient` / `runClient2`).
