@@ -22,10 +22,6 @@ public record TargetInfoPayload(
     public static final TargetInfoPayload NONE =
             new TargetInfoPayload(-1, InfestResult.NOT_A_MOB, 0, Optional.empty(), 0, 1);
 
-    public TargetInfoPayload(int entityId, InfestResult result, int mobLevel, Optional<Sex> sex, int manaCost) {
-        this(entityId, result, mobLevel, sex, manaCost, 1);
-    }
-
     public static final Type<TargetInfoPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(WispbornMod.MOD_ID, "target_info"));
 
