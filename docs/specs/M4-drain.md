@@ -1,5 +1,8 @@
 # M4 — Drenagem e EP passivo
 
+> **Substituída pela F3** (`docs/specs/F3-drain-consume.md`, rodada de fundação de 17/11/2026). As regras
+> abaixo valem só onde a F3 manda herdar. Não implemente esta spec.
+
 **Objetivo:** enquanto está dentro do hospedeiro, o wisp drena a vida dele aos poucos e ganha EP.
 A drenagem para em 20% da vida máxima; daí em diante não há mais EP passivo (incentivo para consumir).
 **Estimativa:** 1 dia. **Branch:** `feat/M4-drain`. **Depende de:** M3 (e Absorção/Eficiência do M2).

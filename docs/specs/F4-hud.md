@@ -1,0 +1,131 @@
+# F4 — HUD temático em sprites
+
+**Objetivo:** enquanto o jogador é parasita (WISP ou HOST), o HUD vanilla dá lugar a um HUD próprio,
+**100% sprites PNG em pixel art**: vida do wisp (núcleo), fome do wisp, mana com cor de mana, pontos de DNA
+(EP) no lugar da barra de XP, painel do hospedeiro e painel do alvo. A action bar fica livre para mensagens.
+**Estimativa:** 2–3 dias. **Branch:** `feat/F4-hud`. **Depende de:** F3 e da arte **A2**
+(`docs/prompts/codex-art-prompts.md`) entregue e aprovada por Eder.
+**Design:** `docs/superpowers/specs/2026-11-17-fundacao-design.md`.
+
+## Regra de ouro
+Nenhuma barra, ícone ou moldura desenhada com `fill`, gradiente ou forma geométrica. Tudo é
+`GuiGraphics.blitSprite` de um PNG do mod ou texto com glifos da fonte do mod. A única exceção é o texto
+(números e nomes), desenhado com `Font`.
+
+## Fonte da arte
+- A arte vem do prompt **A2** em `art/hud/`, com `LAYOUT.md` (posições e tamanhos em pixels de GUI,
+  relativos ao centro inferior da tela) e `mockup.png` aprovado por Eder.
+- Copie os PNGs para `src/main/resources/assets/wispborn/textures/gui/sprites/hud/` (atlas de GUI do
+  1.21: referenciados como `wispborn:hud/<nome>`) e os glifos para `textures/font/`.
+- **Siga o `LAYOUT.md`.** Se algo no layout for impossível ou ambíguo, registre em "Dúvidas do
+  implementador" em vez de inventar posição.
+
+## Contrato de sprites (`wispborn:hud/<nome>`)
+| Sprite | Tamanho | Uso |
+|---|---|---|
+| `core_container`, `core_container_blinking` | 9×9 | Fundo de cada "coração" do wisp (piscando ao tomar dano) |
+| `core_full`, `core_half` | 9×9 | Vida do wisp (2 de vida = 1 ícone) |
+| `hunger_empty`, `hunger_half`, `hunger_full` | 9×9 | Fome do wisp (2 pontos = 1 ícone) |
+| `mana_bar_background`, `mana_bar_progress` | 182×5 | Barra de mana (cor de mana); progresso recortado pela largura |
+| `dna_bar_background`, `dna_bar_progress` | 182×5 | EP dentro do nível atual, no lugar da barra de XP |
+| `dna_icon` | 9×9 | Ícone ao lado do número de nível |
+| `host_frame` | definido no LAYOUT | Moldura do painel do hospedeiro |
+| `host_health_background`, `host_health_progress` | definido no LAYOUT | Vida do hospedeiro |
+| `host_floor_marker` | definido no LAYOUT | Marca de 20% na barra do hospedeiro |
+| `consume_ready` | 9×9 | Indicador "pode consumir" |
+| `no_ep` | 9×9 | Indicador "presa fraca demais para dar EP" |
+| `target_frame` | definido no LAYOUT | Fundo do painel do alvo (substitui o texto do M3b) |
+| `target_ok`, `target_blocked` | 9×9 | Situação do alvo |
+| `cast_bar_background`, `cast_bar_progress` | definido no LAYOUT | Barra de conjuração (substitui o `fill` atual) |
+
+### Fonte de ícones (`assets/wispborn/font/icons.json`)
+Provider `bitmap` com glifos em PNG na Área de Uso Privado:
+| Código | Glifo |
+|---|---|
+| `U+E000` | ♂ (macho) |
+| `U+E001` | ♀ (fêmea) |
+| `U+E002` | DNA pequeno (para texto e chat) |
+
+Componentes usam `Style.withFont(ResourceLocation.fromNamespaceAndPath(MOD_ID, "icons"))` para esses
+caracteres. A placa da F2 e o painel do alvo passam a usar os glifos.
+
+## Regras
+
+### Estado no client
+1. `SyncWispStatePayload` (play-to-client), enviado **só quando muda** (mesmo padrão de
+   `HostManager.syncTargetInfo`), checado a cada 4 ticks e forçado no login, no respawn e na troca de dimensão:
+   `level`, `totalEp`, `levelStartEp`, `nextLevelEp` (`-1` no nível máximo), `mana` (inteiro arredondado),
+   `maxMana`, `availablePoints`, `hostConsumeReady` (bool), `hostEpFactor` (float; 1 fora de HOST).
+2. `client/ClientWispState`: guarda o último payload. Vida e fome vêm do próprio jogador local; a vida do
+   hospedeiro vem do `LivingEntity` montado (já sincronizado pelo vanilla); nível e sexo dele vêm dos
+   traços da F2.
+
+### Camadas vanilla escondidas (só enquanto parasita)
+3. Em `RenderGuiLayerEvent.Pre`, cancelar: `HOTBAR`, `PLAYER_HEALTH`, `FOOD_LEVEL`, `ARMOR_LEVEL`,
+   `EXPERIENCE_BAR`, `EXPERIENCE_LEVEL`, `SELECTED_ITEM_NAME`, `VEHICLE_HEALTH` e `JUMP_METER`
+   (estes dois aparecem quando o wisp está montado no hospedeiro).
+4. Mantidas: `CROSSHAIR`, `AIR_LEVEL`, `EFFECTS`, `BOSS_OVERLAY`, `CHAT`, `OVERLAY_MESSAGE`, `TITLE` etc.
+5. Ao desenhar no lugar de vida e fome, atualizar `Gui.leftHeight`/`Gui.rightHeight` com a altura usada,
+   para que o ar (`AIR_LEVEL`) e camadas de outros mods empilhem certo.
+
+### Camadas do mod (`RegisterGuiLayersEvent`)
+6. Registrar as camadas **acima** das vanilla correspondentes (`registerAbove`), cada uma num método
+   próprio. Todas respeitam `mc.options.hideGui` (F1) e só desenham quando o jogador local é parasita.
+   - `wisp_health`: núcleos, com piscar ao tomar dano (mesma lógica de tempo do vanilla).
+   - `wisp_hunger`: fome, com o tremor vanilla quando a saturação é 0.
+   - `wisp_mana`: barra de mana + número `42/70`.
+   - `wisp_dna`: barra de DNA + `dna_icon` + número do nível no lugar do número verde do XP;
+     `+N` pontos de atributo disponíveis, se houver, conforme o LAYOUT.
+   - `host_panel` (só HOST): nome do mob + glifo do sexo + `Nv X`, barra de vida com `host_floor_marker`
+     em `drain.floorPercent`, `consume_ready` com a tecla configurada (`KeyBindings.CONSUME.getTranslatedKeyMessage()`),
+     `no_ep` quando `hostEpFactor == 0`.
+   - `possess_target` (já existe): migrar para `target_frame`, `target_ok`/`target_blocked`, glifo do
+     sexo e `cast_bar_*`.
+7. A placa sobre os mobs (F2) passa a usar os glifos e a cor por situação, calculada no client com o
+   nível do wisp: verde = infestável e rende EP; cinza = infestável sem EP (`EpMath.levelFactor == 0`);
+   vermelho = forte demais. Os parâmetros vêm da config de servidor, que o NeoForge sincroniza com o client.
+
+### Fim do HUD em texto
+8. Remover o envio periódico de `ProgressManager.buildWispHud` (FormEvents) e do HUD do host
+   (HostManager/F3). As mensagens pontuais (level up, falhas de infestação, consumo) continuam na action
+   bar ou no chat, como hoje.
+
+## Contratos
+- `network/SyncWispStatePayload.java`; envio em `progress/` ou `event/` (servidor).
+- `client/ClientWispState.java`, `client/hud/WispHud.java` (registro + um método por camada),
+  `client/hud/HudSprites.java` (constantes `ResourceLocation` dos sprites).
+- Pura e testável: `client/hud/HudMath.java` (sem classes do Minecraft):
+  - `static int progressWidth(float value, float max, int fullWidth)` → largura em pixels, com clamp
+  - `static int[] iconStates(float value, int icons)` → `0 vazio / 1 metade / 2 cheio` por ícone
+  - `static int floorMarkerX(double floorPercent, int barWidth)`
+
+## Testes (JUnit)
+- `progressWidth(42, 70, 182)` = 109; `(0, 70, 182)` = 0; `(80, 70, 182)` = 182; `max 0` → 0.
+- `iconStates(5, 3)` = `[2, 2, 1]`; `(0, 3)` = `[0, 0, 0]`; `(6, 3)` = `[2, 2, 2]`.
+- `floorMarkerX(0.2, 100)` = 20.
+- Round-trip de `SyncWispStatePayload`.
+
+## Checklist manual
+- [ ] Wisp: não há hotbar, corações, coxinhas, armadura nem barra/número de XP vanilla. Aparecem núcleos,
+      fome, mana e DNA nas posições do `LAYOUT.md`. Comparar com `art/hud/mockup.png`.
+- [ ] Tomar dano: núcleos piscam. Saturação 0: ícones de fome tremem.
+- [ ] Debaixo d'água: as bolhas de ar aparecem acima da fome, sem sobrepor.
+- [ ] Mana gasta ao infestar: a barra cai na hora. EP sobe: a barra de DNA enche; no level up, o número troca e a barra volta.
+- [ ] HOST: painel do hospedeiro com nome, sexo, nível, vida, marca de 20%; no piso aparece `consume_ready`
+      com a tecla configurada (trocar a tecla nos Controles e conferir). Presa fraca: `no_ep`.
+- [ ] Nenhum coração de montaria vanilla nem barra de pulo aparece em HOST.
+- [ ] Action bar livre: nenhum texto periódico; só mensagens pontuais.
+- [ ] F1 esconde tudo. GUI scale 1, 2, 3 e auto: nada desalinhado.
+- [ ] Placas: verdes, cinzas e vermelhas corretas para um wisp Nv 7 perto de galinha, zumbi e enderman.
+- [ ] Multiplayer (`runClient2`): cada jogador vê o próprio HUD.
+- [ ] Servidor dedicado sobe sem crash (nada de `client/` no código comum).
+
+## Fora de escopo
+Menu RPG (nível, fenótipos, árvore de habilidades), tela de atributos, feedback de conjuração em primeira
+pessoa (V1).
+
+## Dúvidas do implementador
+_(preencher se houver)_
+
+## Relatório de implementação
+_(preencher ao terminar)_

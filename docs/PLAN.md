@@ -1,28 +1,34 @@
 # Wispborn — plano resumido
 
-Plano completo (fonte da verdade): https://claude.ai/artifact/3H3tDWH91WeUUiaNozhw7G
+Plano completo original: https://claude.ai/artifact/3H3tDWH91WeUUiaNozhw7G
 Mapa visual (Whiteboard): https://claude.ai/artifact/2GCsrb2iiwEWh7P1kp9Lz4
+**Rodada de fundação (17/11/2026), fonte da verdade atual:** `docs/superpowers/specs/2026-11-17-fundacao-design.md`
 
 ## Conceito
-O jogador é um wisp: um orbe de energia flutuante que parasita criaturas. O nível do wisp define
-quais criaturas ele consegue infectar. Dentro do hospedeiro, sem fazer nada, drena a vida dele aos
-poucos e ganha EP. A criatura só pode ser consumida (morta) com 20% da vida ou menos. Cada nível dá
-pontos para melhorar o próprio parasita.
-Depois do MVP: controle do hospedeiro, traços (fagogenia), arquétipo, covil, espécie própria.
+O jogador **nasce wisp**: um orbe de energia que parasita criaturas. Explorar gasta **fome**; só
+parasitando o wisp se alimenta. Todo mob vanilla tem **nível** e **sexo**. O nível do wisp define quais
+criaturas ele consegue infestar, e presas fracas demais não fazem ele evoluir. Dentro do hospedeiro, drena
+a vida dele aos poucos e ganha EP (pontos de DNA) e fome. Com 20% da vida ou menos, a criatura pode ser
+consumida. Cada nível dá pontos para melhorar o próprio parasita.
+Depois da fundação: menu RPG (nível, fenótipos, árvore de habilidades), reprodução do wisp, controle do
+hospedeiro, covil, espécie própria.
 
-## MVP 0.1 — possessão, consumo e progressão com mobs vanilla
-1. Wisp — orbe pequeno, frágil, flutua, não ataca.
-2. Infestar — botão direito; tier do mob (tag) ≤ tier liberado pelo **nível**; custa 15 × tier de mana; vira passageiro invisível e invulnerável. **Sem controle do mob.**
-3. Drenar — (2% + Absorção) da vida máxima a cada 5s, +10 × tier EP (× Eficiência) por pulso; para em 20%.
-4. Consumir — tecla C só com ≤20%; mata com dano `wispborn:consumed`, sem drops, +100 × tier EP (× Eficiência).
-5. Nível — EP total sobe o nível (Nv 2…10: 300, 800, 1600, 2800, 4500, 6800, 9800, 13600, 18300); 2 pontos por nível.
-6. Falha — mob morre por outra causa: expulso sem bônus. Shift sai. Logout expulsa.
+## MVP 0.1 — loop da fundação com mobs vanilla
+1. Wisp — nasce e renasce wisp; orbe pequeno, frágil, anda no chão, não ataca, não come.
+2. Fome — drena enquanto wisp (mais rápido em nível alto); zerada, mata. Volta drenando e consumindo.
+3. Infestar — segurar a tecla de possessão; nível do mob ≤ nível do wisp; custa 5 × nível do mob de mana;
+   vira passageiro invisível e invulnerável. **Sem controle do mob.**
+4. Drenar — (2% + Absorção) da vida máxima a cada 5 s; +3 × nível do mob EP (× fator de nível × Eficiência)
+   e +1 de fome por pulso; para em 20%.
+5. Consumir — tecla C só com ≤ 20%; mata com dano `wispborn:consumed`, sem drops; +30 × nível do mob EP
+   (× fator × Eficiência) e +(2 + nível/2) de fome.
+6. Fator de nível — presa até 2 níveis abaixo rende EP cheio; −25% por nível além disso; 0 a 6 abaixo.
+7. Nível do wisp — 1 a 20 pela curva de EP do config; 2 pontos por nível.
+8. Reprodução vanilla só entre macho e fêmea (base para a reprodução do wisp).
+9. HUD próprio em pixel art substituindo o vanilla enquanto parasita.
 
-| Tier | Mobs | Nível mínimo |
-|---|---|---|
-| 1 | galinha, porco, vaca, ovelha, coelho | 1 |
-| 2 | zumbi, esqueleto, aranha | 3 |
-| 3 | creeper, enderman | 5 |
+Faixas de nível dos mobs: `docs/specs/F2-mob-traits.md` (ex.: galinha 1–2, zumbi 4–8, enderman 12–16,
+shulker 16–20; chefes imunes).
 
 | Atributo | Por ponto (máx. 10) | Base |
 |---|---|---|
@@ -31,19 +37,25 @@ Depois do MVP: controle do hospedeiro, traços (fagogenia), arquétipo, covil, e
 | Reserva de mana | +10 de mana máxima | 50 (regenera 1/s como wisp) |
 | Vitalidade | +1 coração no wisp | 3 corações |
 
-Todos os números ficam em config de servidor.
+Todos os números ficam em config de servidor ou em JSON de dados.
 
 ## Módulos
-| Módulo | Spec | Entrega |
-|---|---|---|
-| M0 | `specs/M0-setup.md` | Projeto, CI, AGENTS.md, client2 |
-| M1 | `specs/M1-wisp-form.md` | Forma wisp + sync |
-| M1b | `specs/M1b-wisp-model.md` | GeckoLib, modelo e animações do wisp, tamanho +20% |
-| M2 | `specs/M2-level-stats.md` | EP, nível, tiers, pontos, atributos, mana, config, HUD |
-| M3 | `specs/M3-possession.md` | Possessão como passageiro, custo de mana, saídas |
-| M3b | `specs/M3b-possession-feel.md` | Tecla com conjuração, indicador de alvo, efeito no possuído, som do wisp |
-| M4 | `specs/M4-drain.md` | Drenagem até 20% + EP passivo |
-| M5 | `specs/M5-consume.md` | Tecla C, consumo, bônus |
-| M6 | `specs/M6-stats-screen.md` | Tela de atributos (tecla K) |
+| Módulo | Spec | Entrega | Status |
+|---|---|---|---|
+| M0 | `specs/M0-setup.md` | Projeto, CI, AGENTS.md, client2 | feito |
+| M1 | `specs/M1-wisp-form.md` | Forma wisp + sync | feito |
+| M1b | `specs/M1b-wisp-model.md` | GeckoLib, modelo e animações do wisp | feito |
+| M2 | `specs/M2-level-stats.md` | EP, nível, pontos, atributos, mana, config | feito |
+| M3 | `specs/M3-possession.md` | Possessão como passageiro, custo de mana, saídas | feito |
+| M3b | `specs/M3b-possession-feel.md` | Conjuração, indicador de alvo, som do wisp | feito |
+| F1 | `specs/F1-born-wisp.md` | Nascer/renascer wisp, fome, inanição | a fazer |
+| F2 | `specs/F2-mob-traits.md` | Nível e sexo dos mobs, fim dos tiers, reprodução macho + fêmea | a fazer |
+| F3 | `specs/F3-drain-consume.md` | Drenagem e consumo com nível e fome | a fazer |
+| F4 | `specs/F4-hud.md` | HUD temático em sprites | a fazer (depende da arte A2) |
+| V1 | `specs/V1-wisp-visual.md` | Brilho do wisp, animação de possessão, feedback em 1ª pessoa | paralelo (arte A3) |
+| ~~M4~~ | `specs/M4-drain.md` | — | substituída pela F3 |
+| ~~M5~~ | `specs/M5-consume.md` | — | substituída pela F3 |
+| M6 | `specs/M6-stats-screen.md` | Tela de atributos (tecla K) | pausada; vai para o menu RPG |
 
-Pós-MVP: 0.2 controle do hospedeiro · 0.3 traços + tela de evolução · 0.4 arquétipo + covil · 0.5 espécie própria, lacaios, loop de vilão.
+Pós-fundação: menu RPG (nível, fenótipos, árvore de habilidades) · reprodução do wisp · controle do
+hospedeiro · arquétipo + covil · espécie própria, lacaios, loop de vilão.

@@ -17,6 +17,8 @@ Use este guia ao planejar, criar ou revisar modelos, animações, efeitos e estr
 
 **Revisão de 17/11/2026 (teste em jogo):** os raios feitos de dois planos grandes cruzados (`ray_xy`, `ray_yz`) aparecem de perto como um "X" de papel translúcido. Regra daqui em diante: evite planos grandes e chatos com transparência em criaturas 3D. Prefira fragmentos com volume, opacos no corpo e transparentes só nas pontas, e deixe o brilho para a glowmask.
 
+**Rodada de fundação (17/11/2026, 2º teste em jogo):** os 10 fragmentos `ray_*` do prompt A1 viraram "estalactites": varetas finas e longas, mesmo volumétricas, leem como espinho. Regra: brilho de criatura se faz com núcleo opaco + cascas translúcidas emissivas (halo) + partículas, nunca com varetas. O redesign é o prompt A3 ([V1](specs/V1-wisp-visual.md)). O HUD passa a ser **100% sprites PNG em pixel art** (prompt A2, [F4](specs/F4-hud.md)); nada de barra ou ícone desenhado por código.
+
 ## Direção visual
 
 - Use formas e texturas originais, com silhuetas reconhecíveis à distância, geometria voxel e pixels nítidos. O wisp tem núcleo branco e ciano, bordas verde-esmeralda e feixes verde-água translúcidos. Mantenha o centro compacto e os satélites legíveis em movimento.
@@ -28,6 +30,7 @@ Use este guia ao planejar, criar ou revisar modelos, animações, efeitos e estr
 | Entrega | Fonte e revisão | Integração, quando prevista na spec |
 | --- | --- | --- |
 | Criatura ou prop animado | Uma pasta por recurso em `art/`, como `art/parasita-magico/`. Guarde `.bbmodel` (formato Bedrock/GeckoLib), PNG original, máscara emissiva quando houver, exports e capturas. | Copie só os arquivos que o GeckoLib carrega: `geo/entity/<id>.geo.json`, `animations/entity/<id>.animation.json`, `textures/entity/<id>.png` e `textures/entity/<id>_glowmask.png`, todos em `src/main/resources/assets/wispborn/`. A spec indica os caminhos. |
+| Sprites de HUD e glifos | `art/hud/`, com `sprites/`, `font/`, `LAYOUT.md`, `mockup.png`, `variants.png` e o script gerador em `src/`, se houver. | Copie os PNGs para `assets/wispborn/textures/gui/sprites/hud/` (referência `wispborn:hud/<nome>`) e os glifos para `assets/wispborn/textures/font/`, como manda a F4. |
 | Efeito | `art/efeitos/<id>/`, se houver sprite, estudo de movimento ou captura para versionar. | Use os efeitos vanilla já especificados quando suficientes. Para partículas registradas que usam sprites, guarde a definição em `assets/wispborn/particles/` e os PNGs em `assets/wispborn/textures/particle/`. |
 | Estrutura | `art/estruturas/<id>/`, com captura, dimensões, ponto de entrada e instruções para editar ou regenerar a maquete. | Para uma estrutura salva no Minecraft 1.21.1, versione o template em `src/main/resources/data/wispborn/structure/<id>.nbt`. A spec de geração decide posicionamento, regras e arquivos adicionais de worldgen. |
 

@@ -1,5 +1,8 @@
 # M6 — Tela de atributos
 
+> **Pausada** (17/11/2026): a tela de atributos será absorvida pelo menu RPG (nível, fenótipos, árvore de
+> habilidades), que terá design próprio depois da rodada de fundação. Não implemente esta spec.
+
 **Objetivo:** o jogador vê nível, EP, mana e pontos numa tela própria (tecla `K`) e distribui os pontos
 pelos botões +, sem comando. Primeiro módulo que sincroniza progresso para o client.
 **Estimativa:** 1–2 dias. **Branch:** `feat/M6-stats-screen`. **Depende de:** M5.

@@ -5,12 +5,15 @@ Regras específicas de API ficam em `.agents/rules/neoforge-1.21.1.md` e `.agent
 — leia antes de escrever código.
 
 ## O que é
-Mod de Minecraft em que o jogador é um **wisp** (orbe parasita): o nível define quais mobs ele
-infecta; dentro do hospedeiro (passageiro invisível, sem controle) drena a vida e ganha EP; com o
-hospedeiro em ≤20% de vida pode consumi-lo. Subir de nível dá pontos para 4 atributos do parasita
-(Absorção, Eficiência, Reserva de mana, Vitalidade); infestar custa mana. Plano: `docs/PLAN.md`.
-Specs: `docs/specs/M0..M6`.
-Para modelos, animações, efeitos e estruturas, consulte [o guia de produção de arte](docs/ART_PIPELINE.md).
+Mod de Minecraft em que o jogador **nasce wisp** (orbe parasita) e renasce wisp ao morrer. Explorar gasta
+fome; só parasitando ele se alimenta. Todo mob vanilla tem **nível e sexo** (traços sorteados ao nascer):
+o nível do wisp define quais mobs ele infecta e presas fracas demais não dão EP. Dentro do hospedeiro
+(passageiro invisível, sem controle) drena a vida e ganha EP e fome; com o hospedeiro em ≤20% de vida
+pode consumi-lo. Subir de nível dá pontos para 4 atributos do parasita (Absorção, Eficiência, Reserva de
+mana, Vitalidade); infestar custa mana. HUD próprio em sprites substitui o vanilla.
+Plano: `docs/PLAN.md`. Design atual: `docs/superpowers/specs/2026-11-17-fundacao-design.md`.
+Specs: `docs/specs/` (M0–M3b feitas; F1–F4 e V1 a fazer; M4/M5 substituídas pela F3; M6 pausada).
+Para modelos, animações, efeitos, estruturas e sprites, consulte [o guia de produção de arte](docs/ART_PIPELINE.md).
 
 ## Stack (fixa — não mudar sem pedido explícito)
 - Minecraft **1.21.1**, NeoForge **21.1.x**, Java **21**
@@ -38,22 +41,25 @@ Para modelos, animações, efeitos e estruturas, consulte [o guia de produção 
 - **Servidor decide tudo.** O client só renderiza e envia intenções (keybinds) via payload.
 - Estado do jogador em **Data Attachments**; em 1.21.1 **não há sync automático** →
   sync manual por `CustomPacketPayload`.
-- Tiers dos mobs por **tags de entidade**; números de balanceamento em **config** (nunca hardcoded).
+- Faixas de nível dos mobs em **JSON de dados** (`data/wispborn/wisp_mob_levels/`); números de balanceamento em **config** (nunca hardcoded).
+- HUD: **só sprites PNG** (`textures/gui/sprites/hud/`) e glifos da fonte do mod; nada de barra ou ícone desenhado com `fill`.
 - Regras de jogo em funções puras (`*Rules`, `*Math`, `LevelCurve`) testadas com JUnit; os managers só ligam essas funções ao jogo.
 
 ## Estrutura de pacotes
 ```
 dev.eder.wispborn
 ├── WispbornMod            # @Mod(IEventBus, ModContainer): DeferredRegisters + config
-├── config/                # WispbornConfig (ModConfigSpec SERVER)
-├── registry/              # ModAttachments, ModItems, ModTags, ModDamageTypes
-├── form/                  # FormType, FormState, FormManager, WispTuning, WispAnimatable, WispAnimations
-├── progress/              # WispProgress, WispStats, Stat, StatView, LevelCurve, StatMath, TierResolver, ProgressManager
-├── host/                  # HostManager, InfestRules, DrainMath, ConsumeRules
-├── network/               # SyncFormPayload, ConsumeRequestPayload, SyncProgressPayload, AllocateStatPayload
-├── event/                 # FormEvents, WispRestrictions, HostEvents (NeoForge.EVENT_BUS)
+├── config/                # WispbornConfig (SERVER) + config CLIENT
+├── registry/              # ModAttachments, ModTags, ModDamageTypes, ModSounds
+├── form/                  # FormType, FormState, FormManager, HungerMath, WispTuning, WispAnimatable, WispAnimations
+├── progress/              # WispProgress, WispStats, Stat, LevelCurve, StatMath, EpMath, ProgressManager
+├── traits/                # Sex, MobTraits, MobLevelRange, MobLevelTable, MobTraitRoller, BreedingRules, MobTraitsManager
+├── host/                  # HostManager, InfestRules, CastRules, DrainMath, ConsumeRules
+├── network/               # payloads (SyncForm, TargetInfo, CastState, Possess*, SyncMobTraits, SyncWispState, ConsumeRequest)
+├── event/                 # FormEvents, WispRestrictions, HostEvents, TraitEvents (NeoForge.EVENT_BUS)
+├── mixin/                 # só com spec pedindo (F2: BreedGoalMixin, AnimalMakeLoveMixin)
 ├── command/               # WispbornCommand (debug)
-└── client/                # WispRenderHandler, WispModel, WispPlayerRenderer, KeyBindings, StatsScreen, ClientProgress (só Dist.CLIENT)
+└── client/                # renderers, KeyBindings, ClientPossession, ClientWispState, hud/ (só Dist.CLIENT)
 ```
 Arte-fonte (Blockbench) fica em `art/<criatura>/`; os arquivos usados pelo jogo são copiados para `assets/wispborn/`.
 

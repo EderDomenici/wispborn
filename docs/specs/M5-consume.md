@@ -1,5 +1,8 @@
 # M5 — Consumo
 
+> **Substituída pela F3** (`docs/specs/F3-drain-consume.md`, rodada de fundação de 17/11/2026). As regras
+> abaixo valem só onde a F3 manda herdar. Não implemente esta spec.
+
 **Objetivo:** com o hospedeiro em ≤20% da vida, o jogador aperta uma tecla e o consome: o mob morre
 com um dano próprio, não dropa nada, o wisp ganha o bônus de EP e sai. Fecha o ciclo do MVP.
 **Estimativa:** 1–2 dias. **Branch:** `feat/M5-consume`. **Depende de:** M4.

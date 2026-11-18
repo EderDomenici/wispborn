@@ -1,4 +1,4 @@
-# Prompts para o Antigravity — M0 a M6
+# Prompts para o Antigravity — M0 a M3b e rodada de fundação (F1–F4, V1)
 
 Use um prompt por vez, numa conversa nova do agente, com o repositório aberto como workspace.
 Modo recomendado: **Planning** (ele mostra o plano antes de editar). Revise o plano antes de aprovar.
@@ -115,8 +115,8 @@ Não faça merge.
 
 ## Prompts 3 a 7 — M2 a M6 (mesmo modelo)
 
-Troque `<SPEC>` por `M2-level-stats`, `M3-possession`, `M4-drain`, `M5-consume` ou `M6-stats-screen`, sempre em ordem
-e só depois do merge do anterior.
+Troque `<SPEC>` por `M2-level-stats` ou `M3-possession` (já feitas). **M4, M5 e M6 não devem ser
+implementadas**: M4/M5 foram substituídas pela F3 e a M6 está pausada.
 
 ```
 Implemente a spec docs/specs/<SPEC>.md do mod Wispborn.
@@ -132,6 +132,39 @@ Regras deste projeto que mais quebram:
 - Nenhum número de balanceamento hardcoded: tudo vem de WispbornConfig.
 - Config SERVER não pode ser lida em static init nem nos testes.
 - Nada de client/ referenciado por código comum; ./gradlew runServer precisa subir sem crash.
+
+Ao terminar: ./gradlew build, ./gradlew test e ./gradlew runServer (até "Done") sem erro.
+Preencha o "Relatório de implementação" e abra o PR com o checklist manual da spec no corpo.
+Não faça merge.
+```
+
+---
+
+## Prompts F1 a F4 e V1 — rodada de fundação
+
+Ordem: `F1-born-wisp` → `F2-mob-traits` → `F3-drain-consume` → `F4-hud`, cada uma só depois do merge da
+anterior. A F4 só começa com a arte do prompt A2 entregue e aprovada por Eder. A `V1-wisp-visual` pode
+correr em paralelo (precisa da arte A3); se a F4 já estiver em andamento, faça a V1 depois dela.
+
+```
+Implemente a spec docs/specs/<SPEC>.md do mod Wispborn.
+
+Antes de editar, leia por inteiro: AGENTS.md, .agents/rules/neoforge-1.21.1.md (a seção PROIBIDO é
+obrigatória), docs/superpowers/specs/2026-11-17-fundacao-design.md e a spec. Leia o código existente e
+reutilize FormManager, ProgressManager, HostManager, StatMath, LevelCurve e WispbornConfig em vez de
+criar paralelos.
+
+Execute o workflow /implement-spec para <SPEC>.
+
+Regras deste projeto que mais quebram:
+- Regras de jogo em funções puras (*Rules, *Math) com teste JUnit; managers e eventos só chamam.
+- Nenhum número de balanceamento hardcoded: tudo vem de WispbornConfig ou do JSON de dados.
+- Config SERVER não pode ser lida em static init nem nos testes.
+- Nada de client/ referenciado por código comum; ./gradlew runServer precisa subir sem crash.
+- Mixin só onde a spec manda (F2).
+- HUD (F4/V1): só sprites PNG e glifos da fonte do mod. Nenhuma barra ou ícone com fill/gradiente.
+- Se a spec citar um método vanilla e ele não existir com esse nome no 1.21.1, pare e registre em
+  "Dúvidas do implementador". Não invente API.
 
 Ao terminar: ./gradlew build, ./gradlew test e ./gradlew runServer (até "Done") sem erro.
 Preencha o "Relatório de implementação" e abra o PR com o checklist manual da spec no corpo.

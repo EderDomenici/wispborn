@@ -22,7 +22,7 @@ Modelos frequentemente misturam APIs de Forge 1.20 / NeoForge antigo / Fabric. S
 ### Registro
 ```java
 public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MOD_ID);
-public static final DeferredItem<Item> WISP_ESSENCE = ITEMS.registerSimpleItem("wisp_essence");
+public static final DeferredItem<Item> EXAMPLE = ITEMS.registerSimpleItem("example_item");
 // no construtor do mod: ITEMS.register(modEventBus);
 ```
 
@@ -32,7 +32,7 @@ public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
     DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, MOD_ID);
 
 public static final Supplier<AttachmentType<FormState>> FORM = ATTACHMENT_TYPES.register("form",
-    () -> AttachmentType.builder(() -> FormState.HUMAN).serialize(FormState.CODEC).copyOnDeath().build());
+    () -> AttachmentType.builder(() -> FormState.WISP).serialize(FormState.CODEC).copyOnDeath().build());
 
 FormState s = player.getData(ModAttachments.FORM);
 player.setData(ModAttachments.FORM, novo);
