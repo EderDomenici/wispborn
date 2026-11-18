@@ -4,6 +4,60 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 
 ---
 
+## [F1-born-wisp] — Nascer Wisp, Renascer Wisp e Fome do Wisp (`feat/F1-born-wisp`)
+
+**Spec de referência:** `docs/specs/F1-born-wisp.md`
+
+### 1. Resumo das Alterações (`docs/fundacao-specs..feat/F1-born-wisp`)
+- Jogador nasce e renasce em `FormState.WISP` (`ModAttachments.FORM` com default `FormState.WISP`); mana restaurada ao máximo em `PlayerRespawnEvent`.
+- Remoção completa da forma humana (`FormType.HUMAN`, `FormState.HUMAN`, `/wispborn form human`, `WispEssenceItem`, `ModItems`, texturas/modelos de `wisp_essence` e exceções em `WispRestrictions`), mantendo compatibilidade de saves antigos em `FormType.CODEC` (`"human"` decodifica como `WISP`).
+- Pressão de fome escalonada por nível (`HungerMath.exhaustionPerSecond`) aplicada a cada 20 ticks na forma `WISP` fora do Pacífico e inanição letal em qualquer dificuldade fora do Pacífico (`HungerMath.vanillaStarves` e `HungerMath.wispStarves`) a cada `hunger.starveIntervalTicks` sem duplicar o dano vanilla de `FoodData.tick`.
+
+### 2. Detalhamento por Arquivo
+
+| Arquivo | Ação | Detalhes da Implementação |
+|---|---|---|
+| `src/main/java/dev/eder/wispborn/form/FormType.java` | Modificado | Removido `HUMAN`; `CODEC` usa `Codec.STRING.comapFlatMap` aceitando `"human"` → `WISP` na leitura e serializando apenas `"wisp"` ou `"host"`. |
+| `src/main/java/dev/eder/wispborn/form/FormState.java` | Modificado | Removida constante `FormState.HUMAN`. |
+| `src/main/java/dev/eder/wispborn/registry/ModAttachments.java` | Modificado | Default de `FORM` alterado para `FormState.WISP`. |
+| `src/main/java/dev/eder/wispborn/{form/WispEssenceItem,registry/ModItems}.java` e `assets/wispborn/{models,textures}/item/wisp_essence.*` | Removido | Item de transformação e registro de itens removidos; `WispbornMod` limpo. |
+| `src/main/java/dev/eder/wispborn/event/WispRestrictions.java` | Modificado | Cancelamento incondicional de `RightClickItem` e `RightClickBlock` para parasitas (impede comer comida comum). |
+| `src/main/java/dev/eder/wispborn/command/WispbornCommand.java` e `assets/wispborn/lang/{en_us,pt_br}.json` | Modificado | Removido `/wispborn form human` e chaves `item.wispborn.wisp_essence` / `wispborn.form.human`. |
+| `src/main/java/dev/eder/wispborn/config/WispbornConfig.java` | Modificado | Adicionados `hunger.exhaustionBasePerSecond` (0.05), `hunger.exhaustionPerLevelPerSecond` (0.01), `hunger.starveIntervalTicks` (80) e `hunger.starveDamage` (1.0). |
+| `src/main/java/dev/eder/wispborn/form/HungerMath.java` | Criado | Funções puras `exhaustionPerSecond`, `vanillaStarves` e `wispStarves`. |
+| `src/main/java/dev/eder/wispborn/event/FormEvents.java` | Modificado | `onPlayerRespawn` enche a mana; `onPlayerTickPost` aplica exaustão a cada 20 ticks em `WISP` e dano `starve()` a cada `hunger.starveIntervalTicks` quando `wispStarves` é true. |
+| `src/test/java/dev/eder/wispborn/form/{FormStateTest,HungerMathTest}.java` | Mod./Criado | Testes de alias legado `"human"` → `WISP` em `FormStateTest` e cobertura unitária completa de `HungerMath`. |
+| `docs/specs/F1-born-wisp.md` | Modificado | Preenchido "Dúvidas do implementador" e "Relatório de implementação". |
+
+### 3. Evidências de Verificação
+
+- **`./gradlew build --no-daemon`:**
+  ```text
+  > Task :jar
+  > Task :assemble
+  > Task :build
+  BUILD SUCCESSFUL in 10s
+  ```
+- **`./gradlew test --rerun-tasks --no-daemon`:**
+  ```text
+  > Task :compileJava
+  > Task :classes
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  BUILD SUCCESSFUL in 17s
+  ```
+- **`./gradlew runServer --no-daemon`:**
+  ```text
+  [23:13:00] [Server thread/INFO] [minecraft/DedicatedServer]: Done (8.759s)! For help, type "help"
+  [23:13:00] [Server thread/INFO] [ne.ne.ne.ga.GameTestHooks/]: Enabled Gametest Namespaces: [wispborn]
+  ```
+
+### 4. Pendências
+- [ ] **Checklist manual in-game (`./gradlew runClient`):** validação de nascimento/renascimento como wisp, bloqueio de comida, drenagem de fome e morte por inanição a cargo de Eder.
+
+---
+
 ## [M3b-possession-feel] — Tecla, Conjuração e Feedback da Possessão (`feat/M3b-possession-feel`)
 
 **Spec de referência:** `docs/specs/M3b-possession-feel.md`  

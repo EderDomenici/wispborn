@@ -16,7 +16,7 @@ public final class ModAttachments {
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, WispbornMod.MOD_ID);
 
     public static final Supplier<AttachmentType<FormState>> FORM = ATTACHMENT_TYPES.register("form",
-            () -> AttachmentType.builder(() -> FormState.HUMAN)
+            () -> AttachmentType.builder(() -> FormState.WISP)
                     .serialize(FormState.CODEC)
                     .copyOnDeath()
                     .build());

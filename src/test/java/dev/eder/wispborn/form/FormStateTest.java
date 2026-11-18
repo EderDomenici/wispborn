@@ -1,6 +1,8 @@
 package dev.eder.wispborn.form;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import net.minecraft.resources.ResourceLocation;
@@ -13,14 +15,21 @@ class FormStateTest {
 
     @Test
     void formTypeSerializesLowercaseNames() {
-        assertEquals("human", FormType.CODEC.encodeStart(JsonOps.INSTANCE, FormType.HUMAN).getOrThrow().getAsString());
         assertEquals("wisp", FormType.CODEC.encodeStart(JsonOps.INSTANCE, FormType.WISP).getOrThrow().getAsString());
         assertEquals("host", FormType.CODEC.encodeStart(JsonOps.INSTANCE, FormType.HOST).getOrThrow().getAsString());
     }
 
     @Test
-    void formStateCodecRoundTripHuman() {
-        assertRoundTrip(FormState.HUMAN);
+    void formStateDecodesLegacyHumanAsWisp() {
+        assertEquals(FormType.WISP, FormType.CODEC.parse(JsonOps.INSTANCE, new JsonPrimitive("human")).getOrThrow());
+
+        JsonObject legacyState = new JsonObject();
+        legacyState.addProperty("type", "human");
+        FormState decoded = FormState.CODEC.parse(JsonOps.INSTANCE, legacyState).getOrThrow();
+        assertEquals(FormState.WISP, decoded);
+
+        JsonElement reencoded = FormState.CODEC.encodeStart(JsonOps.INSTANCE, decoded).getOrThrow();
+        assertEquals("wisp", reencoded.getAsJsonObject().get("type").getAsString());
     }
 
     @Test

@@ -71,6 +71,18 @@ public final class WispbornConfig {
     public static final ModConfigSpec.DoubleValue POSSESS_RANGE =
             BUILDER.defineInRange("possess.range", 4.0D, 1.0D, 32.0D);
 
+    public static final ModConfigSpec.DoubleValue HUNGER_EXHAUSTION_BASE_PER_SECOND =
+            BUILDER.defineInRange("hunger.exhaustionBasePerSecond", 0.05D, 0.0D, 10.0D);
+
+    public static final ModConfigSpec.DoubleValue HUNGER_EXHAUSTION_PER_LEVEL_PER_SECOND =
+            BUILDER.defineInRange("hunger.exhaustionPerLevelPerSecond", 0.01D, 0.0D, 10.0D);
+
+    public static final ModConfigSpec.IntValue HUNGER_STARVE_INTERVAL_TICKS =
+            BUILDER.defineInRange("hunger.starveIntervalTicks", 80, 1, 72000);
+
+    public static final ModConfigSpec.DoubleValue HUNGER_STARVE_DAMAGE =
+            BUILDER.defineInRange("hunger.starveDamage", 1.0D, 0.0D, 1000.0D);
+
     public static final ModConfigSpec SPEC = BUILDER.build();
 
     private WispbornConfig() {

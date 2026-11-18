@@ -10,7 +10,6 @@ import net.minecraft.resources.ResourceLocation;
 import java.util.Optional;
 
 public record FormState(FormType type, Optional<ResourceLocation> hostEntity) {
-    public static final FormState HUMAN = new FormState(FormType.HUMAN, Optional.empty());
     public static final FormState WISP = new FormState(FormType.WISP, Optional.empty());
 
     public static FormState host(ResourceLocation entityTypeId) {

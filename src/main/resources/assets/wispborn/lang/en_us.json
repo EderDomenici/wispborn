@@ -1,9 +1,7 @@
 {
-  "item.wispborn.wisp_essence": "Wisp Essence",
   "key.categories.wispborn": "Wispborn",
   "key.wispborn.possess": "Possess Creature",
   "subtitles.wispborn.entity.wisp.drift": "Wisp shimmers",
-  "wispborn.form.human": "Human",
   "wispborn.form.wisp": "Wisp",
   "wispborn.form.host": "Host",
   "wispborn.stat.absorption": "Absorption",

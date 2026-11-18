@@ -80,7 +80,41 @@ zerada, mata o wisp em qualquer dificuldade.
 Recuperar fome (vem na F3), HUD novo (F4), nível dos mobs (F2).
 
 ## Dúvidas do implementador
-_(preencher se houver)_
+Nenhuma dúvida.
 
 ## Relatório de implementação
-_(preencher ao terminar)_
+- **Arquivos criados/alterados/removidos:**
+  - `src/main/java/dev/eder/wispborn/form/FormType.java` e `FormState.java`: removido `FormType.HUMAN` e `FormState.HUMAN`; `FormType.CODEC` implementado com `Codec.STRING.comapFlatMap` para decodificar `"human"` como `WISP` em saves legados e nunca serializar `"human"`.
+  - `src/main/java/dev/eder/wispborn/registry/ModAttachments.java`: default do attachment `FORM` alterado para `FormState.WISP`.
+  - Removidos `src/main/java/dev/eder/wispborn/form/WispEssenceItem.java`, `src/main/java/dev/eder/wispborn/registry/ModItems.java`, `src/main/resources/assets/wispborn/models/item/wisp_essence.json` e `src/main/resources/assets/wispborn/textures/item/wisp_essence.png`; limpadas referências em `WispbornMod.java`.
+  - `src/main/java/dev/eder/wispborn/event/WispRestrictions.java`: removida a exceção de `wisp_essence` em `RightClickItem` e `RightClickBlock` (bloqueia todo uso de item com botão direito, inclusive comida).
+  - `src/main/java/dev/eder/wispborn/command/WispbornCommand.java` e `src/main/resources/assets/wispborn/lang/{en_us,pt_br}.json`: removido o subcomando `/wispborn form human` e as chaves `item.wispborn.wisp_essence` e `wispborn.form.human`.
+  - `src/main/java/dev/eder/wispborn/config/WispbornConfig.java`: adicionadas `hunger.exhaustionBasePerSecond` (0.05), `hunger.exhaustionPerLevelPerSecond` (0.01), `hunger.starveIntervalTicks` (80) e `hunger.starveDamage` (1.0).
+  - `src/main/java/dev/eder/wispborn/form/HungerMath.java`: criado helper puro com `exhaustionPerSecond`, `vanillaStarves` e `wispStarves`.
+  - `src/main/java/dev/eder/wispborn/event/FormEvents.java`: restauração de mana cheia em `onPlayerRespawn`; em `onPlayerTickPost`, aplicação de `causeFoodExhaustion` a cada 20 ticks enquanto `WISP` fora do Pacífico e dano `damageSources().starve()` a cada `hunger.starveIntervalTicks` quando `HungerMath.wispStarves` é verdadeiro.
+  - `src/test/java/dev/eder/wispborn/form/FormStateTest.java` e `HungerMathTest.java`: atualizados testes de `FormState` (alias legado `"human"` → `WISP`, remoção de `HUMAN`) e adicionada suíte unitária de `HungerMath`.
+- **Decisões tomadas:**
+  - A lógica de fome e inanição foi integrada diretamente em `FormEvents.onPlayerTickPost` usando `serverPlayer.tickCount % starveInterval == 0` (conforme permitido pelo contrato da spec), mantendo o pacote `event/` enxuto e sem estado transitório extra em memória.
+- **Saída final de `./gradlew build`:**
+  ```text
+  > Task :jar
+  > Task :assemble
+  > Task :build
+  BUILD SUCCESSFUL in 10s
+  ```
+- **Saída final de `./gradlew test`:**
+  ```text
+  > Task :compileJava
+  > Task :classes
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  BUILD SUCCESSFUL in 17s
+  ```
+- **Saída final de `./gradlew runServer`:**
+  ```text
+  [23:13:00] [Server thread/INFO] [minecraft/DedicatedServer]: Done (8.759s)! For help, type "help"
+  [23:13:00] [Server thread/INFO] [ne.ne.ne.ga.GameTestHooks/]: Enabled Gametest Namespaces: [wispborn]
+  ```
+- **Pendências:**
+  - Validação do checklist manual in-game por Eder (`runClient`).
