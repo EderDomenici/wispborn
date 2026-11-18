@@ -1,12 +1,19 @@
 package dev.eder.wispborn.event;
 
 import dev.eder.wispborn.form.FormManager;
+import dev.eder.wispborn.form.FormType;
 import dev.eder.wispborn.host.HostManager;
+import dev.eder.wispborn.host.StealthRules;
+import dev.eder.wispborn.registry.ModAttachments;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.EntityMountEvent;
+import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
@@ -65,6 +72,22 @@ public final class HostEvents {
             }
         } else if (FormManager.isWisp(serverPlayer)) {
             HostManager.notifyDamageTaken(serverPlayer);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLivingChangeTarget(LivingChangeTargetEvent event) {
+        LivingEntity newTarget = event.getNewAboutToBeSetTarget();
+        boolean targetIsPlayer = newTarget instanceof Player;
+        FormType targetForm = newTarget instanceof Player player
+                ? player.getData(ModAttachments.FORM).type()
+                : FormType.WISP;
+        if (StealthRules.blocksTargeting(targetIsPlayer, targetForm)) {
+            if (event.getEntity() instanceof Mob mob && mob.getTarget() == newTarget) {
+                event.setNewAboutToBeSetTarget(null);
+            } else {
+                event.setCanceled(true);
+            }
         }
     }
 

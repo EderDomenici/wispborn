@@ -70,7 +70,39 @@ Num mundo superplano, um slime continuou seguindo o jogador depois que ele possu
 Furtividade como wisp, controle do hospedeiro, mobs atacando o hospedeiro por ele estar "infectado".
 
 ## Dúvidas do implementador
-_(preencher se houver)_
+Nenhuma dúvida.
 
 ## Relatório de implementação
-_(preencher ao terminar)_
+- **Arquivos criados/alterados:**
+  - `src/main/java/dev/eder/wispborn/config/WispbornConfig.java`: adicionada chave `stealth.clearRadius` (padrão `48.0`, faixa `1.0–128.0`).
+  - `src/main/java/dev/eder/wispborn/host/StealthRules.java`: funções puras `blocksTargeting(boolean targetIsPlayer, FormType targetForm)` e `shouldClear(boolean targetsPlayer, boolean angryAtPlayer, boolean isHostItself)`.
+  - `src/main/java/dev/eder/wispborn/host/HostStealth.java`: `clearPursuers(ServerPlayer player, LivingEntity host)` limpando `mob.setTarget(null)`, `mob.setLastHurtByMob(null)`, memórias `MemoryModuleType.ATTACK_TARGET` e `ANGRY_AT` (via `brain.isMemoryValue` para não lançar `IllegalStateException` em mobs sem a memória registrada), `NeutralMob#stopBeingAngry()` e `Warden#clearAnger(player)` num raio de `stealth.clearRadius` blocos (exceto o próprio hospedeiro).
+  - `src/main/java/dev/eder/wispborn/host/HostManager.java`: chamada a `HostStealth.clearPursuers(player, mob)` ao concluir a possessão e a cada 20 ticks enquanto `HOST`.
+  - `src/main/java/dev/eder/wispborn/event/HostEvents.java`: listener `onLivingChangeTarget(LivingChangeTargetEvent)` bloqueando aquisição/manutenção de alvo em jogadores `HOST` via `StealthRules.blocksTargeting`.
+  - `src/test/java/dev/eder/wispborn/host/StealthRulesTest.java`: testes JUnit 5 cobrindo `blocksTargeting` e `shouldClear`.
+- **Decisões tomadas:**
+  - Em `HostEvents.onLivingChangeTarget`, quando `StealthRules.blocksTargeting` retorna `true`, se o `Mob` já tinha aquele jogador `HOST` como `mob.getTarget()` atual (ex.: um zumbi que já perseguia o wisp antes de ser possuído e cujo `TargetGoal#canContinueToUse` reenvia `setTarget(player)`), define `event.setNewAboutToBeSetTarget(null)` para limpar o alvo do próprio hospedeiro; caso contrário (`mob.getTarget() != newTarget`), chama `event.setCanceled(true)` para preservar o alvo anterior do mob (ex.: um zumbi que já perseguia o porco).
+  - Em `HostStealth.clearPursuers`, consultas ao `Brain` usam `brain.isMemoryValue(...)` (que verifica `hasMemoryValue` internamente) antes de `eraseMemory`, evitando `IllegalStateException: Unregistered memory fetched` em mobs baseados em `Goal`.
+- **Saída final de `./gradlew build`:**
+  ```text
+  > Task :jar
+  > Task :assemble
+  > Task :build
+  BUILD SUCCESSFUL in 3s
+  ```
+- **Saída final de `./gradlew test`:**
+  ```text
+  > Task :compileJava
+  > Task :classes
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  BUILD SUCCESSFUL in 8s
+  ```
+- **Saída final de `./gradlew runServer`:**
+  ```text
+  [18:48:24] [Server thread/INFO] [minecraft/DedicatedServer]: Done (1.076s)! For help, type "help"
+  [18:48:24] [Server thread/INFO] [ne.ne.ne.ga.GameTestHooks/]: Enabled Gametest Namespaces: [wispborn]
+  ```
+- **Pendências:**
+  - Validação do checklist manual in-game por Eder (`runClient`).

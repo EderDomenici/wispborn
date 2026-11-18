@@ -163,7 +163,9 @@ public final class HostManager {
                 hostOf(player).ifPresent(host -> spawnPossessedParticles(player.serverLevel(), host));
             }
             if (player.tickCount % 20 == 0) {
-                hostOf(player).ifPresent(host -> player.displayClientMessage(buildHostHud(host), true));
+                Optional<LivingEntity> currentHost = hostOf(player);
+                HostStealth.clearPursuers(player, currentHost.orElse(null));
+                currentHost.ifPresent(host -> player.displayClientMessage(buildHostHud(host), true));
             }
             return;
         }
@@ -250,6 +252,7 @@ public final class HostManager {
         FormManager.setForm(player, FormState.host(entityTypeId));
         player.setInvisible(true);
         player.startRiding(mob, true);
+        HostStealth.clearPursuers(player, mob);
         syncTargetInfo(player, TargetInfoPayload.NONE);
 
         serverLevel.playSound(

@@ -78,6 +78,9 @@ public final class WispbornConfig {
     public static final ModConfigSpec.DoubleValue POSSESS_RANGE =
             BUILDER.defineInRange("possess.range", 4.0D, 1.0D, 32.0D);
 
+    public static final ModConfigSpec.DoubleValue STEALTH_CLEAR_RADIUS =
+            BUILDER.defineInRange("stealth.clearRadius", 48.0D, 1.0D, 128.0D);
+
     public static final ModConfigSpec.DoubleValue HUNGER_EXHAUSTION_BASE_PER_SECOND =
             BUILDER.defineInRange("hunger.exhaustionBasePerSecond", 0.05D, 0.0D, 10.0D);
 

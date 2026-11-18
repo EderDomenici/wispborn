@@ -4,6 +4,40 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 
 ---
 
+## [M3c-host-stealth] — Wisp Indetectável Dentro do Hospedeiro (`feat/M3c-host-stealth`)
+
+**Spec de referência:** `docs/specs/M3c-host-stealth.md`
+
+### 1. Resumo das Alterações (`feat/F2-mob-traits..feat/M3c-host-stealth`)
+- Ao entrar num hospedeiro e a cada 20 ticks na forma `HOST`, `HostStealth.clearPursuers(player, host)` limpa a perseguição e a raiva de todos os `Mob` num raio de `stealth.clearRadius` (`48.0`) blocos ao redor do jogador (exceto o próprio hospedeiro), cobrindo `Mob#setTarget(null)`, `Mob#setLastHurtByMob(null)`, memórias de brain `ATTACK_TARGET` e `ANGRY_AT`, `NeutralMob#stopBeingAngry()` e `Warden#clearAnger(player)`.
+- Enquanto `HOST`, `HostEvents.onLivingChangeTarget` (`LivingChangeTargetEvent`) bloqueia qualquer tentativa de mirar o jogador usando `StealthRules.blocksTargeting`: cancela o evento para manter o alvo anterior do mob (ex.: zumbi que já perseguia o porco) ou zera o alvo (`setNewAboutToBeSetTarget(null)`) caso o próprio hospedeiro já estivesse mirando o jogador antes da possessão.
+
+### 2. Detalhamento por Arquivo
+
+| Arquivo | Ação | Detalhes da Implementação |
+|---|---|---|
+| `src/main/java/dev/eder/wispborn/config/WispbornConfig.java` | Modificado | Adicionado `stealth.clearRadius` (`48.0`, faixa `1.0–128.0`). |
+| `src/main/java/dev/eder/wispborn/host/StealthRules.java` | Criado | Funções puras `blocksTargeting` e `shouldClear`. |
+| `src/main/java/dev/eder/wispborn/host/HostStealth.java` | Criado | `clearPursuers(ServerPlayer, LivingEntity)` limpando `target`, `lastHurtByMob`, brain (`ATTACK_TARGET`, `ANGRY_AT`), `NeutralMob` e `Warden`. |
+| `src/main/java/dev/eder/wispborn/host/HostManager.java` | Modificado | Chama `HostStealth.clearPursuers` ao montar no hospedeiro e a cada 20 ticks em `HOST`. |
+| `src/main/java/dev/eder/wispborn/event/HostEvents.java` | Modificado | Handler `onLivingChangeTarget` bloqueando mira em jogadores `HOST`. |
+| `src/test/java/dev/eder/wispborn/host/StealthRulesTest.java` | Criado | Testes unitários JUnit 5 para `StealthRules.blocksTargeting` e `StealthRules.shouldClear`. |
+| `docs/specs/M3c-host-stealth.md` | Modificado | Preenchido "Dúvidas do implementador" e "Relatório de implementação". |
+
+### 3. Evidências de Verificação
+
+- **`./gradlew build --no-daemon`:** `BUILD SUCCESSFUL in 3s`
+- **`./gradlew test --rerun-tasks --no-daemon`:** `BUILD SUCCESSFUL in 8s`
+- **`./gradlew runServer --no-daemon`:**
+  ```text
+  [18:48:24] [Server thread/INFO] [minecraft/DedicatedServer]: Done (1.076s)! For help, type "help"
+  ```
+
+### 4. Pendências
+- [ ] **Checklist manual in-game (`./gradlew runClient`):** validação com slime, zumbi, esqueleto, aranha e piglin zumbificado a cargo de Eder.
+
+---
+
 ## [F2-mob-traits] — Nível e Sexo dos Mobs / Fim dos Tiers (`feat/F2-mob-traits`)
 
 **Spec de referência:** `docs/specs/F2-mob-traits.md`
