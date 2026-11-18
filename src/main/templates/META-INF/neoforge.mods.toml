@@ -11,6 +11,9 @@ description='''
 Wispborn — mod de possessão parasitária e evolução de wisp.
 '''
 
+[[mixins]]
+config="wispborn.mixins.json"
+
 [[dependencies.${mod_id}]]
     modId="neoforge"
     type="required"

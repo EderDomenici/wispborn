@@ -27,6 +27,11 @@ public final class ModPayloads {
                 TargetInfoPayload.STREAM_CODEC,
                 (payload, context) -> ClientPayloadHandler.handleTargetInfo(payload, context)
         );
+        registrar.playToClient(
+                SyncMobTraitsPayload.TYPE,
+                SyncMobTraitsPayload.STREAM_CODEC,
+                (payload, context) -> ClientPayloadHandler.handleSyncMobTraits(payload, context)
+        );
         registrar.playToServer(
                 PossessStartPayload.TYPE,
                 PossessStartPayload.STREAM_CODEC,

@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "dev.eder.wispborn.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "minVersion": "0.8",
+  "mixins": [
+    "BreedGoalMixin",
+    "AnimalMakeLoveMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

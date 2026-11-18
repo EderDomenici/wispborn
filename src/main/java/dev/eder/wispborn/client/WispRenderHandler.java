@@ -147,9 +147,16 @@ public final class WispRenderHandler {
         int centerX = graphics.guiWidth() / 2;
         int baseY = graphics.guiHeight() / 2 + 12;
 
-        Component header = info.tier() > 0
-                ? Component.translatable("wispborn.target.info", target.getType().getDescription(), info.tier(), info.manaCost())
-                : target.getType().getDescription();
+        Component targetName = target instanceof Player ? target.getDisplayName() : target.getType().getDescription();
+        Component header = info.mobLevel() > 0 && info.sex().isPresent()
+                ? Component.translatable(
+                        "wispborn.target.info",
+                        targetName,
+                        info.sex().get().symbol(),
+                        info.mobLevel(),
+                        info.manaCost()
+                )
+                : targetName;
         graphics.drawCenteredString(font, header, centerX, baseY, 0xFFFFFF);
 
         Component status = buildStatusLine(info);
@@ -180,7 +187,7 @@ public final class WispRenderHandler {
             case OK -> Component.translatable("wispborn.target.ready", KeyBindings.POSSESS.getTranslatedKeyMessage());
             case IMMUNE, NOT_A_MOB -> Component.translatable("wispborn.infest.immune");
             case HAS_PASSENGER -> Component.translatable("wispborn.infest.has_passenger");
-            case TOO_STRONG -> Component.translatable("wispborn.infest.too_strong", info.tier(), Math.max(1, info.tier() * 2 - 1));
+            case TOO_STRONG -> Component.translatable("wispborn.infest.too_strong", info.mobLevel(), info.wispLevel());
             case NO_MANA -> Component.translatable("wispborn.infest.no_mana", info.manaCost());
         };
     }

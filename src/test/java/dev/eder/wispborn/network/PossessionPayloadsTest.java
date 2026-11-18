@@ -1,9 +1,12 @@
 package dev.eder.wispborn.network;
 
 import dev.eder.wispborn.host.InfestResult;
+import dev.eder.wispborn.traits.Sex;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.Test;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -36,16 +39,39 @@ class PossessionPayloadsTest {
     }
 
     @Test
-    void targetInfoPayloadStreamCodecRoundTrip() {
-        for (InfestResult result : InfestResult.values()) {
-            TargetInfoPayload original = new TargetInfoPayload(15, result, 2, 30);
+    void syncMobTraitsPayloadStreamCodecRoundTrip() {
+        for (Sex sex : Sex.values()) {
+            SyncMobTraitsPayload original = new SyncMobTraitsPayload(77, 12, sex);
             ByteBuf buf = Unpooled.buffer();
             try {
-                TargetInfoPayload.STREAM_CODEC.encode(buf, original);
-                TargetInfoPayload decoded = TargetInfoPayload.STREAM_CODEC.decode(buf);
+                SyncMobTraitsPayload.STREAM_CODEC.encode(buf, original);
+                SyncMobTraitsPayload decoded = SyncMobTraitsPayload.STREAM_CODEC.decode(buf);
                 assertEquals(original, decoded);
             } finally {
                 buf.release();
+            }
+        }
+    }
+
+    @Test
+    void targetInfoPayloadStreamCodecRoundTrip() {
+        for (InfestResult result : InfestResult.values()) {
+            TargetInfoPayload withTraits = new TargetInfoPayload(15, result, 6, Optional.of(Sex.FEMALE), 30, 4);
+            ByteBuf buf = Unpooled.buffer();
+            try {
+                TargetInfoPayload.STREAM_CODEC.encode(buf, withTraits);
+                assertEquals(withTraits, TargetInfoPayload.STREAM_CODEC.decode(buf));
+            } finally {
+                buf.release();
+            }
+
+            TargetInfoPayload immune = new TargetInfoPayload(16, InfestResult.IMMUNE, 0, Optional.empty(), 0, 4);
+            ByteBuf bufImmune = Unpooled.buffer();
+            try {
+                TargetInfoPayload.STREAM_CODEC.encode(bufImmune, immune);
+                assertEquals(immune, TargetInfoPayload.STREAM_CODEC.decode(bufImmune));
+            } finally {
+                bufImmune.release();
             }
         }
     }

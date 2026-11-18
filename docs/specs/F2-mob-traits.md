@@ -177,7 +177,46 @@ Client (`ModConfig.Type.CLIENT`, novo): `client.nameplateRange` = 8 (1–64).
 Herança de traços, reprodução do wisp, EP por nível (F3), cor das placas e glifos em pixel art (F4).
 
 ## Dúvidas do implementador
-_(preencher se houver)_
+Nenhuma dúvida.
 
 ## Relatório de implementação
-_(preencher ao terminar)_
+- **Arquivos criados/alterados/removidos:**
+  - `src/main/resources/data/wispborn/wisp_mob_levels/vanilla.json`: tabela inicial com as 77 espécies vanilla e faixas de nível da spec.
+  - `src/main/java/dev/eder/wispborn/traits/`: criados `Sex`, `MobTraits`, `MobLevelRange` (`CODEC` validando `min >= 1` e `max >= min`), `MobLevelTable` (`SimpleJsonResourceReloadListener` sobre `wisp_mob_levels` somando arquivos em ordem de carregamento e ignorando entradas inválidas com `WARN`), `MobTraitRoller`, `BreedingRules` e `MobTraitsManager`.
+  - `src/main/java/dev/eder/wispborn/registry/ModAttachments.java` e `ModTags.java`: registrado `MOB_TRAITS` (`MobTraits.CODEC`) e removidas as tags `TIER_1..3` (assim como `TierResolver.java`, `TierResolverTest.java` e `data/wispborn/tags/entity_type/tier_*.json`).
+  - `src/main/java/dev/eder/wispborn/config/{WispbornConfig,WispbornClientConfig}.java`: curva `levels.thresholds` expandida até Nv 20 (`136800`); removidos `tiers.minLevel` e `mana.infestCostPerTier`; adicionados `infest.levelGateMargin` (`0`), `mana.infestCostPerLevel` (`5`), `traits.femaleChance` (`0.5`), `ep.levelGrace` (`2`), `ep.falloffPerLevel` (`0.25`) e `client.nameplateRange` (`8`, `ModConfig.Type.CLIENT`).
+  - `src/main/java/dev/eder/wispborn/progress/{EpMath,ProgressManager}.java`: criado `EpMath.levelFactor` e removido o sufixo `wispborn.level_up.tier_unlocked`.
+  - `src/main/java/dev/eder/wispborn/host/{InfestRules,HostManager}.java`: `InfestRules.check` migrado de tier para nível + margem e custo `infestCostPerLevel × mobLevel`; `HostManager` atualizado (incluindo resolução de `PartEntity` para o Ender Dragon e jogadores como `IMMUNE` no indicador de alvo).
+  - `src/main/java/dev/eder/wispborn/network/{SyncMobTraitsPayload,TargetInfoPayload,ModPayloads}.java` e `client/ClientPayloadHandler.java`: sincronização S2C de traços e atualização de `TargetInfoPayload`.
+  - `src/main/java/dev/eder/wispborn/event/TraitEvents.java`: registro de `MobLevelTable` em `AddReloadListenerEvent`, sorteio em `EntityJoinLevelEvent` (`!hasData`), sync em `StartTracking` e rede de segurança em `BabyEntitySpawnEvent`.
+  - `src/main/java/dev/eder/wispborn/mixin/{BreedGoalMixin,AnimalMakeLoveMixin}.java`, `src/main/resources/wispborn.mixins.json` e `neoforge.mods.toml`: `@WrapOperation` em `BreedGoal#getFreePartner` e nas duas chamadas de `Animal#canMate` em `AnimalMakeLove` (`canStillUse` e `lambda$findValidBreedPartner$0`).
+  - `src/main/java/dev/eder/wispborn/client/{MobNameplateRenderer,WispRenderHandler}.java`: placa billboard `♀/♂ Nv X` em `RenderLivingEvent.Post` até `client.nameplateRange` com linha de visão (posicionada acima do nome customizado, escondida no F1 e no hospedeiro atual) e HUD de alvo atualizado.
+  - `src/main/java/dev/eder/wispborn/command/WispbornCommand.java` e `lang/{en_us,pt_br}.json`: adicionados `/wispborn traits <entity>` e `/wispborn traits <entity> set <level> <male|female>`; removido `Max Tier` de `/wispborn info`.
+  - `src/test/java/dev/eder/wispborn/`: criados `MobTraitRollerTest`, `BreedingRulesTest`, `MobLevelRangeTest`, `EpMathTest` e atualizados `InfestRulesTest`, `LevelCurveTest` e `PossessionPayloadsTest`.
+- **Decisões tomadas:**
+  - `TargetInfoPayload` inclui `wispLevel` como 6º campo (mantendo construtor sobrecarregado de 5 parâmetros) porque no client o progresso do wisp só será sincronizado globalmente na `F4` (`SyncWispStatePayload`), e o painel de mira renderiza `wispborn.infest.too_strong` (`Forte demais (Nv %s; você Nv %s)`) no client antes do jogador apertar `R`.
+  - Em `HostManager.computeTargetInfo`, entidades multipart (`PartEntity`, como `EnderDragonPart`) são resolvidas para o `Mob` pai e jogadores vivos na mira retornam `InfestResult.IMMUNE`, garantindo feedback visual consistente de imunidade para Ender Dragon, Warden e jogadores.
+- **Saída final de `./gradlew build`:**
+  ```text
+  > Task :jar
+  > Task :assemble
+  > Task :build
+  BUILD SUCCESSFUL in 3s
+  ```
+- **Saída final de `./gradlew test`:**
+  ```text
+  > Task :compileJava
+  > Task :classes
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  BUILD SUCCESSFUL in 10s
+  ```
+- **Saída final de `./gradlew runServer`:**
+  ```text
+  [00:11:06] [main/INFO] [de.ed.wi.WispbornMod/]: Carregadas 77 faixas de nível de mobs em 'wisp_mob_levels'
+  [00:11:08] [Server thread/INFO] [minecraft/DedicatedServer]: Done (1.112s)! For help, type "help"
+  [00:11:08] [Server thread/INFO] [ne.ne.ne.ga.GameTestHooks/]: Enabled Gametest Namespaces: [wispborn]
+  ```
+- **Pendências:**
+  - Validação do checklist manual in-game por Eder (`runClient` / `runClient2`).

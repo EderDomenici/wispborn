@@ -2,9 +2,11 @@ package dev.eder.wispborn;
 
 import com.mojang.logging.LogUtils;
 import dev.eder.wispborn.command.WispbornCommand;
+import dev.eder.wispborn.config.WispbornClientConfig;
 import dev.eder.wispborn.config.WispbornConfig;
 import dev.eder.wispborn.event.FormEvents;
 import dev.eder.wispborn.event.HostEvents;
+import dev.eder.wispborn.event.TraitEvents;
 import dev.eder.wispborn.event.WispRestrictions;
 import dev.eder.wispborn.event.WispSounds;
 import dev.eder.wispborn.form.WispAnimatable;
@@ -29,6 +31,7 @@ public class WispbornMod {
         ModSounds.SOUND_EVENTS.register(modEventBus);
 
         modContainer.registerConfig(ModConfig.Type.SERVER, WispbornConfig.SPEC);
+        modContainer.registerConfig(ModConfig.Type.CLIENT, WispbornClientConfig.SPEC);
 
         SingletonGeoAnimatable.registerSyncedAnimatable(WispAnimatable.INSTANCE);
 
@@ -36,6 +39,7 @@ public class WispbornMod {
 
         NeoForge.EVENT_BUS.register(FormEvents.class);
         NeoForge.EVENT_BUS.register(HostEvents.class);
+        NeoForge.EVENT_BUS.register(TraitEvents.class);
         NeoForge.EVENT_BUS.register(WispRestrictions.class);
         NeoForge.EVENT_BUS.register(WispSounds.class);
         NeoForge.EVENT_BUS.register(WispbornCommand.class);

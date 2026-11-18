@@ -15,16 +15,20 @@ import dev.eder.wispborn.progress.AllocateResult;
 import dev.eder.wispborn.progress.ProgressManager;
 import dev.eder.wispborn.progress.Stat;
 import dev.eder.wispborn.progress.StatMath;
-import dev.eder.wispborn.progress.TierResolver;
 import dev.eder.wispborn.progress.WispProgress;
 import dev.eder.wispborn.progress.WispStats;
 import dev.eder.wispborn.registry.ModAttachments;
+import dev.eder.wispborn.traits.MobTraits;
+import dev.eder.wispborn.traits.MobTraitsManager;
+import dev.eder.wispborn.traits.Sex;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
@@ -36,6 +40,12 @@ public final class WispbornCommand {
     private static final SuggestionProvider<CommandSourceStack> STAT_SUGGESTIONS =
             (ctx, builder) -> SharedSuggestionProvider.suggest(
                     Arrays.stream(Stat.values()).map(Stat::getSerializedName),
+                    builder
+            );
+
+    private static final SuggestionProvider<CommandSourceStack> SEX_SUGGESTIONS =
+            (ctx, builder) -> SharedSuggestionProvider.suggest(
+                    Arrays.stream(Sex.values()).map(Sex::getSerializedName),
                     builder
             );
 
@@ -88,6 +98,19 @@ public final class WispbornCommand {
                                         .executes(ctx -> setMana(ctx.getSource(), ctx.getSource().getPlayerOrException(), FloatArgumentType.getFloat(ctx, "n")))
                                         .then(Commands.argument("player", EntityArgument.player())
                                                 .executes(ctx -> setMana(ctx.getSource(), EntityArgument.getPlayer(ctx, "player"), FloatArgumentType.getFloat(ctx, "n")))))))
+                .then(Commands.literal("traits")
+                        .then(Commands.argument("entity", EntityArgument.entity())
+                                .executes(ctx -> showTraits(ctx.getSource(), EntityArgument.getEntity(ctx, "entity")))
+                                .then(Commands.literal("set")
+                                        .then(Commands.argument("level", IntegerArgumentType.integer(1))
+                                                .then(Commands.argument("sex", StringArgumentType.word())
+                                                        .suggests(SEX_SUGGESTIONS)
+                                                        .executes(ctx -> setTraits(
+                                                                ctx.getSource(),
+                                                                EntityArgument.getEntity(ctx, "entity"),
+                                                                IntegerArgumentType.getInteger(ctx, "level"),
+                                                                StringArgumentType.getString(ctx, "sex")
+                                                        )))))))
                 .then(Commands.literal("info")
                         .executes(ctx -> showInfo(ctx.getSource(), ctx.getSource().getPlayerOrException()))
                         .then(Commands.argument("player", EntityArgument.player())
@@ -208,6 +231,54 @@ public final class WispbornCommand {
         return 1;
     }
 
+    private static int showTraits(CommandSourceStack source, Entity entity) {
+        if (!(entity instanceof Mob mob)) {
+            source.sendFailure(Component.translatable("commands.wispborn.traits.not_mob", entity.getDisplayName()));
+            return 0;
+        }
+
+        Optional<MobTraits> traitsOpt = MobTraitsManager.traitsOf(mob);
+        if (traitsOpt.isEmpty()) {
+            source.sendSuccess(() -> Component.translatable("commands.wispborn.traits.none", mob.getDisplayName()), false);
+            return 1;
+        }
+
+        MobTraits traits = traitsOpt.get();
+        source.sendSuccess(() -> Component.translatable(
+                "commands.wispborn.traits.show",
+                mob.getDisplayName(),
+                traits.level(),
+                Component.translatable(traits.sex().translationKey()),
+                traits.sex().symbol()
+        ), false);
+        return 1;
+    }
+
+    private static int setTraits(CommandSourceStack source, Entity entity, int level, String sexRaw) {
+        if (!(entity instanceof Mob mob)) {
+            source.sendFailure(Component.translatable("commands.wispborn.traits.not_mob", entity.getDisplayName()));
+            return 0;
+        }
+
+        Optional<Sex> sexOpt = Sex.byName(sexRaw);
+        if (sexOpt.isEmpty()) {
+            source.sendFailure(Component.translatable("commands.wispborn.traits.invalid_sex", sexRaw));
+            return 0;
+        }
+
+        Sex sex = sexOpt.get();
+        MobTraits traits = new MobTraits(level, sex);
+        MobTraitsManager.set(mob, traits);
+        source.sendSuccess(() -> Component.translatable(
+                "commands.wispborn.traits.set.success",
+                mob.getDisplayName(),
+                level,
+                Component.translatable(sex.translationKey()),
+                sex.symbol()
+        ), true);
+        return 1;
+    }
+
     private static int showInfo(CommandSourceStack source, ServerPlayer target) {
         FormState form = target.getData(ModAttachments.FORM);
         WispStats stats = target.getData(ModAttachments.STATS);
@@ -218,7 +289,6 @@ public final class WispbornCommand {
         int maxStat = WispbornConfig.MAX_PER_STAT.get();
         int currentMana = Math.round(ProgressManager.getMana(target));
         int maxMana = ProgressManager.getMaxMana(target);
-        int maxTier = TierResolver.maxTierFor(level, WispbornConfig.tiersMinLevel());
 
         double drainPct = StatMath.drainPercent(
                 WispbornConfig.DRAIN_BASE_PERCENT_PER_PULSE.get(),
@@ -239,8 +309,7 @@ public final class WispbornCommand {
                 epDisplay,
                 availablePoints,
                 currentMana,
-                maxMana,
-                maxTier
+                maxMana
         ), false);
 
         source.sendSuccess(() -> Component.translatable(

@@ -1,6 +1,8 @@
 package dev.eder.wispborn.host;
 
-import java.util.OptionalInt;
+import dev.eder.wispborn.traits.MobTraits;
+
+import java.util.Optional;
 
 public final class InfestRules {
     private InfestRules() {
@@ -10,10 +12,11 @@ public final class InfestRules {
             boolean isMob,
             boolean alive,
             boolean hasPassenger,
-            OptionalInt tier,
-            int maxTier,
+            Optional<MobTraits> traits,
+            int wispLevel,
+            int levelGateMargin,
             float mana,
-            int costPerTier
+            int costPerLevel
     ) {
         if (!isMob || !alive) {
             return InfestResult.NOT_A_MOB;
@@ -21,14 +24,14 @@ public final class InfestRules {
         if (hasPassenger) {
             return InfestResult.HAS_PASSENGER;
         }
-        if (tier.isEmpty()) {
+        if (traits.isEmpty()) {
             return InfestResult.IMMUNE;
         }
-        int targetTier = tier.getAsInt();
-        if (targetTier > maxTier) {
+        int mobLevel = traits.get().level();
+        if (mobLevel > wispLevel + levelGateMargin) {
             return InfestResult.TOO_STRONG;
         }
-        float requiredMana = (float) costPerTier * targetTier;
+        float requiredMana = (float) costPerLevel * mobLevel;
         if (mana < requiredMana) {
             return InfestResult.NO_MANA;
         }

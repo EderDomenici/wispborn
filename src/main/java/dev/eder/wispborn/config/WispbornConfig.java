@@ -10,17 +10,12 @@ public final class WispbornConfig {
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> LEVEL_THRESHOLDS =
             BUILDER.defineListAllowEmpty(
                     "levels.thresholds",
-                    List.of(300, 800, 1600, 2800, 4500, 6800, 9800, 13600, 18300),
+                    List.of(
+                            300, 800, 1600, 2800, 4500, 6800, 9800, 13600, 18300,
+                            24000, 30800, 38800, 48100, 58800, 71000, 84800, 100300, 117600, 136800
+                    ),
                     () -> 300,
                     o -> o instanceof Integer i && i > 0
-            );
-
-    public static final ModConfigSpec.ConfigValue<List<? extends Integer>> TIERS_MIN_LEVEL =
-            BUILDER.defineListAllowEmpty(
-                    "tiers.minLevel",
-                    List.of(1, 3, 5),
-                    () -> 1,
-                    o -> o instanceof Integer i && i >= 1
             );
 
     public static final ModConfigSpec.IntValue POINTS_PER_LEVEL =
@@ -47,8 +42,14 @@ public final class WispbornConfig {
     public static final ModConfigSpec.DoubleValue MANA_REGEN_PER_SECOND =
             BUILDER.defineInRange("mana.regenPerSecond", 1.0D, 0.0D, 10000.0D);
 
-    public static final ModConfigSpec.IntValue MANA_INFEST_COST_PER_TIER =
-            BUILDER.defineInRange("mana.infestCostPerTier", 15, 0, 100000);
+    public static final ModConfigSpec.IntValue MANA_INFEST_COST_PER_LEVEL =
+            BUILDER.defineInRange("mana.infestCostPerLevel", 5, 0, 100000);
+
+    public static final ModConfigSpec.IntValue INFEST_LEVEL_GATE_MARGIN =
+            BUILDER.defineInRange("infest.levelGateMargin", 0, 0, 100);
+
+    public static final ModConfigSpec.DoubleValue TRAITS_FEMALE_CHANCE =
+            BUILDER.defineInRange("traits.femaleChance", 0.5D, 0.0D, 1.0D);
 
     public static final ModConfigSpec.IntValue DRAIN_INTERVAL_TICKS =
             BUILDER.defineInRange("drain.intervalTicks", 100, 1, 72000);
@@ -64,6 +65,12 @@ public final class WispbornConfig {
 
     public static final ModConfigSpec.IntValue EP_CONSUME_BONUS_PER_TIER =
             BUILDER.defineInRange("ep.consumeBonusPerTier", 100, 0, 1000000);
+
+    public static final ModConfigSpec.IntValue EP_LEVEL_GRACE =
+            BUILDER.defineInRange("ep.levelGrace", 2, 0, 100);
+
+    public static final ModConfigSpec.DoubleValue EP_FALLOFF_PER_LEVEL =
+            BUILDER.defineInRange("ep.falloffPerLevel", 0.25D, 0.0D, 1.0D);
 
     public static final ModConfigSpec.IntValue POSSESS_CAST_TICKS =
             BUILDER.defineInRange("possess.castTicks", 20, 1, 1200);
@@ -91,9 +98,5 @@ public final class WispbornConfig {
     public static List<Integer> levelThresholds() {
         // Ordenada e sem repetição: LevelCurve assume limites crescentes.
         return LEVEL_THRESHOLDS.get().stream().map(Integer::intValue).sorted().distinct().toList();
-    }
-
-    public static List<Integer> tiersMinLevel() {
-        return TIERS_MIN_LEVEL.get().stream().map(Integer::intValue).toList();
     }
 }

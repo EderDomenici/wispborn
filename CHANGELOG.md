@@ -4,6 +4,49 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 
 ---
 
+## [F2-mob-traits] — Nível e Sexo dos Mobs / Fim dos Tiers (`feat/F2-mob-traits`)
+
+**Spec de referência:** `docs/specs/F2-mob-traits.md`
+
+### 1. Resumo das Alterações (`feat/F1-born-wisp..feat/F2-mob-traits`)
+- Substituição integral dos tiers por **nível e sexo por mob** (`MobTraits(level, sex)` persistido em `ModAttachments.MOB_TRAITS`), sorteados em `EntityJoinLevelEvent` a partir de `data/wispborn/wisp_mob_levels/vanilla.json` (77 espécies vanilla carregadas por `MobLevelTable`) e sincronizados via `SyncMobTraitsPayload` em `StartTracking`.
+- Expansão do nível máximo do wisp para **20** (`levels.thresholds` até `136800`), atualização de `InfestRules.check` e `HostManager` (`mobLevel <= wispLevel + infest.levelGateMargin`, custo `infestCostPerLevel * mobLevel`), criação de `EpMath.levelFactor` para a `F3` e remoção de `TierResolver` e `tier_1..3.json`.
+- Placa sobre mobs próximos no client (`MobNameplateRenderer`, `RenderLivingEvent.Post`) até `client.nameplateRange` (`8`) com linha de visão, exibindo `♂/♀ Nv X` no estilo vanilla.
+- Reprodução vanilla restrita a macho + fêmea via MixinExtras `@WrapOperation` em `BreedGoal#getFreePartner` e nas duas chamadas de `AnimalMakeLove` (`canStillUse` e `lambda$findValidBreedPartner$0`), com rede de segurança em `BabyEntitySpawnEvent`.
+- Subcomando de debug `/wispborn traits <entity> [set <level> <male|female>]`.
+
+### 2. Detalhamento por Arquivo
+
+| Arquivo | Ação | Detalhes da Implementação |
+|---|---|---|
+| `src/main/resources/data/wispborn/wisp_mob_levels/vanilla.json` | Criado | Faixas iniciais de nível das 77 espécies vanilla infestáveis (chefes, `giant` e jogadores fora da tabela = imunes). |
+| `src/main/java/dev/eder/wispborn/traits/{Sex,MobTraits,MobLevelRange,MobLevelTable,MobTraitRoller,BreedingRules,MobTraitsManager}.java` | Criado | Modelo, codecs, reload listener `wisp_mob_levels`, sorteio puro, regra de reprodução e gerenciador com sync S2C. |
+| `src/main/java/dev/eder/wispborn/registry/{ModAttachments,ModTags}.java` e `progress/TierResolver.java` | Mod./Rem. | Adicionado `MOB_TRAITS`; removidos `TierResolver`, `ModTags.TIER_1..3` e `data/wispborn/tags/entity_type/tier_*.json`. |
+| `src/main/java/dev/eder/wispborn/config/{WispbornConfig,WispbornClientConfig}.java` | Mod./Criado | Curva até Nv 20; adicionados `infest.levelGateMargin`, `mana.infestCostPerLevel`, `traits.femaleChance`, `ep.levelGrace`, `ep.falloffPerLevel` e `client.nameplateRange`. |
+| `src/main/java/dev/eder/wispborn/progress/{EpMath,ProgressManager}.java` | Criado/Mod. | `EpMath.levelFactor` e remoção do aviso de tier desbloqueado no level-up. |
+| `src/main/java/dev/eder/wispborn/host/{InfestRules,HostManager}.java` | Modificado | Gate de nível e custo por nível do mob; suporte a `PartEntity` (Ender Dragon) e jogadores como `IMMUNE` no raycast de alvo. |
+| `src/main/java/dev/eder/wispborn/network/{SyncMobTraitsPayload,TargetInfoPayload,ModPayloads}.java` | Criado/Mod. | `SyncMobTraitsPayload` registrado; `TargetInfoPayload` atualizado com `mobLevel`, `Optional<Sex>` e `wispLevel`. |
+| `src/main/java/dev/eder/wispborn/event/TraitEvents.java` | Criado | Listeners para `AddReloadListenerEvent`, `EntityJoinLevelEvent`, `PlayerEvent.StartTracking` e `BabyEntitySpawnEvent`. |
+| `src/main/java/dev/eder/wispborn/mixin/{BreedGoalMixin,AnimalMakeLoveMixin}.java`, `wispborn.mixins.json`, `neoforge.mods.toml` | Criado/Mod. | `@WrapOperation` exigindo sexos opostos em `BreedGoal` e `AnimalMakeLove`. |
+| `src/main/java/dev/eder/wispborn/client/{MobNameplateRenderer,WispRenderHandler,ClientPayloadHandler}.java` | Criado/Mod. | Placa `♂/♀ Nv X` sobre mobs próximos, recepção de `SyncMobTraitsPayload` e HUD de alvo atualizado. |
+| `src/main/java/dev/eder/wispborn/command/WispbornCommand.java` e `assets/wispborn/lang/{en_us,pt_br}.json` | Modificado | Subcomando `/wispborn traits` e traduções atualizadas. |
+| `src/test/java/dev/eder/wispborn/**` | Criado/Mod. | Testes unitários JUnit 5 para `MobTraitRoller`, `BreedingRules`, `MobLevelRange`/`MobLevelTable`, `EpMath`, `InfestRules`, `LevelCurve` e payloads. |
+
+### 3. Evidências de Verificação
+
+- **`./gradlew build --no-daemon`:** `BUILD SUCCESSFUL in 3s`
+- **`./gradlew test --rerun-tasks --no-daemon`:** `BUILD SUCCESSFUL in 10s`
+- **`./gradlew runServer --no-daemon`:**
+  ```text
+  [00:11:06] [main/INFO] [de.ed.wi.WispbornMod/]: Carregadas 77 faixas de nível de mobs em 'wisp_mob_levels'
+  [00:11:08] [Server thread/INFO] [minecraft/DedicatedServer]: Done (1.112s)! For help, type "help"
+  ```
+
+### 4. Pendências
+- [ ] **Checklist manual in-game (`./gradlew runClient` / `runClient2`):** validação das placas, gate de nível, custo de mana, reprodução M+F (vacas, lobos, cabras/sapos) e `/reload` a cargo de Eder.
+
+---
+
 ## [F1-born-wisp] — Nascer Wisp, Renascer Wisp e Fome do Wisp (`feat/F1-born-wisp`)
 
 **Spec de referência:** `docs/specs/F1-born-wisp.md`

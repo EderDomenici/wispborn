@@ -9,8 +9,9 @@ import dev.eder.wispborn.form.WispTuning;
 import dev.eder.wispborn.network.CastStatePayload;
 import dev.eder.wispborn.network.TargetInfoPayload;
 import dev.eder.wispborn.progress.ProgressManager;
-import dev.eder.wispborn.progress.TierResolver;
 import dev.eder.wispborn.registry.ModAttachments;
+import dev.eder.wispborn.traits.MobTraits;
+import dev.eder.wispborn.traits.MobTraitsManager;
 import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -29,12 +30,11 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.entity.PartEntity;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -91,25 +91,25 @@ public final class HostManager {
             return InfestResult.NOT_A_MOB;
         }
 
-        OptionalInt tierOpt = TierResolver.tierOf(target.getType());
+        Optional<MobTraits> traitsOpt = MobTraitsManager.traitsOf(target);
         int playerLevel = ProgressManager.level(player);
-        List<Integer> minLevels = WispbornConfig.tiersMinLevel();
-        int maxTier = TierResolver.maxTierFor(playerLevel, minLevels);
+        int gateMargin = WispbornConfig.INFEST_LEVEL_GATE_MARGIN.get();
         float mana = ProgressManager.getMana(player);
-        int costPerTier = WispbornConfig.MANA_INFEST_COST_PER_TIER.get();
+        int costPerLevel = WispbornConfig.MANA_INFEST_COST_PER_LEVEL.get();
 
         InfestResult result = InfestRules.check(
                 true,
                 target.isAlive(),
                 !target.getPassengers().isEmpty(),
-                tierOpt,
-                maxTier,
+                traitsOpt,
+                playerLevel,
+                gateMargin,
                 mana,
-                costPerTier
+                costPerLevel
         );
 
         if (result != InfestResult.OK) {
-            sendInfestFailure(player, result, tierOpt, minLevels, mana, costPerTier);
+            sendInfestFailure(player, result, traitsOpt, playerLevel, mana, costPerLevel);
             return result;
         }
 
@@ -217,32 +217,32 @@ public final class HostManager {
         PENDING.remove(player.getUUID());
         PacketDistributor.sendToPlayer(player, CastStatePayload.NONE);
 
-        OptionalInt tierOpt = TierResolver.tierOf(mob.getType());
+        Optional<MobTraits> traitsOpt = MobTraitsManager.traitsOf(mob);
         int playerLevel = ProgressManager.level(player);
-        List<Integer> minLevels = WispbornConfig.tiersMinLevel();
-        int maxTier = TierResolver.maxTierFor(playerLevel, minLevels);
+        int gateMargin = WispbornConfig.INFEST_LEVEL_GATE_MARGIN.get();
         float mana = ProgressManager.getMana(player);
-        int costPerTier = WispbornConfig.MANA_INFEST_COST_PER_TIER.get();
+        int costPerLevel = WispbornConfig.MANA_INFEST_COST_PER_LEVEL.get();
 
         InfestResult recheck = InfestRules.check(
                 true,
                 mob.isAlive(),
                 !mob.getPassengers().isEmpty(),
-                tierOpt,
-                maxTier,
+                traitsOpt,
+                playerLevel,
+                gateMargin,
                 mana,
-                costPerTier
+                costPerLevel
         );
 
         if (recheck != InfestResult.OK) {
-            sendInfestFailure(player, recheck, tierOpt, minLevels, mana, costPerTier);
+            sendInfestFailure(player, recheck, traitsOpt, playerLevel, mana, costPerLevel);
             return;
         }
 
-        int tier = tierOpt.getAsInt();
-        float cost = (float) costPerTier * tier;
+        int mobLevel = traitsOpt.get().level();
+        float cost = (float) costPerLevel * mobLevel;
         if (!ProgressManager.spendMana(player, cost)) {
-            sendInfestFailure(player, InfestResult.NO_MANA, tierOpt, minLevels, ProgressManager.getMana(player), costPerTier);
+            sendInfestFailure(player, InfestResult.NO_MANA, traitsOpt, playerLevel, ProgressManager.getMana(player), costPerLevel);
             return;
         }
 
@@ -370,31 +370,55 @@ public final class HostManager {
                 eyePos,
                 endPos,
                 searchBox,
-                e -> e instanceof Mob && e.isAlive() && !e.isSpectator(),
+                e -> !e.isSpectator() && (
+                        (e instanceof Mob && e.isAlive())
+                                || (e instanceof Player && e.isAlive())
+                                || (e instanceof PartEntity<?> part && part.getParent() instanceof Mob parent && parent.isAlive())
+                ),
                 maxDistSqr
         );
 
-        if (entityHit == null || !(entityHit.getEntity() instanceof Mob mob) || !player.hasLineOfSight(mob)) {
+        if (entityHit == null) {
             return TargetInfoPayload.NONE;
         }
 
-        OptionalInt tierOpt = TierResolver.tierOf(mob.getType());
-        int tier = tierOpt.orElse(0);
-        int costPerTier = WispbornConfig.MANA_INFEST_COST_PER_TIER.get();
-        int manaCost = tier * costPerTier;
-        int maxTier = TierResolver.maxTierFor(ProgressManager.level(player), WispbornConfig.tiersMinLevel());
+        Entity hitEntity = entityHit.getEntity();
+        Entity resolved = (hitEntity instanceof PartEntity<?> part) ? part.getParent() : hitEntity;
+        int wispLevel = ProgressManager.level(player);
+
+        if (resolved instanceof Player targetPlayer) {
+            if (!targetPlayer.isAlive() || !player.hasLineOfSight(targetPlayer)) {
+                return TargetInfoPayload.NONE;
+            }
+            return new TargetInfoPayload(targetPlayer.getId(), InfestResult.IMMUNE, 0, Optional.empty(), 0, wispLevel);
+        }
+
+        if (!(resolved instanceof Mob mob) || !mob.isAlive() || !player.hasLineOfSight(mob)) {
+            return TargetInfoPayload.NONE;
+        }
+
+        Optional<MobTraits> traitsOpt = MobTraitsManager.traitsOf(mob);
+        int costPerLevel = WispbornConfig.MANA_INFEST_COST_PER_LEVEL.get();
+        int gateMargin = WispbornConfig.INFEST_LEVEL_GATE_MARGIN.get();
 
         InfestResult result = InfestRules.check(
                 true,
                 mob.isAlive(),
                 !mob.getPassengers().isEmpty(),
-                tierOpt,
-                maxTier,
+                traitsOpt,
+                wispLevel,
+                gateMargin,
                 ProgressManager.getMana(player),
-                costPerTier
+                costPerLevel
         );
 
-        return new TargetInfoPayload(mob.getId(), result, tier, manaCost);
+        if (traitsOpt.isEmpty()) {
+            return new TargetInfoPayload(mob.getId(), result, 0, Optional.empty(), 0, wispLevel);
+        }
+
+        MobTraits traits = traitsOpt.get();
+        int manaCost = traits.level() * costPerLevel;
+        return new TargetInfoPayload(mob.getId(), result, traits.level(), Optional.of(traits.sex()), manaCost, wispLevel);
     }
 
     private static void syncTargetInfo(ServerPlayer player, TargetInfoPayload next) {
@@ -412,22 +436,21 @@ public final class HostManager {
     private static void sendInfestFailure(
             ServerPlayer player,
             InfestResult result,
-            OptionalInt tierOpt,
-            List<Integer> minLevels,
+            Optional<MobTraits> traitsOpt,
+            int wispLevel,
             float mana,
-            int costPerTier
+            int costPerLevel
     ) {
         Component message = switch (result) {
             case IMMUNE, NOT_A_MOB -> Component.translatable("wispborn.infest.immune");
             case HAS_PASSENGER -> Component.translatable("wispborn.infest.has_passenger");
             case TOO_STRONG -> {
-                int tier = tierOpt.orElse(1);
-                int requiredLevel = (tier - 1 >= 0 && tier - 1 < minLevels.size()) ? minLevels.get(tier - 1) : tier;
-                yield Component.translatable("wispborn.infest.too_strong", tier, requiredLevel);
+                int mobLevel = traitsOpt.map(MobTraits::level).orElse(1);
+                yield Component.translatable("wispborn.infest.too_strong", mobLevel, wispLevel);
             }
             case NO_MANA -> {
-                int tier = tierOpt.orElse(1);
-                int requiredMana = costPerTier * tier;
+                int mobLevel = traitsOpt.map(MobTraits::level).orElse(1);
+                int requiredMana = costPerLevel * mobLevel;
                 yield Component.translatable("wispborn.infest.no_mana", Math.round(mana) + "/" + requiredMana);
             }
             case OK -> Component.empty();

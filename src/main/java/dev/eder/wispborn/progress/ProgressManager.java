@@ -48,15 +48,7 @@ public final class ProgressManager {
 
         if (newLevel > oldLevel) {
             int pointsGained = (newLevel - oldLevel) * WispbornConfig.POINTS_PER_LEVEL.get();
-            List<Integer> minLevels = WispbornConfig.tiersMinLevel();
-            int oldMaxTier = TierResolver.maxTierFor(oldLevel, minLevels);
-            int newMaxTier = TierResolver.maxTierFor(newLevel, minLevels);
-
-            MutableComponent message = Component.translatable("wispborn.level_up", newLevel, pointsGained);
-            if (newMaxTier > oldMaxTier) {
-                message.append(Component.translatable("wispborn.level_up.tier_unlocked", newMaxTier));
-            }
-            player.sendSystemMessage(message);
+            player.sendSystemMessage(Component.translatable("wispborn.level_up", newLevel, pointsGained));
 
             player.level().playSound(
                     null,
