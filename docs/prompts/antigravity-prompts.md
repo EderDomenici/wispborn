@@ -142,7 +142,7 @@ Não faça merge.
 
 ## Prompts F1 a F4 e V1 — rodada de fundação
 
-Ordem: `F1-born-wisp` → `F2-mob-traits` → `F3-drain-consume` → `F4-hud`, cada uma só depois do merge da
+Ordem: `F1-born-wisp` → `M3c-host-stealth` → `F2-mob-traits` → `F3-drain-consume` → `F4-hud`, cada uma só depois do merge da
 anterior. A F4 só começa com a arte do prompt A2 entregue e aprovada por Eder. A `V1-wisp-visual` pode
 correr em paralelo (precisa da arte A3); se a F4 já estiver em andamento, faça a V1 depois dela.
 

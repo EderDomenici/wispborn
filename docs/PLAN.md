@@ -48,6 +48,7 @@ Todos os números ficam em config de servidor ou em JSON de dados.
 | M2 | `specs/M2-level-stats.md` | EP, nível, pontos, atributos, mana, config | feito |
 | M3 | `specs/M3-possession.md` | Possessão como passageiro, custo de mana, saídas | feito |
 | M3b | `specs/M3b-possession-feel.md` | Conjuração, indicador de alvo, som do wisp | feito |
+| M3c | `specs/M3c-host-stealth.md` | Wisp indetectável dentro do hospedeiro (mobs perdem o alvo) | a fazer, depois da F1 |
 | F1 | `specs/F1-born-wisp.md` | Nascer/renascer wisp, fome, inanição | a fazer |
 | F2 | `specs/F2-mob-traits.md` | Nível e sexo dos mobs, fim dos tiers, reprodução macho + fêmea | a fazer |
 | F3 | `specs/F3-drain-consume.md` | Drenagem e consumo com nível e fome | a fazer |
