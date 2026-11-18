@@ -81,7 +81,7 @@ public final class FormEvents {
         }
 
         int starveInterval = WispbornConfig.HUNGER_STARVE_INTERVAL_TICKS.getAsInt();
-        if (starveInterval > 0 && serverPlayer.tickCount % starveInterval == 0 && serverPlayer.isAlive()) {
+        if (serverPlayer.tickCount % starveInterval == 0 && serverPlayer.isAlive()) {
             boolean shouldStarve = HungerMath.wispStarves(
                     isWisp,
                     difficulty,
