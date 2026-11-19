@@ -1,0 +1,98 @@
+{
+  "core_container": [
+    9,
+    9
+  ],
+  "core_container_blinking": [
+    9,
+    9
+  ],
+  "core_full": [
+    9,
+    9
+  ],
+  "core_half": [
+    9,
+    9
+  ],
+  "hunger_empty": [
+    9,
+    9
+  ],
+  "hunger_full": [
+    9,
+    9
+  ],
+  "hunger_half": [
+    9,
+    9
+  ],
+  "mana_bar_background": [
+    182,
+    5
+  ],
+  "mana_bar_progress": [
+    182,
+    5
+  ],
+  "dna_bar_background": [
+    182,
+    5
+  ],
+  "dna_bar_progress": [
+    182,
+    5
+  ],
+  "host_health_background": [
+    164,
+    6
+  ],
+  "host_health_progress": [
+    164,
+    6
+  ],
+  "cast_bar_background": [
+    132,
+    4
+  ],
+  "cast_bar_progress": [
+    132,
+    4
+  ],
+  "dna_icon": [
+    9,
+    9
+  ],
+  "host_frame": [
+    182,
+    44
+  ],
+  "target_frame": [
+    150,
+    32
+  ],
+  "host_floor_marker": [
+    3,
+    8
+  ],
+  "consume_ready": [
+    9,
+    9
+  ],
+  "no_ep": [
+    9,
+    9
+  ],
+  "target_ok": [
+    9,
+    9
+  ],
+  "target_blocked": [
+    9,
+    9
+  ],
+  "cast_vignette": [
+    256,
+    256
+  ]
+}

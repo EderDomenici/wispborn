@@ -63,4 +63,23 @@ Animações novas de drenagem e consumo, câmera do hospedeiro, modelos de outra
 _(preencher se houver)_
 
 ## Relatório de implementação
-_(preencher ao terminar)_
+
+### Arte A3 e integração — 19/11/2026
+
+- Atualização na pasta principal, branch `feat/V1-art-refresh`, preservando F1/F2/M3c.
+- Causa do modelo antigo: fonte, resources e build da branch ativa ainda tinham
+  núcleo cúbico e dez espinhos; o arredondamento anterior ficou em worktree temporário
+  que não existe mais. A revisão foi reconstruída pelos scripts versionados.
+- Atualizados `art/parasita-magico/wisp.bbmodel`, geo, animações, textura, glowmask,
+  prévias técnicas e BRIEF. Núcleo de 5 px com 27 cuboides em degraus de 0,5 px;
+  halos de 7 e 9 px. Rig e tempos da possessão preservados.
+- Copiados os quatro arquivos para `src/main/resources/assets/wispborn/`, nos caminhos
+  `geo/entity/`, `animations/entity/` e `textures/entity/`.
+- `./gradlew build`: **BUILD SUCCESSFUL in 17s**. Arte validada por
+  `art/parasita-magico/src/validate_a3.py`; fonte, resources, build e JAR idênticos.
+- A2 entregue em `art/hud/`, incluindo `cast_vignette.png`; pacote artístico ainda
+  não integrado ao HUD. Nomes e dimensões conferidos contra a tabela da F4.
+- Não implementado nesta entrega artística: `WispFirstPersonFx`, configuração da
+  vinheta, flash, partículas ou HUD F4. Nenhum código Java foi alterado.
+- Pendentes: Passo 1 em F5/Player2 e revisão in-game de transparência, distância,
+  água e logs. As prévias são renders técnicos, não capturas do Blockbench/jogo.

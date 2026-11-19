@@ -1,0 +1,51 @@
+# Art refresh — 2026-11-19
+
+## Objective
+
+Make the rounded A3 wisp load from the main development checkout and deliver the
+remaining A2 artwork described in `docs/prompts/codex-art-prompts.md`.
+
+## Context
+
+The active checkout was `feat/M3c-host-stealth`, with the original one-cube nucleus
+and ten ray bones in both art sources and runtime resources. The earlier rounded
+revision lived only in `/tmp/wispborn-v1-rounding`; that directory no longer exists.
+The committed V1 branch retained the first A3 version and its regeneration scripts.
+The new `feat/V1-art-refresh` branch starts from the active checkout, preserving
+F1, F2 and M3c. No temporary worktree is required for this delivery.
+
+## Steps
+
+1. Restore committed A3 sources and reconstruct the requested half-pixel chamfers.
+2. Copy all four runtime assets into the main checkout; check generated resources
+   and packaged JAR contents after the build.
+3. Generate all A2 sprites, white bitmap glyphs, vignette, layout, variants and
+   both mockups with original deterministic pixel art.
+4. Validate dimensions/names against F4, alpha channels and source/export parity.
+5. Record build and artifact validation separately from manual in-game review.
+
+## Decisions
+
+- Preserve the 5px nucleus diameter, rig, two halos and possession timing.
+- Keep A2 artwork under `art/hud/`; F4 runtime HUD implementation is outside the
+  user's request for the remaining artistic work.
+- Use variant A for core and hunger in the mockups; retain visible alternatives.
+- Keep generated sources and regeneration scripts in the durable repository.
+- Technical A3 previews are not Blockbench or Minecraft captures.
+
+## Open questions
+
+- User visual review of rounded wisp in game, including transparency and distance.
+- User selection/approval of A2 icons and layout before F4 runtime integration.
+- V1 step 1 multiplayer checks and first-person code are not completed by an art update.
+
+## Verification outcome
+
+- A3 validator passed: rig, UVs, PNGs, animation parity and timing limits.
+- A2 validator passed: all 24 sprite names/sizes, RGBA alpha, bitmap font and scaling.
+- Both generators reproduced identical file hashes on a second run.
+- Mockups inspected at 100% and 200%; vignette preview inspected separately.
+- `./gradlew build`: BUILD SUCCESSFUL in 17s.
+- All four wisp files match art, source resources, processed resources and packaged
+  `build/libs/wispborn-0.0.1.jar`. Packaged nucleus has 27 cuboids and no ray bones.
+- No manual in-game or Blockbench validation was performed in this session.
