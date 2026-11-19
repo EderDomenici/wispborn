@@ -34,10 +34,10 @@ def main():
         if name in ('mana_bar_progress','dna_bar_progress'):
             meta=json.loads((ROOT/'sprites'/f'{name}.png.mcmeta').read_text())['animation']
             assert (meta['width'],meta['height'])==expected
-            assert meta['frametime']==2 and meta['interpolate'] is False
-            assert image.size==(expected[0],expected[1]*16)
-            frames=[image.crop((0,i*expected[1],expected[0],(i+1)*expected[1])).tobytes() for i in range(16)]
-            assert len(set(frames))>=8, name
+            assert meta['frametime']==1 and meta['interpolate'] is False
+            assert image.size==(expected[0],expected[1]*64)
+            frames=[image.crop((0,i*expected[1],expected[0],(i+1)*expected[1])).tobytes() for i in range(64)]
+            assert len(set(frames))>=32, name
         else:
             assert image.size==expected,name
         assert image.mode=='RGBA',name
@@ -56,7 +56,10 @@ def main():
     assert [p['chars'] for p in providers]==[[chr(0xE000+i)] for i in range(3)]
     assert all(p['height']==8 and p['ascent']==7 for p in providers)
     gif=Image.open(ROOT/'bars_animated.gif')
-    assert gif.n_frames==16 and gif.info['loop']==0 and gif.info['duration']==100
+    assert gif.n_frames==64 and gif.info['loop']==0 and gif.info['duration']==50
+    for index in range(gif.n_frames):
+        gif.seek(index)
+        assert gif.info['duration']==50
     for name in ('mockup','mockup_host'):
         image=Image.open(ROOT/(name+'.png'))
         assert image.mode=='RGBA' and image.size==(854,480)

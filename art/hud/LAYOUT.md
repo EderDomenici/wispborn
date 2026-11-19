@@ -120,8 +120,8 @@ Requested size increase: mana is now 182×9 GUI pixels and XP/DNA is 182×7.
 The width remains aligned with the vanilla hotbar footprint. Upper rows and host
 panel move upward by 5 px to retain spacing. Mana text stays outside the bar.
 
-Progress PNGs contain 16 vertically stacked frames: mana 182×144, DNA 182×112.
-Their `.png.mcmeta` specifies frame width/height, 2 ticks per frame and no interpolation.
+Progress PNGs contain 64 vertically stacked frames: mana 182×576, DNA 182×448.
+Their `.png.mcmeta` specifies frame width/height, 1 tick per frame (20 fps) and no interpolation.
 Mana flows in blue-violet with small moving highlights. DNA has two counterphase
 emerald strands and connecting rungs. Both loop seamlessly; frame dimensions in
 `manifest.json` are logical dimensions, not the full strip dimensions.
@@ -129,5 +129,9 @@ emerald strands and connecting rungs. Both loop seamlessly; frame dimensions in
 Copy the metadata alongside each PNG during F4 integration. The GUI atlas handles
 texture animation; rendering must still crop to the actual resource fraction.
 This is decorative motion, not invented changes to the player's mana or XP.
-`bars_animated.gif` previews the loop at 100 ms per frame with resource values fixed.
+`bars_animated.gif` previews the loop at 50 ms per frame with resource values fixed.
 The other mockups show frame zero. No Java HUD implementation is included.
+
+The refined loop lasts 3.2 seconds. Phase advances by half a texel per frame
+instead of the previous two texels, reducing visible jumps while preserving crisp
+pixel edges. The atlas has no spatial filtering or extra runtime code.

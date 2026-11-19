@@ -38,8 +38,8 @@ Nenhuma barra, ícone ou moldura desenhada com `fill`, gradiente ou forma geomé
 | `target_ok`, `target_blocked` | 9×9 | Situação do alvo |
 | `cast_bar_background`, `cast_bar_progress` | definido no LAYOUT | Barra de conjuração (substitui o `fill` atual) |
 
-As dimensões das barras correspondem a um frame. Os sprites de progresso usam 16 frames
-verticais com `.png.mcmeta` (2 ticks por frame, sem interpolação). Copiar PNG e metadata
+As dimensões das barras correspondem a um frame. Os sprites de progresso usam 64 frames
+verticais com `.png.mcmeta` (1 tick por frame, 20 fps, sem interpolação). Copiar PNG e metadata
 juntos; o atlas anima a textura, enquanto a largura recortada continua seguindo o recurso.
 
 ### Fonte de ícones (`assets/wispborn/font/icons.json`)

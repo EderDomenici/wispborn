@@ -7,6 +7,8 @@ from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
 EDGE = '#101d29'
+BAR_FRAMES = 64
+BAR_FRAME_TICKS = 1
 PALETTE = {'.':(0,0,0,0), '#':EDGE, 'd':'#294b59', 'm':'#328f9d',
            'c':'#64e5e4', 'l':'#b7fff0', 'w':'#f0fff9', 'g':'#299a79',
            'e':'#55dca0', 'b':'#202d44', 'v':'#a6a0ff', 'r':'#ed6d81'}
@@ -76,23 +78,23 @@ def frame(size):
 
 
 def animated_bar(kind, phase):
-    """Sixteen seamlessly looping pixel frames; values stay independent of shimmer."""
+    """Sixty-four looping pixel frames with half-pixel phase steps at 20 fps."""
     height=9 if kind=='mana' else 7
     colors=('#6252c9','#b5adff','#35459b') if kind=='mana' else ('#299a79','#c7ffe8','#196359')
     image=bar((182,height),colors,True)
     draw=ImageDraw.Draw(image)
     for x in range(2,180):
-        angle=2*math.pi*(x/32-phase/16)
+        angle=2*math.pi*(x/32-phase/BAR_FRAMES)
         if kind=='mana':
             y=4+round(math.sin(angle))
             draw.point((x,y),fill='#9690f0')
             draw.point((x,y+1),fill='#7771d8')
-            if (x-2*phase)%32 in (0,1):
+            if (x-32*phase/BAR_FRAMES)%32 < 2:
                 draw.point((x,2),fill='#e1dcff')
                 draw.point((x,3),fill='#b5adff')
         else:
-            offset=round(2*math.sin(2*angle))
-            if (x-2*phase)%4==0:
+            offset=round(2*math.sin(angle))
+            if (x-32*phase/BAR_FRAMES)%4 < 1:
                 draw.line((x,3-abs(offset),x,3+abs(offset)),fill='#53cfa0')
             draw.point((x,3+offset),fill='#c7ffe8')
             draw.point((x,3-offset),fill='#6ae4b4')
@@ -182,12 +184,12 @@ def make_sprites():
         put(prefix+'_background',bar(size,colors))
         put(prefix+'_progress',bar(size,colors,True,kind=='dna'))
         if kind in ('mana','dna'):
-            sheet=Image.new('RGBA',(size[0],size[1]*16))
-            for phase in range(16):sheet.paste(animated_bar(kind,phase),(0,phase*size[1]))
+            sheet=Image.new('RGBA',(size[0],size[1]*BAR_FRAMES))
+            for phase in range(BAR_FRAMES):sheet.paste(animated_bar(kind,phase),(0,phase*size[1]))
             save(sheet,'sprites',prefix+'_progress')
             sprites[prefix+'_progress']=animated_bar(kind,0)
             (ROOT/'sprites'/(prefix+'_progress.png.mcmeta')).write_text(json.dumps({
-                'animation':{'width':size[0],'height':size[1],'frametime':2,'interpolate':False}
+                'animation':{'width':size[0],'height':size[1],'frametime':BAR_FRAME_TICKS,'interpolate':False}
             },indent=2)+'\n')
     put('dna_icon',icon(['.##...##.','#le#.#wl#','.#el#wl#.','..#ele#..','...#e#...','..#wle#..','.#wl#el#.','#wl#.#el#','.##...##.']))
     put('host_frame',frame((182,44)));put('target_frame',frame((150,32)))
@@ -296,10 +298,10 @@ def main():
     Image.alpha_composite(Image.open(ROOT/'mockup.png'),overlay).save(ROOT/'vignette_preview.png')
     variants()
     frames=[]
-    for phase in range(16):
+    for phase in range(BAR_FRAMES):
         animated=sprites | {kind+'_bar_progress':animated_bar(kind,phase) for kind in ('mana','dna')}
         frames.append(mockup(animated,glyphs,True))
-    frames[0].save(ROOT/'bars_animated.gif',save_all=True,append_images=frames[1:],duration=100,loop=0,disposal=2)
+    frames[0].save(ROOT/'bars_animated.gif',save_all=True,append_images=frames[1:],duration=BAR_FRAME_TICKS*50,loop=0,disposal=2)
     (ROOT/'manifest.json').write_text(json.dumps({name:list(image.size) for name,image in sprites.items()},indent=2)+'\n')
     print(f'Generated {len(sprites)} sprites, {len(glyphs)} glyphs, font provider, two mockups and variants.')
 
