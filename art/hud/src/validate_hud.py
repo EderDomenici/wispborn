@@ -30,8 +30,18 @@ def main():
     assert set(manifest)==required
     for name in required:
         image=Image.open(ROOT/'sprites'/f'{name}.png')
-        assert image.mode=='RGBA' and image.size==fixed[name],name
-        assert list(image.size)==manifest[name]
+        expected=fixed[name]
+        if name in ('mana_bar_progress','dna_bar_progress'):
+            meta=json.loads((ROOT/'sprites'/f'{name}.png.mcmeta').read_text())['animation']
+            assert (meta['width'],meta['height'])==expected
+            assert meta['frametime']==2 and meta['interpolate'] is False
+            assert image.size==(expected[0],expected[1]*16)
+            frames=[image.crop((0,i*expected[1],expected[0],(i+1)*expected[1])).tobytes() for i in range(16)]
+            assert len(set(frames))>=8, name
+        else:
+            assert image.size==expected,name
+        assert image.mode=='RGBA',name
+        assert list(expected)==manifest[name]
         if name not in ('host_frame','target_frame','cast_vignette'):
             assert set(image.getchannel('A').getdata()) <= {0,255},name
     vignette=Image.open(ROOT/'sprites/cast_vignette.png')
@@ -45,6 +55,8 @@ def main():
     providers=json.loads((ROOT/'font/icons.json').read_text())['providers']
     assert [p['chars'] for p in providers]==[[chr(0xE000+i)] for i in range(3)]
     assert all(p['height']==8 and p['ascent']==7 for p in providers)
+    gif=Image.open(ROOT/'bars_animated.gif')
+    assert gif.n_frames==16 and gif.info['loop']==0 and gif.info['duration']==100
     for name in ('mockup','mockup_host'):
         image=Image.open(ROOT/(name+'.png'))
         assert image.mode=='RGBA' and image.size==(854,480)

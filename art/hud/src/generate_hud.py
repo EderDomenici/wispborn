@@ -75,6 +75,30 @@ def frame(size):
     return image
 
 
+def animated_bar(kind, phase):
+    """Sixteen seamlessly looping pixel frames; values stay independent of shimmer."""
+    height=9 if kind=='mana' else 7
+    colors=('#6252c9','#b5adff','#35459b') if kind=='mana' else ('#299a79','#c7ffe8','#196359')
+    image=bar((182,height),colors,True)
+    draw=ImageDraw.Draw(image)
+    for x in range(2,180):
+        angle=2*math.pi*(x/32-phase/16)
+        if kind=='mana':
+            y=4+round(math.sin(angle))
+            draw.point((x,y),fill='#9690f0')
+            draw.point((x,y+1),fill='#7771d8')
+            if (x-2*phase)%32 in (0,1):
+                draw.point((x,2),fill='#e1dcff')
+                draw.point((x,3),fill='#b5adff')
+        else:
+            offset=round(2*math.sin(2*angle))
+            if (x-2*phase)%4==0:
+                draw.line((x,3-abs(offset),x,3+abs(offset)),fill='#53cfa0')
+            draw.point((x,3+offset),fill='#c7ffe8')
+            draw.point((x,3-offset),fill='#6ae4b4')
+    return image
+
+
 FONT = {
  'A':['01110','10001','10001','11111','10001','10001','10001'],
  'B':['11110','10001','10001','11110','10001','10001','11110'],
@@ -150,13 +174,21 @@ def make_sprites():
     put('core_half',core_half)
     hunger_empty=empty_shape(FLAME)
     put('hunger_empty',hunger_empty);put('hunger_full',flame);put('hunger_half',half(flame,hunger_empty))
-    for kind,colors,size in [('mana',('#6252c9','#b5adff','#35459b'),(182,5)),
-                             ('dna',('#299a79','#c7ffe8','#196359'),(182,5)),
+    for kind,colors,size in [('mana',('#6252c9','#b5adff','#35459b'),(182,9)),
+                             ('dna',('#299a79','#c7ffe8','#196359'),(182,7)),
                              ('host_health',('#42b994','#a1f1d0','#23735d'),(164,6)),
                              ('cast',('#409ba9','#cbfff8','#286177'),(132,4))]:
         prefix=kind+'_bar' if kind in ('mana','dna','cast') else kind
         put(prefix+'_background',bar(size,colors))
         put(prefix+'_progress',bar(size,colors,True,kind=='dna'))
+        if kind in ('mana','dna'):
+            sheet=Image.new('RGBA',(size[0],size[1]*16))
+            for phase in range(16):sheet.paste(animated_bar(kind,phase),(0,phase*size[1]))
+            save(sheet,'sprites',prefix+'_progress')
+            sprites[prefix+'_progress']=animated_bar(kind,0)
+            (ROOT/'sprites'/(prefix+'_progress.png.mcmeta')).write_text(json.dumps({
+                'animation':{'width':size[0],'height':size[1],'frametime':2,'interpolate':False}
+            },indent=2)+'\n')
     put('dna_icon',icon(['.##...##.','#le#.#wl#','.#el#wl#.','..#ele#..','...#e#...','..#wle#..','.#wl#el#.','#wl#.#el#','.##...##.']))
     put('host_frame',frame((182,44)));put('target_frame',frame((150,32)))
     marker=Image.new('RGBA',(3,8));d=ImageDraw.Draw(marker)
@@ -206,25 +238,26 @@ def mockup(sprites,glyphs,host):
     def paste(name,x,y):canvas.alpha_composite(sprites[name],(x,y))
     cx=213
     for i in range(3):
-        paste('core_container',cx-91+i*8,201)
-        paste('core_full' if i<2 else 'core_half',cx-91+i*8,201)
-    for i in range(10):paste('hunger_full' if i<7 else 'hunger_empty',cx+11+i*8,201)
-    paste('dna_icon',cx-27,191);text(canvas,'NV 7',cx-14,193)
-    text(canvas,'+2',cx+38,193,color='#8be8bd')
-    for kind,y,value in [('dna',215,.6),('mana',230,42/70)]:
+        paste('core_container',cx-91+i*8,196)
+        paste('core_full' if i<2 else 'core_half',cx-91+i*8,196)
+    for i in range(10):paste('hunger_full' if i<7 else 'hunger_empty',cx+11+i*8,196)
+    paste('dna_icon',cx-27,186);text(canvas,'NV 7',cx-14,188)
+    text(canvas,'+2',cx+38,188,color='#8be8bd')
+    for kind,y,value in [('dna',210,.6),('mana',228,42/70)]:
         paste(kind+'_bar_background',cx-91,y)
-        canvas.alpha_composite(sprites[kind+'_bar_progress'].crop((0,0,math.floor(182*value),5)),(cx-91,y))
-    text(canvas,'MANA 42/70',cx,222,color='#d0caff',center=True)
+        height=sprites[kind+'_bar_progress'].height
+        canvas.alpha_composite(sprites[kind+'_bar_progress'].crop((0,0,math.floor(182*value),height)),(cx-91,y))
+    text(canvas,'MANA 42/70',cx,219,color='#d0caff',center=True)
     if host:
-        paste('host_frame',cx-91,146)
-        text(canvas,'ZUMBI',cx-82,152)
-        canvas.alpha_composite(glyphs['sex_female'],(cx-47,152))
-        text(canvas,'NV 6',cx-36,152)
-        text(canvas,'62%',cx+56,152)
-        paste('host_health_background',cx-82,165)
-        canvas.alpha_composite(sprites['host_health_progress'].crop((0,0,101,6)),(cx-82,165))
-        paste('host_floor_marker',cx-82+32-1,164)
-        text(canvas,'CONSUMIR: ATE 20%',cx-82,177,color='#e4cba6')
+        paste('host_frame',cx-91,141)
+        text(canvas,'ZUMBI',cx-82,147)
+        canvas.alpha_composite(glyphs['sex_female'],(cx-47,147))
+        text(canvas,'NV 6',cx-36,147)
+        text(canvas,'62%',cx+56,147)
+        paste('host_health_background',cx-82,160)
+        canvas.alpha_composite(sprites['host_health_progress'].crop((0,0,101,6)),(cx-82,160))
+        paste('host_floor_marker',cx-82+32-1,159)
+        text(canvas,'CONSUMIR: ATE 20%',cx-82,172,color='#e4cba6')
     else:
         paste('target_frame',cx-75,67)
         text(canvas,'ZUMBI',cx-66,73)
@@ -262,6 +295,11 @@ def main():
     overlay.putalpha(overlay.getchannel('A').point(lambda value: round(value*.6)))
     Image.alpha_composite(Image.open(ROOT/'mockup.png'),overlay).save(ROOT/'vignette_preview.png')
     variants()
+    frames=[]
+    for phase in range(16):
+        animated=sprites | {kind+'_bar_progress':animated_bar(kind,phase) for kind in ('mana','dna')}
+        frames.append(mockup(animated,glyphs,True))
+    frames[0].save(ROOT/'bars_animated.gif',save_all=True,append_images=frames[1:],duration=100,loop=0,disposal=2)
     (ROOT/'manifest.json').write_text(json.dumps({name:list(image.size) for name,image in sprites.items()},indent=2)+'\n')
     print(f'Generated {len(sprites)} sprites, {len(glyphs)} glyphs, font provider, two mockups and variants.')
 

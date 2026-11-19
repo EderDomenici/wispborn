@@ -26,8 +26,8 @@ Nenhuma barra, ícone ou moldura desenhada com `fill`, gradiente ou forma geomé
 | `core_container`, `core_container_blinking` | 9×9 | Fundo de cada "coração" do wisp (piscando ao tomar dano) |
 | `core_full`, `core_half` | 9×9 | Vida do wisp (2 de vida = 1 ícone) |
 | `hunger_empty`, `hunger_half`, `hunger_full` | 9×9 | Fome do wisp (2 pontos = 1 ícone) |
-| `mana_bar_background`, `mana_bar_progress` | 182×5 | Barra de mana (cor de mana); progresso recortado pela largura |
-| `dna_bar_background`, `dna_bar_progress` | 182×5 | EP dentro do nível atual, no lugar da barra de XP |
+| `mana_bar_background`, `mana_bar_progress` | 182×9 | Barra de mana (cor de mana); progresso recortado pela largura |
+| `dna_bar_background`, `dna_bar_progress` | 182×7 | EP dentro do nível atual, no lugar da barra de XP |
 | `dna_icon` | 9×9 | Ícone ao lado do número de nível |
 | `host_frame` | definido no LAYOUT | Moldura do painel do hospedeiro |
 | `host_health_background`, `host_health_progress` | definido no LAYOUT | Vida do hospedeiro |
@@ -37,6 +37,10 @@ Nenhuma barra, ícone ou moldura desenhada com `fill`, gradiente ou forma geomé
 | `target_frame` | definido no LAYOUT | Fundo do painel do alvo (substitui o texto do M3b) |
 | `target_ok`, `target_blocked` | 9×9 | Situação do alvo |
 | `cast_bar_background`, `cast_bar_progress` | definido no LAYOUT | Barra de conjuração (substitui o `fill` atual) |
+
+As dimensões das barras correspondem a um frame. Os sprites de progresso usam 16 frames
+verticais com `.png.mcmeta` (2 ticks por frame, sem interpolação). Copiar PNG e metadata
+juntos; o atlas anima a textura, enquanto a largura recortada continua seguindo o recurso.
 
 ### Fonte de ícones (`assets/wispborn/font/icons.json`)
 Provider `bitmap` com glifos em PNG na Área de Uso Privado:

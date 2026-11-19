@@ -20,14 +20,14 @@ neighbor. They are original schematic scenes, not Minecraft screenshots.
 
 | Element | X | Y | Size | Rule |
 | --- | ---: | ---: | --- | --- |
-| Health containers and foreground | -91 | 39 | 9×9 each | Advance 8 px to the right; 2 HP per icon. |
-| Hunger icons | 11 | 39 | 9×9 each | Ten slots, advance 8 px to the right. |
-| DNA icon | -27 | 49 | 9×9 | Level row above health/hunger. |
-| Level text | -14 | 47 | Font height 7–9 | `Nv 7`; grow to the right. |
-| Available stat points | 38 | 47 | Font height 7–9 | `+2`; hide when zero. |
-| DNA background/progress | -91 | 25 | 182×5 | Crop progress; do not stretch pixels. |
-| Mana value | centered on 0 | 18 | Font height 7–9 | `Mana 42/70`; measure the localized string. |
-| Mana background/progress | -91 | 10 | 182×5 | Crop progress; do not stretch pixels. |
+| Health containers and foreground | -91 | 44 | 9×9 each | Advance 8 px to the right; 2 HP per icon. |
+| Hunger icons | 11 | 44 | 9×9 each | Ten slots, advance 8 px to the right. |
+| DNA icon | -27 | 54 | 9×9 | Level row above health/hunger. |
+| Level text | -14 | 52 | Font height 7–9 | `Nv 7`; grow to the right. |
+| Available stat points | 38 | 52 | Font height 7–9 | `+2`; hide when zero. |
+| DNA background/progress | -91 | 30 | 182×7 | Crop progress; do not stretch pixels. |
+| Mana value | centered on 0 | 21 | Font height 7–9 | `Mana 42/70`; measure the localized string. |
+| Mana background/progress | -91 | 12 | 182×9 | Crop progress; do not stretch pixels. |
 
 Health examples use three containers (5/6 HP); hunger uses seven full and three
 empty sparks (14/20). Extra health rows grow upward at a 10 px pitch, at most ten
@@ -43,15 +43,15 @@ complete icons including their empty portions. Blinking containers are brighter.
 
 | Element | X | Y | Size |
 | --- | ---: | ---: | --- |
-| `host_frame` | -91 | 94 | 182×44 |
-| Host name | -82 | 88 | Available text width depends on trailing labels |
-| Sex glyph / level | after measured name + 5 px | 88 | Glyph 5×8; level text |
-| Health percent | right aligned at 82 | 88 | Font height 7–9 |
-| Health background/progress | -82 | 75 | 164×6 |
-| `host_floor_marker` | `-82 + floor(164 * floorPercent) - 1` | 76 | 3×8 |
-| Consume status / configured key | -82 | 63 | Font height 7–9 |
-| `consume_ready` | -82 | 64 | 9×9; shift following text right by 12 px |
-| `no_ep` | 70 | 64 | 9×9; reserve its trailing space when visible |
+| `host_frame` | -91 | 99 | 182×44 |
+| Host name | -82 | 93 | Available text width depends on trailing labels |
+| Sex glyph / level | after measured name + 5 px | 93 | Glyph 5×8; level text |
+| Health percent | right aligned at 82 | 93 | Font height 7–9 |
+| Health background/progress | -82 | 80 | 164×6 |
+| `host_floor_marker` | `-82 + floor(164 * floorPercent) - 1` | 81 | 3×8 |
+| Consume status / configured key | -82 | 68 | Font height 7–9 |
+| `consume_ready` | -82 | 69 | 9×9; shift following text right by 12 px |
+| `no_ep` | 70 | 69 | 9×9; reserve its trailing space when visible |
 
 Draw marker after both bar layers. The example uses Zombie, female, level 6,
 62% health (101/164 px progress) and the 20% marker at pixel 32. At 62% the
@@ -113,3 +113,21 @@ Dependencies: Python 3 and Pillow. Generation uses pixel operations and an origi
 The A2 files remain in `art/hud/`. They are not a claim that F4 or V1 first-person
 effects have been implemented. User-facing strings shown in mockups are examples;
 production text must come from the mod's language files.
+
+## Mana and XP/DNA animation revision
+
+Requested size increase: mana is now 182×9 GUI pixels and XP/DNA is 182×7.
+The width remains aligned with the vanilla hotbar footprint. Upper rows and host
+panel move upward by 5 px to retain spacing. Mana text stays outside the bar.
+
+Progress PNGs contain 16 vertically stacked frames: mana 182×144, DNA 182×112.
+Their `.png.mcmeta` specifies frame width/height, 2 ticks per frame and no interpolation.
+Mana flows in blue-violet with small moving highlights. DNA has two counterphase
+emerald strands and connecting rungs. Both loop seamlessly; frame dimensions in
+`manifest.json` are logical dimensions, not the full strip dimensions.
+
+Copy the metadata alongside each PNG during F4 integration. The GUI atlas handles
+texture animation; rendering must still crop to the actual resource fraction.
+This is decorative motion, not invented changes to the player's mana or XP.
+`bars_animated.gif` previews the loop at 100 ms per frame with resource values fixed.
+The other mockups show frame zero. No Java HUD implementation is included.
