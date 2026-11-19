@@ -42,7 +42,7 @@ def empty_shape(rows, blink=False):
 
 def half(full, empty):
     image=empty.copy()
-    image.paste(full.crop((0,0,5,9)),(0,0))
+    image.paste(full.crop((4,0,9,9)),(4,0))
     return image
 
 
@@ -242,7 +242,7 @@ def mockup(sprites,glyphs,host):
     for i in range(3):
         paste('core_container',cx-91+i*8,196)
         paste('core_full' if i<2 else 'core_half',cx-91+i*8,196)
-    for i in range(10):paste('hunger_full' if i<7 else 'hunger_empty',cx+11+i*8,196)
+    for i in range(10):paste('hunger_empty' if i<3 else 'hunger_full',cx+11+i*8,196)
     paste('dna_icon',cx-27,186);text(canvas,'NV 7',cx-14,188)
     text(canvas,'+2',cx+38,188,color='#8be8bd')
     for kind,y,value in [('dna',210,.6),('mana',228,42/70)]:

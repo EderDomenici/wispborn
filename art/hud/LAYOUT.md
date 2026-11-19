@@ -30,7 +30,10 @@ neighbor. They are original schematic scenes, not Minecraft screenshots.
 | Mana background/progress | -91 | 12 | 182×9 | Crop progress; do not stretch pixels. |
 
 Health examples use three containers (5/6 HP); hunger uses seven full and three
-empty sparks (14/20). Extra health rows grow upward at a 10 px pitch, at most ten
+empty sparks (14/20). Hunger depletes from left to right: the three empty
+slots are on the left and the seven full slots remain on the right. For slot
+`i` from left to right (0–9), its fill is `clamp(food - 2 * (9 - i), 0, 2)`.
+A partially depleted slot uses `hunger_half`, with its remaining bright half on the right. Extra health rows grow upward at a 10 px pitch, at most ten
 icons per row. With `r` health rows, move the level row and host panel upward by
 `10 * (r - 1)` GUI pixels. F4 must account for these rows in vanilla HUD stacking.
 This art mockup does not implement GUI events or vanilla bubble positioning.
