@@ -3,6 +3,7 @@
   "key.wispborn.possess": "Possess Creature",
   "key.wispborn.consume": "Consume Host",
   "subtitles.wispborn.entity.wisp.drift": "Wisp shimmers",
+  "subtitles.wispborn.host.drain_pulse": "Host drained",
   "death.attack.wispborn.consumed": "%1$s was consumed by %2$s",
   "death.attack.wispborn.consumed.item": "%1$s was consumed by %2$s using %3$s",
   "wispborn.form.wisp": "Wisp",

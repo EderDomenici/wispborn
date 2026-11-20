@@ -294,6 +294,7 @@ public final class HostManager {
     public static void tickDrain(ServerPlayer player) {
         if (!isHost(player)) {
             DRAIN_TICKS.remove(player.getUUID());
+            DrainFx.clear(player.getUUID());
             return;
         }
 
@@ -313,16 +314,19 @@ public final class HostManager {
             return;
         }
 
+        float health = mob.getHealth();
+        float maxHealth = mob.getMaxHealth();
+        double floorPercent = WispbornConfig.DRAIN_FLOOR_PERCENT.getAsDouble();
+        boolean atFloor = DrainMath.atFloor(health, maxHealth, floorPercent);
+        DrainFx.tick(player, mob, atFloor);
+
         int ticks = DRAIN_TICKS.merge(player.getUUID(), 1, Integer::sum);
         int interval = WispbornConfig.DRAIN_INTERVAL_TICKS.getAsInt();
         if (ticks <= 0 || interval <= 0 || ticks % interval != 0) {
             return;
         }
 
-        float health = mob.getHealth();
-        float maxHealth = mob.getMaxHealth();
-        double floorPercent = WispbornConfig.DRAIN_FLOOR_PERCENT.getAsDouble();
-        if (DrainMath.atFloor(health, maxHealth, floorPercent)) {
+        if (atFloor) {
             return;
         }
 
@@ -358,18 +362,7 @@ public final class HostManager {
             player.getFoodData().eat(restoreFood, restoreSaturation);
         }
 
-        ServerLevel serverLevel = player.serverLevel();
-        serverLevel.sendParticles(
-                ParticleTypes.SOUL,
-                mob.getX(),
-                mob.getY() + mob.getBbHeight() * 0.5D,
-                mob.getZ(),
-                4,
-                mob.getBbWidth() * 0.3D,
-                mob.getBbHeight() * 0.3D,
-                mob.getBbWidth() * 0.3D,
-                0.02D
-        );
+        DrainFx.onPulse(player, mob, nextHealth, floorPercent);
         player.displayClientMessage(buildHostHud(player, mob), true);
     }
 
@@ -473,6 +466,7 @@ public final class HostManager {
         cancelCast(player, false);
         LAST_TARGET_INFO.remove(player.getUUID());
         DRAIN_TICKS.remove(player.getUUID());
+        DrainFx.clear(player.getUUID());
         if (!isHost(player)) {
             return;
         }
@@ -526,6 +520,7 @@ public final class HostManager {
         PENDING_DISMOUNT_POS.remove(player.getUUID());
         LAST_TARGET_INFO.remove(player.getUUID());
         DRAIN_TICKS.remove(player.getUUID());
+        DrainFx.clear(player.getUUID());
     }
 
     public static Component buildHostHud(ServerPlayer player, LivingEntity host) {

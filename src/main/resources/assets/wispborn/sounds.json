@@ -9,5 +9,15 @@
         "pitch": 1.4
       }
     ]
+  },
+  "host.drain_pulse": {
+    "subtitle": "subtitles.wispborn.host.drain_pulse",
+    "sounds": [
+      {
+        "name": "entity.warden.heartbeat",
+        "type": "event",
+        "volume": 0.8
+      }
+    ]
   }
 }

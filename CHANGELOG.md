@@ -42,6 +42,22 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 
 ---
 
+## [F3 extra] — Feedback da drenagem e cliques do parasita (`feat/F3-drain-consume`)
+
+**Design:** `docs/superpowers/specs/2026-11-20-drain-feedback-design.md`.
+
+- `host/DrainFx.java` (novo): a cada pulso envia `ClientboundHurtAnimationPacket` (só a piscada vermelha e o
+  tranco, sem dano nem reação da IA), toca `wispborn:host.drain_pulse` com tom de 0,8 a 1,3 conforme a vida
+  cai e dispara uma onda de partículas na cor do wisp que se expande em 5 passos de 2 ticks. No piso, um
+  anel gira devagar em volta do mob. Substitui as 4 partículas de alma do pulso.
+- `DrainMath`: `pulsePitch`, `ringRadius`, `ringPoints` (puras, com testes).
+- `ModSounds.HOST_DRAIN_PULSE` + `sounds.json` (aponta para `entity.warden.heartbeat`) + legendas.
+- `WispTuning`: constantes da onda, do anel e do volume.
+- `client/ParasiteInputBlocker.java` (novo): como parasita, cancela ataque, uso e escolher bloco no
+  cliente (`InteractionKeyMappingTriggered`, sem balançar o braço). Fim do bloco sumindo e voltando.
+
+---
+
 ## [fix] — Fome do wisp visível dentro do hospedeiro (`fix/host-hunger-bar`)
 
 - O vanilla trata o hospedeiro como montaria: troca a barra de fome pelos corações do mob. Em HOST a fome

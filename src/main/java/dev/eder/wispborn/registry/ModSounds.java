@@ -18,6 +18,14 @@ public final class ModSounds {
             )
     );
 
+    /** Pulso da drenagem do hospedeiro. Aponta para um som vanilla em sounds.json; a arte pode trocar. */
+    public static final DeferredHolder<SoundEvent, SoundEvent> HOST_DRAIN_PULSE = SOUND_EVENTS.register(
+            "host.drain_pulse",
+            () -> SoundEvent.createVariableRangeEvent(
+                    ResourceLocation.fromNamespaceAndPath(WispbornMod.MOD_ID, "host.drain_pulse")
+            )
+    );
+
     private ModSounds() {
     }
 }

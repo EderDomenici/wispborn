@@ -3,6 +3,7 @@
   "key.wispborn.possess": "Possuir criatura",
   "key.wispborn.consume": "Consumir hospedeiro",
   "subtitles.wispborn.entity.wisp.drift": "Wisp cintila",
+  "subtitles.wispborn.host.drain_pulse": "Hospedeiro drenado",
   "death.attack.wispborn.consumed": "%1$s foi consumido por %2$s",
   "death.attack.wispborn.consumed.item": "%1$s foi consumido por %2$s usando %3$s",
   "wispborn.form.wisp": "Wisp",

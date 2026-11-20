@@ -34,6 +34,14 @@ public final class WispTuning {
     public static final int TARGET_FAIL_COLOR = 0xFF4444;
     public static final int POSSESSED_PARTICLE_COLOR = 0xFF40E0D0;
 
+    /** Feedback da drenagem: onda que se expande a cada pulso e anel girando no piso. */
+    public static final int DRAIN_WAVE_STEPS = 5;
+    public static final int DRAIN_WAVE_STEP_TICKS = 2;
+    public static final float DRAIN_WAVE_PARTICLE_SCALE = 0.9F;
+    public static final int DRAIN_FLOOR_RING_INTERVAL_TICKS = 4;
+    public static final double DRAIN_FLOOR_RING_SPIN_PER_TICK = 0.04D;
+    public static final float DRAIN_PULSE_VOLUME = 0.6F;
+
     private WispTuning() {
     }
 }
