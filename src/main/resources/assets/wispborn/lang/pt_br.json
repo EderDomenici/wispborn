@@ -22,8 +22,6 @@
   "wispborn.stat.allocate.maxed": "%s já está no máximo (%s).",
   "wispborn.hud.max": "%s · máx",
   "wispborn.hud.level": "Nv %s",
-  "wispborn.hud.stat_points": "+%s",
-  "wispborn.hud.mana": "Mana %s/%s",
   "wispborn.hud.consume_prompt": "Consumir [%s]",
   "wispborn.grimoire.title": "Grimório",
   "wispborn.grimoire.tab.wisp": "Wisp",

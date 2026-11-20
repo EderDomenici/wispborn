@@ -18,7 +18,6 @@ public final class HudSprites {
 
     public static final ResourceLocation DNA_BAR_BACKGROUND = hud("dna_bar_background");
     public static final ResourceLocation DNA_BAR_PROGRESS = hud("dna_bar_progress");
-    public static final ResourceLocation DNA_ICON = hud("dna_icon");
     public static final ResourceLocation DNA_ORB = hud("dna_orb");
 
     public static final ResourceLocation HOST_FRAME = hud("host_frame");

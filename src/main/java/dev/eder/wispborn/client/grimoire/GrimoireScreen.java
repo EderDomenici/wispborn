@@ -254,7 +254,7 @@ public final class GrimoireScreen extends Screen {
             boolean hasStatPending = this.pending.pending(stat) > 0;
 
             String statName = ellipsize(font, Component.translatable(stat.translationKey()).getString(), STAT_TEXT_MAX_WIDTH);
-            String effectStr = ellipsize(font, formatEffect(stat, state, total), STAT_TEXT_MAX_WIDTH);
+            String effectStr = ellipsize(font, formatEffect(stat, state, total, this.pending.pending(stat), this.minecraft.player.getMaxHealth()), STAT_TEXT_MAX_WIDTH);
             graphics.drawString(font, statName, left + 116, rowY, COLOR_TEXT_PRIMARY, true);
             graphics.drawString(
                     font,
@@ -398,7 +398,7 @@ public final class GrimoireScreen extends Screen {
         }
     }
 
-    private static String formatEffect(Stat stat, SyncWispStatePayload state, int totalPoints) {
+    private static String formatEffect(Stat stat, SyncWispStatePayload state, int totalPoints, int pendingPoints, float maxHealth) {
         return switch (stat) {
             case ABSORPTION -> {
                 double pct = StatMath.drainPercent(
@@ -426,7 +426,9 @@ public final class GrimoireScreen extends Screen {
                 yield Component.translatable("wispborn.grimoire.effect.reserve", maxMana).getString();
             }
             case VITALITY -> {
-                int cores = 3 + totalPoints * WispbornConfig.VITALITY_HEARTS_PER_POINT.getAsInt();
+                // Núcleos atuais vêm da vida máxima real (já inclui a Vitalidade gasta); soma só os pendentes.
+                int cores = Mth.ceil(maxHealth / 2.0F)
+                        + pendingPoints * WispbornConfig.VITALITY_HEARTS_PER_POINT.getAsInt();
                 yield Component.translatable("wispborn.grimoire.effect.vitality", cores).getString();
             }
         };
