@@ -161,3 +161,54 @@ ENTREGA
 - Capturas novas idle.png, walking.png e possess.png (quadro de 0,7 s), com fundo escuro e com fundo claro.
 - Atualize BRIEF.md: o que mudou, tamanhos do halo, e a lista de ossos citados por cada clipe.
 ```
+
+---
+
+## Prompt A4 — HUD na paleta B e kit do Grimório (para a F5)
+
+```
+Você vai refazer a arte do HUD do mod Wispborn (Minecraft 1.21.1) numa paleta nova e criar o kit de
+sprites do Grimório. Trabalhe só em art/hud/.
+
+Antes de começar, leia por inteiro:
+- docs/superpowers/specs/2026-11-20-hud-b-grimorio-design.md (paleta B com os valores exatos e o porquê)
+- docs/specs/F5-hud-b-grimorio.md (a tabela "Contrato de sprites" é a lista obrigatória de entregas)
+- art/hud/LAYOUT.md e art/hud/src/generate_hud.py (o gerador atual; estenda, não reescreva)
+
+CONTEXTO
+- Eder escolheu a paleta B, "Pergaminho e tinta": osso, grafite e tinta ferrugem. O ciano atual sai de
+  TODO o HUD porque lembra o Deep Dark. Nenhuma cor pode lembrar Deep Dark, Nether, End ou o cobre das
+  Trial Chambers.
+- A cor do wisp é independente da interface; não use a cor do wisp em nenhum sprite.
+- Referência visual aprovada: canvas https://claude.ai/artifact/5GmZeBSHyhcLcBmzjpWvoW, pranchas
+  "HUD reposicionado na paleta B" e "Grimório · página do wisp (paleta B)". Se não conseguir abrir o
+  link, siga as tabelas da F5 e do design.
+
+ENTREGAS
+1. Recolorir TODOS os sprites atuais de art/hud/sprites/ na paleta B, mantendo nomes, formas e tamanhos
+   (exceto os que a F5 muda). Os selos de sexo (font/sex_*_badge.png) continuam azul e rosa.
+2. Barras novas: dna_bar_background/progress 200x6 e mana_bar_background/progress 80x6, com o progresso
+   animado em 64 quadros de 1 tick, como as atuais (a onda da mana e a hélice do DNA cabem em 6 px:
+   amplitude de 1 px).
+3. dna_orb 19x19: anel cor de osso com o ícone de DNA no centro, contorno escuro de 1 px.
+4. Kit do grimório em art/hud/grimoire/ (vai para wispborn:grimoire/*): todos os sprites da segunda
+   tabela da F5, com os .png.mcmeta de nine-slice onde a tabela pede. Estilo: o mesmo das molduras do
+   HUD (chanfro de 3 px, contorno de 1 px, cantos com 1 px claro). Botão primário em ferrugem #C4573A;
+   botão comum em grafite com borda osso; marcador pendente em ferrugem com borda clara.
+5. Regere mockup.png e mockup_host.png no layout novo do HUD (F5, regra 1) e crie mockup_grimoire.png
+   (316x200 de GUI em escala 2, sobre fundo escuro de jogo) com valores de exemplo: Lvl 7, EP 8920/9800,
+   2 pontos livres, Absorção 2 (+1 pendente), Eficiência 3, Reserva 4, Vitalidade 1.
+6. Atualize LAYOUT.md (HUD inferior novo e o painel do grimório) e estenda validate_hud.py para a
+   segunda tabela da F5 e os tamanhos novos.
+
+REGRAS
+- Tudo gerado pelo script, determinístico: rodar duas vezes dá os mesmos bytes. Nada de imagem por IA,
+  nada redimensionado com filtro.
+- Todo PNG é RGBA; alfa só 0 ou 255, exceto o preenchimento translúcido das molduras e a vinheta.
+- Arte original; não copie sprites de outros jogos ou mods.
+
+CONFERÊNCIA
+- python art/hud/src/validate_hud.py passa.
+- Abra os mockups em 100% e 200%: nada borrado, nada ciano.
+- Liste no fim os arquivos criados e alterados.
+```

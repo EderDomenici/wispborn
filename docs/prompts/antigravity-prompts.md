@@ -173,6 +173,19 @@ Não faça merge.
 
 ---
 
+## Prompt F5 — HUD na paleta B e Grimório
+
+Só depois do merge da `F4-hud` e com a arte do prompt A4 entregue e aprovada por Eder. Use o mesmo texto
+do bloco "Prompts F1 a F4 e V1" com `<SPEC>` = `F5-hud-b-grimorio`, e acrescente às leituras obrigatórias
+`docs/superpowers/specs/2026-11-20-hud-b-grimorio-design.md`. Lembretes específicos:
+- A arte vem de `art/hud/` (A4); copiar `sprites/` para `textures/gui/sprites/hud/` e `grimoire/` para
+  `textures/gui/sprites/grimoire/`, sempre com os `.png.mcmeta`.
+- A distribuição de pontos é decidida no servidor (`AllocationRules`); a tela só monta o pedido.
+- O wisp 3D do grimório usa `InventoryScreen.renderEntityInInventoryFollowsMouse`; se o modelo do wisp não
+  aparecer dentro da tela, pare e registre em "Dúvidas do implementador".
+
+---
+
 ## Depois de cada PR
 
 Mande o link do PR (ou o diff) para o Claude revisar, com a frase:
