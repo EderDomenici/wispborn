@@ -1,159 +1,168 @@
-# A2 HUD art contract
+# A4 — Palette B HUD and Grimoire art contract
 
-## Objective
+## Objective and scope
 
-Original pixel sprites for F4 and the V1 casting vignette. Variant A is the initial
-selection for both health and hunger; `variants.png` exposes alternatives for review.
-All PNGs were approved by Eder on 2026-11-19 and copied into runtime resources.
-In-game HUD programming and visual testing remain pending.
+A4 extends the existing A2 generator with the approved **Parchment and ink** palette,
+new HUD proportions, and the complete F5 Grimoire sprite kit. Only `art/hud/` is
+owned by this art task. Antigravity owns F5 Java, runtime resource integration and
+in-game verification. These mockups are original schematic previews, not screenshots.
 
-## Coordinates
+Reference documents: `docs/specs/F5-hud-b-grimorio.md` and
+`docs/superpowers/specs/2026-11-20-hud-b-grimorio-design.md`. The linked external
+canvas could not be opened; the local tables are the source of truth.
 
-All measurements below are **GUI pixels**, before GUI scaling. Origin `(0, 0)` is
-the bottom center; X grows right and Y grows up. Each coordinate identifies the
-**top-left** of the element. Convert with `screenX = floor(W / 2) + x`,
-`screenY = H - y`. W and H are scaled GUI dimensions.
+## Palette B
 
-The 854×480 mockups use GUI scale 2: a 427×240 canvas is enlarged with nearest
-neighbor. They are original schematic scenes, not Minecraft screenshots.
+| Role | Colors |
+| --- | --- |
+| Outline | `#120F0C` |
+| Frame fill | `#1D1915`, alpha 225 |
+| Bone border / corner highlight | `#CDBB94` / `#FFF3D6` |
+| Text / secondary / disabled | `#F3EAD6` / `#B5A88F` / `#6F655A` |
+| Rust emphasis | `#C4573A`, `#E2775F` |
+| Bar rail / highlight / ticks | `#26211C` / `#3A332B` / `#4A4137` |
+| Health | `#4A1B16`, `#7D2A21`, `#B5402F`, `#E2775F`, `#F7CBB8` |
+| Hunger | `#6E5A2A`, `#C9A55A`, `#F2E2B0` |
+| Empty / blinking | `#2B2621` / `#B5A88F` |
+| Mana | `#3F5AA8`, `#9FB4EE`, `#24346A`, `#8AA0E6`, `#6A80CC`, `#D9E2FF` |
+| DNA | `#A8976A`, `#FFF6D8`, `#6F644A`, `#D9C99C` |
+| Target allowed / blocked | `#A8C46A` / `#D0563C` |
+
+No cyan/teal remains in HUD or Grimoire sprites. The creature itself is independent
+of interface colors: the Grimoire mockup contains a schematic cyan wisp portrait.
+It is not a new texture or a replacement for the animated 3D player renderer.
 
 ## Bottom HUD
 
-| Element | X | Y | Size | Rule |
-| --- | ---: | ---: | --- | --- |
-| Health containers and foreground | -91 | 44 | 9×9 each | Advance 8 px to the right; 2 HP per icon. |
-| Hunger icons | 11 | 44 | 9×9 each | Ten slots, advance 8 px to the right. |
-| DNA icon | -27 | 54 | 9×9 | Level row above health/hunger. |
-| Level text | -14 | 52 | Font height 7–9 | `Nv 7`; grow to the right. |
-| Available stat points | 38 | 52 | Font height 7–9 | `+2`; hide when zero. |
-| DNA background/progress | -91 | 30 | 182×7 | Crop progress; do not stretch pixels. |
-| Mana value | centered on 0 | 21 | Font height 7–9 | `Mana 42/70`; measure the localized string. |
-| Mana background/progress | -91 | 12 | 182×9 | Crop progress; do not stretch pixels. |
+Coordinates are GUI pixels relative to bottom center. X grows right; Y grows up.
+Each position is the **top-left**: `screenX = floor(W/2) + x`, `screenY = H - y`.
+The mockups use logical 427×240 pixels, enlarged to 854×480 with nearest neighbor.
 
-Health examples use three containers (5/6 HP); hunger uses seven full and three
-empty sparks (14/20). Hunger depletes from left to right: the three empty
-slots are on the left and the seven full slots remain on the right. For slot
-`i` from left to right (0–9), its fill is `clamp(food - 2 * (9 - i), 0, 2)`.
-A partially depleted slot uses `hunger_half`, with its remaining bright half on the right. Extra health rows grow upward at a 10 px pitch, at most ten
-icons per row. With `r` health rows, move the level row and the central bottom slot upward by
-`10 * (r - 1)` GUI pixels. F4 must account for these rows in vanilla HUD stacking.
-This art mockup does not implement GUI events or vanilla bubble positioning.
-
-Health uses `core_container` underneath `core_full`/`core_half`. The right half of
-`core_half` is transparent so the container remains visible. Hunger variants are
-complete icons including their empty portions. Blinking containers are brighter.
-
-## Host panel (revisado em 20/11/2026)
-
-Compact panel at the **top center**, absolute Y from the top of the screen (not from the bottom).
-
-| Element | X (from center) | Y (from top) | Size |
+| Element | X | Y | Logical size / rule |
 | --- | ---: | ---: | --- |
-| `host_frame` (nine-slice, border 4) | -64 | top slot (2, below boss bars) | 128×24 |
-| Host name | -59 | 8 | Measured, ellipsized before the suffix |
-| Sex badge / level | after name + 3 px | 7 / 8 | Badge 9×9 (`U+E003`/`U+E004`); level text |
-| `no_ep` (when the prey gives no EP) | left of the percentage, 2 px gap | 7 | 9×9 |
-| Health percent | right aligned at 59 | 8 | Font height 7–9 |
-| Health background/progress | -59 | 19 | 118×5 |
-| `host_floor_marker` | `-59 + floor(118 * floorPercent) - 1` | 17 | 3×8 |
+| DNA background/progress | -100 | 14 | 200×6; crop to progress |
+| Health containers/foreground | -100 | 28 | 9×9, advance 8 px |
+| DNA orb | -9 | 34 | 19×19; centered using integer pixels |
+| Total EP text | centered | 43 | Example `8920`; `#FFF6D8` |
+| Hunger | 20 | 36 | Ten 9×9 slots, advance 8 px |
+| Mana background/progress | 20 | 26 | 80×6; no numerical label |
+| Central consume badge | -42 | 61 | 84×16, bottom at H-45 |
+| Consume-ready icon | -37 | 57 | 9×9 inside badge |
+| Consume text | -24 | 56 | Font; configured key in game |
+| Central cast bar | -66 | 49 | 132×4, bottom at H-45 |
 
-There is no consume text in the panel: the floor marker on the bar is the only hint
-until the host reaches the floor.
+The central slot ends 2 px above the EP text; WISP casting and HOST consuming are
+mutually exclusive. Level and available attribute points appear only in the Grimoire.
+Health beyond ten icons grows upward by 10 px per row. The upper central elements
+and hunger follow F5's row-offset rules; runtime code must reserve space for air bubbles.
 
-## Central bottom slot (revisado em 20/11/2026)
+Hunger depletes **left to right**. In the 14/20 example, three empty slots are on
+the left and seven full slots on the right. Slot `i` (0–9 from left) uses
+`clamp(food - 2*(9-i), 0, 2)`; `hunger_half` retains its bright right half.
 
-A single slot centered above the level row (DNA icon + level, Y = 54 from the bottom).
-Its bottom edge sits 56 px above the screen bottom and moves up with extra health rows
-(`10 * (r - 1)`). HOST and WISP never use it at the same time.
+## Top cards
 
-| Element | When | X | Y (bottom edge, from bottom) | Size |
+Behavior and source sizes remain those delivered for F4, now recolored:
+
+- `target_frame`: 150×26 source, nine-slice border 4. Mockup displays 96×36 at
+  `(cx-48, 2)`. Name at +6,+5; sex badge at +6,+14; level at +18,+15;
+  status icon at +6,+24 and action text at +18,+25.
+- `host_frame`: 128×24, nine-slice border 4. Mockup displays `(cx-64, 4)`.
+  Name, sex badge, level and percent occupy the header. Health is 118×5 at
+  `(cx-59, 19)`; the 3×8 floor marker is centered at 20% of its width.
+- Move the shared top slot below boss bars in runtime. Target and host cards never
+  coexist. The host example is 18% health to demonstrate the consume badge.
+
+## Animation and source dimensions
+
+| Sprite | Frame size | Frames | Frame time | PNG strip |
 | --- | --- | ---: | ---: | --- |
-| `consume_badge` (animated, 16 frames × 2 ticks) | HOST at the floor | -42 | 56 | 84×16 |
-| `consume_ready` inside the badge | same | -33 | badge top + 4 | 9×9 |
-| "Consumir [key]" text | same | -21 | badge top + 5 | Font, `#C7FFE8` |
-| Cast background/progress | WISP while casting | -66 | 56 (top at 64) | 132×4 |
+| `mana_bar_progress` | 80×6 | 64 | 1 tick | 80×384 |
+| `dna_bar_progress` | 200×6 | 64 | 1 tick | 200×384 |
+| `consume_badge` | 84×16 | 16 | 2 ticks | 84×256 |
 
-## Target card (opção B, 20/11/2026)
+Mana wave and DNA helix use 1 px amplitude to fit the 6 px height without touching
+the outer outline. The progress animations loop at 20 fps over 3.2 seconds.
+Copy each `.png.mcmeta` next to its PNG. `manifest.json` records logical frame sizes.
+Texture motion is decorative; the actual resource values still determine the crop width.
 
-Card at the **top center**, same slot as the host panel (they never show together). Its
-top is Y = 2, or 2 px below the last boss bar when one is on screen.
+## Grimoire sprite kit
 
-| Element | X (from card left) | Y (from card top) | Size |
-| --- | ---: | ---: | --- |
-| `target_frame` (nine-slice, border 4) | centered | 0 | width = widest line + 12, 72–160; height 36 |
-| Target name | 6 | 5 | Ellipsized to 148 px |
-| Sex badge + level | 6 | 14 / 15 | Badge 9×9; level in `#A7C9C4` |
-| `target_ok` / `target_blocked` | 6 | 24 | 9×9 |
-| "Infestar" | 18 | 25 | Green `#55DCA0` when possible, red `#FF7B7B` when not |
+All 19 files in `grimoire/` map to `wispborn:grimoire/<name>`. Their metadata describes
+`gui.scaling.type = nine_slice` where specified. The preview applies nine-slice
+scaling separately to the nine regions; corners retain their pixel size.
 
-No key and no mana cost on the card. The cast bar lives in the central bottom slot.
+| Sprites | Source size | Border |
+| --- | --- | ---: |
+| `panel` | 64×64 | 6 |
+| `portrait_frame` | 32×32 | 4 |
+| `tab_underline` | 16×3 | 1 |
+| `pip_empty`, `pip_filled`, `pip_pending` | 7×7 | none |
+| `button`, `button_hover`, `button_disabled` | 20×20 | 3 |
+| `button_primary`, `button_primary_hover`, `button_primary_disabled` | 20×20 | 3 |
+| `points_box_active`, `points_box_empty` | 24×24 | 4 |
+| `bar_background`, `bar_life`, `bar_mana`, `bar_hunger`, `bar_ep` | 120×5 | none |
 
-## Sprite inventory and alpha
+## Grimoire mockup layout
 
-`manifest.json` lists all 25 sprite dimensions, including all 24 F4 assets plus
-`cast_vignette` (256×256). All sprites are RGBA. Alpha is binary except for
-`host_frame`, `target_frame`, and `cast_vignette`. Frames have opaque 1 px borders
-and translucent interiors. Bars retain a dark outline and use short palettes.
-The vignette fades in discrete alpha steps from cyan/emerald edges to a completely
-transparent center; it is the only sprite intended to stretch across the screen.
+Panel: 316×200 GUI pixels, centered at (55,20) in the logical 427×240 scene.
+The final preview is 854×480; the panel itself occupies 632×400 physical pixels.
+All coordinates below are relative to the panel's top-left.
 
-## Bitmap font
-
-| File | Size | Code point |
+| Element | Position | Size / notes |
 | --- | --- | --- |
-| `font/sex_male.png` | 7×8 | U+E000 |
-| `font/sex_female.png` | 5×8 | U+E001 |
-| `font/dna.png` | 5×8 | U+E002 |
+| Panel | 0,0 | 316×200 |
+| Title | 8,7 | Text |
+| Tabs | starting 74,7 | Wisp active; others disabled; 6 px gap (allowed -2 adjustment) |
+| Active underline | tab X,17 | Text width ×3 |
+| Portrait frame | 8,24 | 100×168 |
+| Level / EP label | 116,26 / 154,26 | Lvl 7; EP 8920/9800 |
+| EP bar | 116,38 | 120×5 |
+| Life / mana / hunger labels | 116,48 / 58 / 68 | Values 5/6, 42/70, 14/20 |
+| Resource bars | 146,49 / 59 / 69 | 120×5; values centered at X=206 over the bars |
+| Points box | 270,24 | 38×28; +2 remaining |
+| Points caption | centered at 289,53 and 61 | Two lines avoid the resource column |
+| Attribute rows | 116,84 + 22*i | Name; effect 10 px below |
+| Minus / pips / plus | 202 / 215 / 297 | 11×11 buttons; ten 7×7 pips at 8 px pitch |
+| Cancel / confirm | 190,176 / 252,176 | 56×18 |
+| Pending hint | 116,181 | One pending point |
 
-Glyph artwork occupies seven rows; the eighth is transparent. Female pixels are
-pink `#F48FB1`, male pixels are blue `#64B5F6`, and DNA remains white. Render gender
-glyph components with explicit white text color so their texture colors are preserved;
-do not inherit the target status color. Tint only the white DNA glyph when needed. `font/icons.json` is the ready-to-copy provider descriptor
-(`height: 8`, `ascent: 7`). During F4 integration place the PNGs in
-`assets/wispborn/textures/font/` and the descriptor in `assets/wispborn/font/icons.json`.
+Example: Absorption has two committed pips plus one pending; Efficiency 3,
+Reserve 4, Vitality 1. The +2 box means **two remaining after the displayed pending
+point** (three unallocated before the staged click). This avoids presenting a counter
+that ignores pending allocations. Numeric effects are illustrative, not balance changes;
+runtime must calculate them through StatMath and config.
 
-## Reproduction and review
+## Font and alpha
+
+The three legacy glyphs and two 9×9 badges keep their shapes/colors and codepoints.
+Badges remain blue `#3D8FD6` and pink `#D9628F`, with white symbols; their existing
+outline is preserved. Render their text components in white to avoid multiplying colors.
+The DNA text glyph stays white for text tinting. UI DNA sprites use palette B.
+
+All PNGs are RGBA. Alpha is binary except for frame interiors (HUD frames, Grimoire
+panel/portrait/points boxes) and the vignette. Buttons and pips are not translucent.
+The cast vignette now uses rust-colored edges fading to a transparent center.
+
+## Reproduction and delivery
 
 ```sh
 /usr/bin/python3 art/hud/src/generate_hud.py
 /usr/bin/python3 art/hud/src/validate_hud.py
 ```
 
-Dependencies: Python 3 and Pillow. Generation uses pixel operations and an original
-5×7 bitmap alphabet for mockups. No AI imagery, blur, antialiasing or filtered resizing.
+Python 3 + Pillow. No AI imagery, antialiasing, blur, or filtered resizing.
 
-- `mockup.png`: unhosted wisp and target panel, GUI scale 2.
-- `mockup_host.png`: host panel at 62% health.
-- `variants.png`: two health and two hunger alternatives, enlarged with nearest neighbor.
-- `review_200.png`: both mockups at 200% for pixel inspection.
-- `vignette_preview.png`: vignette composited over the mockup for review only.
+- `sprites/`: 26 HUD sprites, including the new `dna_orb`, animation and frame metadata.
+- `grimoire/`: 19 sprites and 11 nine-slice metadata files.
+- `font/`: unchanged glyph contract, regenerated deterministically.
+- `mockup.png`, `mockup_host.png`, `mockup_grimoire.png`: the three scenes.
+- `review_200.png`, `grimoire_200.png`: nearest-neighbor 200% inspection sheets.
+- `bars_animated.gif`: animated HUD preview; resource values are fixed.
+- `variants.png`, `gender_symbols.png`, `vignette_preview.png`: updated review material.
+- `manifest.json`, `grimoire_manifest.json`: logical dimensions.
 
-The editable A2 source files remain in `art/hud/`; approved runtime copies are in
-`src/main/resources/assets/wispborn/`. F4 and V1 first-person effects are not yet
-implemented. User-facing strings shown in mockups are examples;
-production text must come from the mod's language files.
-
-## Mana and XP/DNA animation revision
-
-Requested size increase: mana is now 182×9 GUI pixels and XP/DNA is 182×7.
-The width remains aligned with the vanilla hotbar footprint. Upper rows and host
-panel move upward by 5 px to retain spacing. Mana text stays outside the bar.
-
-Progress PNGs contain 64 vertically stacked frames: mana 182×576, DNA 182×448.
-Their `.png.mcmeta` specifies frame width/height, 1 tick per frame (20 fps) and no interpolation.
-Mana flows in blue-violet with small moving highlights. DNA has two counterphase
-emerald strands and connecting rungs. Both loop seamlessly; frame dimensions in
-`manifest.json` are logical dimensions, not the full strip dimensions.
-
-Copy the metadata alongside each PNG during F4 integration. The GUI atlas handles
-texture animation; rendering must still crop to the actual resource fraction.
-This is decorative motion, not invented changes to the player's mana or XP.
-`bars_animated.gif` previews the loop at 50 ms per frame with resource values fixed.
-The other mockups show frame zero. No Java HUD implementation is included.
-
-The refined loop lasts 3.2 seconds. Phase advances by half a texel per frame
-instead of the previous two texels, reducing visible jumps while preserving crisp
-pixel edges. The atlas has no spatial filtering or extra runtime code.
-
-`gender_symbols.png` previews both colored gender glyphs. Gender color is independent
-of infestation eligibility; target name/status keeps the F4 green/gray/red convention.
+Runtime integration is owned by F5: copy `sprites/` to
+`assets/wispborn/textures/gui/sprites/hud/` and `grimoire/` to
+`assets/wispborn/textures/gui/sprites/grimoire/`, including all `.png.mcmeta` files.
+Do not copy mockups or review sheets to the atlas. A4 does not modify Java or resources.

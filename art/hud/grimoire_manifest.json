@@ -1,0 +1,78 @@
+{
+  "panel": [
+    64,
+    64
+  ],
+  "portrait_frame": [
+    32,
+    32
+  ],
+  "tab_underline": [
+    16,
+    3
+  ],
+  "pip_empty": [
+    7,
+    7
+  ],
+  "pip_filled": [
+    7,
+    7
+  ],
+  "pip_pending": [
+    7,
+    7
+  ],
+  "button": [
+    20,
+    20
+  ],
+  "button_hover": [
+    20,
+    20
+  ],
+  "button_disabled": [
+    20,
+    20
+  ],
+  "button_primary": [
+    20,
+    20
+  ],
+  "button_primary_hover": [
+    20,
+    20
+  ],
+  "button_primary_disabled": [
+    20,
+    20
+  ],
+  "points_box_active": [
+    24,
+    24
+  ],
+  "points_box_empty": [
+    24,
+    24
+  ],
+  "bar_background": [
+    120,
+    5
+  ],
+  "bar_life": [
+    120,
+    5
+  ],
+  "bar_mana": [
+    120,
+    5
+  ],
+  "bar_hunger": [
+    120,
+    5
+  ],
+  "bar_ep": [
+    120,
+    5
+  ]
+}
