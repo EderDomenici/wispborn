@@ -17,4 +17,8 @@ public final class HungerMath {
     public static boolean wispStarves(boolean isWisp, Difficulty difficulty, int foodLevel, float health) {
         return isWisp && difficulty != Difficulty.PEACEFUL && foodLevel == 0 && !vanillaStarves(difficulty, health);
     }
+
+    public static int consumeFood(int mobLevel, int base) {
+        return base + (mobLevel / 2);
+    }
 }

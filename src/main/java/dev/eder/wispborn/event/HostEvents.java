@@ -5,8 +5,10 @@ import dev.eder.wispborn.form.FormType;
 import dev.eder.wispborn.host.HostManager;
 import dev.eder.wispborn.host.StealthRules;
 import dev.eder.wispborn.registry.ModAttachments;
+import dev.eder.wispborn.registry.ModDamageTypes;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -15,6 +17,8 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.EntityMountEvent;
 import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
+import net.neoforged.neoforge.event.entity.living.LivingExperienceDropEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
@@ -42,11 +46,33 @@ public final class HostEvents {
             return;
         }
 
+        boolean consumed = event.getSource().is(ModDamageTypes.CONSUMED);
         List<Entity> passengers = new ArrayList<>(dying.getPassengers());
         for (Entity passenger : passengers) {
             if (passenger instanceof ServerPlayer serverPlayer && HostManager.isHost(serverPlayer)) {
-                HostManager.release(serverPlayer, HostManager.Reason.HOST_DIED);
+                if (consumed && dying instanceof Mob mob) {
+                    HostManager.onHostConsumed(serverPlayer, mob);
+                    HostManager.release(serverPlayer, HostManager.Reason.CONSUMED);
+                } else {
+                    HostManager.release(serverPlayer, HostManager.Reason.HOST_DIED);
+                }
             }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLivingDrops(LivingDropsEvent event) {
+        if (event.getSource().is(ModDamageTypes.CONSUMED)) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLivingExperienceDrop(LivingExperienceDropEvent event) {
+        DamageSource lastSource = event.getEntity().getLastDamageSource();
+        if (lastSource != null && lastSource.is(ModDamageTypes.CONSUMED)) {
+            event.setDroppedExperience(0);
+            event.setCanceled(true);
         }
     }
 
@@ -95,6 +121,7 @@ public final class HostEvents {
     public static void onPlayerTickPost(PlayerTickEvent.Post event) {
         if (event.getEntity() instanceof ServerPlayer serverPlayer) {
             HostManager.tick(serverPlayer);
+            HostManager.tickDrain(serverPlayer);
         }
     }
 }

@@ -98,7 +98,42 @@ Iguais ao M5: `data/wispborn/damage_type/consumed.json`, as tags `bypasses_armor
 HUD em sprites (F4), animação especial de consumo, traços ganhos ao consumir (menu RPG).
 
 ## Dúvidas do implementador
-_(preencher se houver)_
+Nenhuma dúvida.
 
 ## Relatório de implementação
-_(preencher ao terminar)_
+- **Arquivos criados/alterados:**
+  - `src/main/java/dev/eder/wispborn/config/WispbornConfig.java`: substituídos `ep.perPulsePerTier` e `ep.consumeBonusPerTier` por `ep.perPulsePerLevel` (`3`) e `ep.consumePerLevel` (`30`); adicionados `hunger.restorePerPulse` (`1`), `hunger.restorePerPulseSaturation` (`0.25`), `hunger.consumeBase` (`2`) e `hunger.consumeSaturation` (`0.3`).
+  - `src/main/java/dev/eder/wispborn/form/HungerMath.java`: adicionado `consumeFood(int mobLevel, int base)` = `base + (mobLevel / 2)`.
+  - `src/main/java/dev/eder/wispborn/host/DrainMath.java`: criado helper puro com `nextHealth`, `atFloor` (com tolerância `1e-4F` para precisão de `float`, garantindo 40 pulsos exatos de 100% a 20% a 2%/pulso) e `epPerPulse`.
+  - `src/main/java/dev/eder/wispborn/host/{ConsumeResult,ConsumeRules}.java`: criados `ConsumeResult` (`OK`, `NOT_HOST`, `NOT_READY`) e `ConsumeRules` (`check` e `consumeEp`).
+  - `src/main/java/dev/eder/wispborn/registry/ModDamageTypes.java`, `src/main/resources/data/wispborn/damage_type/consumed.json` e `src/main/resources/data/minecraft/tags/damage_type/{bypasses_armor,bypasses_effects}.json`: registrado damage type `wispborn:consumed`.
+  - `src/main/java/dev/eder/wispborn/network/{ConsumeRequestPayload,ModPayloads}.java` e `client/KeyBindings.java`: payload C2S `ConsumeRequestPayload` e tecla `CONSUME` (`key.wispborn.consume`, padrão `C`).
+  - `src/main/java/dev/eder/wispborn/host/HostManager.java` e `event/HostEvents.java`: `tickDrain` (contador transitório por jogador inicializado em `-1` ao montar para não drenar no tick de entrada, `mob.setHealth`, EP escalado por `EpMath.levelFactor`, restauração de fome, partículas `SOUL`, e `release(SNEAK)` se o mob não tiver traços), `tryConsume`, `onHostConsumed` (recompensa de EP + fome + sons `GENERIC_EAT` e `SOUL_ESCAPE` + partículas `SOUL` + mensagens `wispborn.consume.ok` / `wispborn.consume.ok_no_ep` antes de `release(CONSUMED)`), bloqueio de drops (`LivingDropsEvent`) e XP (`LivingExperienceDropEvent`), e HUD provisório em `buildHostHud`.
+  - `src/main/resources/assets/wispborn/lang/{en_us,pt_br}.json`: adicionadas traduções de consumo, damage type e sufixos do HUD do hospedeiro.
+  - `src/test/java/dev/eder/wispborn/`: criados `DrainMathTest` e `ConsumeRulesTest`; atualizados `HungerMathTest` e `PossessionPayloadsTest`.
+- **Decisões tomadas:**
+  - `DrainMath.atFloor` e `DrainMath.nextHealth` usam tolerância `FLOOR_EPSILON = 1.0e-4F` porque em ponto flutuante IEEE-754 de 32 bits (`float`), 40 subtrações de `0.2` a partir de `10.0F` acumulam `+7.6e-6F` (`2.0000076F`), o que exigiria um 41º pulso sem o snap ao piso; com `1.0e-4F`, `atFloor(2.01F, 10.0F, 0.2D)` continua `false` e a drenagem de 100% a 20% leva exatamente 40 pulsos para qualquer vida máxima.
+  - Em `HostManager.onHostConsumed`, a mensagem `wispborn.consume.ok` / `wispborn.consume.ok_no_ep` é enviada tanto para a action bar quanto para o chat (`sendSystemMessage`), evitando que o tick de 20 em 20 ticks de `FormEvents` sobrescreva o feedback na action bar logo após o wisp sair do hospedeiro.
+- **Saída final de `./gradlew build`:**
+  ```text
+  > Task :jar
+  > Task :assemble
+  > Task :build
+  BUILD SUCCESSFUL in 9s
+  ```
+- **Saída final de `./gradlew test`:**
+  ```text
+  > Task :compileJava
+  > Task :classes
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  BUILD SUCCESSFUL in 14s
+  ```
+- **Saída final de `./gradlew runServer`:**
+  ```text
+  [22:52:39] [Server thread/INFO] [minecraft/DedicatedServer]: Done (1.692s)! For help, type "help"
+  [22:52:39] [Server thread/INFO] [ne.ne.ne.ga.GameTestHooks/]: Enabled Gametest Namespaces: [wispborn]
+  ```
+- **Pendências:**
+  - Validação do checklist manual in-game por Eder (`runClient` / `runClient2`).

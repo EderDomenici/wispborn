@@ -3,7 +3,9 @@ package dev.eder.wispborn.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.eder.wispborn.WispbornMod;
 import dev.eder.wispborn.form.FormManager;
+import dev.eder.wispborn.host.HostManager;
 import dev.eder.wispborn.host.InfestResult;
+import dev.eder.wispborn.network.ConsumeRequestPayload;
 import dev.eder.wispborn.network.PossessCancelPayload;
 import dev.eder.wispborn.network.PossessStartPayload;
 import dev.eder.wispborn.network.TargetInfoPayload;
@@ -29,6 +31,13 @@ public final class KeyBindings {
             CATEGORY
     );
 
+    public static final KeyMapping CONSUME = new KeyMapping(
+            "key.wispborn.consume",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_C,
+            CATEGORY
+    );
+
     private static boolean holdActive = false;
 
     private KeyBindings() {
@@ -37,13 +46,29 @@ public final class KeyBindings {
     @SubscribeEvent
     public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
         event.register(POSSESS);
+        event.register(CONSUME);
     }
 
     @SubscribeEvent
     public static void onClientTickPost(ClientTickEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
         Player localPlayer = mc.player;
-        if (localPlayer == null || mc.screen != null || !FormManager.isWisp(localPlayer)) {
+        if (localPlayer == null || mc.screen != null) {
+            if (holdActive || ClientPossession.isCasting()) {
+                PacketDistributor.sendToServer(PossessCancelPayload.INSTANCE);
+                ClientPossession.clearCast();
+                holdActive = false;
+            }
+            return;
+        }
+
+        while (CONSUME.consumeClick()) {
+            if (HostManager.isHost(localPlayer)) {
+                PacketDistributor.sendToServer(ConsumeRequestPayload.INSTANCE);
+            }
+        }
+
+        if (!FormManager.isWisp(localPlayer)) {
             if (holdActive || ClientPossession.isCasting()) {
                 PacketDistributor.sendToServer(PossessCancelPayload.INSTANCE);
                 ClientPossession.clearCast();

@@ -4,23 +4,34 @@ import dev.eder.wispborn.config.WispbornConfig;
 import dev.eder.wispborn.form.FormManager;
 import dev.eder.wispborn.form.FormState;
 import dev.eder.wispborn.form.FormType;
+import dev.eder.wispborn.form.HungerMath;
 import dev.eder.wispborn.form.WispAnimatable;
 import dev.eder.wispborn.form.WispTuning;
 import dev.eder.wispborn.network.CastStatePayload;
 import dev.eder.wispborn.network.TargetInfoPayload;
+import dev.eder.wispborn.progress.EpMath;
 import dev.eder.wispborn.progress.ProgressManager;
+import dev.eder.wispborn.progress.StatMath;
+import dev.eder.wispborn.progress.WispStats;
 import dev.eder.wispborn.registry.ModAttachments;
+import dev.eder.wispborn.registry.ModDamageTypes;
 import dev.eder.wispborn.traits.MobTraits;
 import dev.eder.wispborn.traits.MobTraitsManager;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -55,6 +66,7 @@ public final class HostManager {
     private static final Set<UUID> DAMAGED_DURING_CAST = ConcurrentHashMap.newKeySet();
     private static final Map<UUID, Vec3> PENDING_DISMOUNT_POS = new ConcurrentHashMap<>();
     private static final Map<UUID, TargetInfoPayload> LAST_TARGET_INFO = new ConcurrentHashMap<>();
+    private static final Map<UUID, Integer> DRAIN_TICKS = new ConcurrentHashMap<>();
 
     private HostManager() {
     }
@@ -164,7 +176,7 @@ public final class HostManager {
             }
             if (player.tickCount % 20 == 0) {
                 HostStealth.clearPursuers(player);
-                hostOf(player).ifPresent(host -> player.displayClientMessage(buildHostHud(host), true));
+                hostOf(player).ifPresent(host -> player.displayClientMessage(buildHostHud(player, host), true));
             }
             return;
         }
@@ -251,6 +263,7 @@ public final class HostManager {
         FormManager.setForm(player, FormState.host(entityTypeId));
         player.setInvisible(true);
         player.startRiding(mob, true);
+        DRAIN_TICKS.put(player.getUUID(), -1);
         HostStealth.clearPursuers(player);
         syncTargetInfo(player, TargetInfoPayload.NONE);
 
@@ -278,9 +291,188 @@ public final class HostManager {
         player.displayClientMessage(Component.translatable("wispborn.infest.ok", mob.getType().getDescription()), true);
     }
 
+    public static void tickDrain(ServerPlayer player) {
+        if (!isHost(player)) {
+            DRAIN_TICKS.remove(player.getUUID());
+            return;
+        }
+
+        Optional<LivingEntity> hostOpt = hostOf(player);
+        if (hostOpt.isEmpty() || !hostOpt.get().isAlive()) {
+            return;
+        }
+
+        if (!(hostOpt.get() instanceof Mob mob)) {
+            release(player, Reason.SNEAK);
+            return;
+        }
+
+        Optional<MobTraits> traitsOpt = MobTraitsManager.traitsOf(mob);
+        if (traitsOpt.isEmpty()) {
+            release(player, Reason.SNEAK);
+            return;
+        }
+
+        int ticks = DRAIN_TICKS.merge(player.getUUID(), 1, Integer::sum);
+        int interval = WispbornConfig.DRAIN_INTERVAL_TICKS.getAsInt();
+        if (ticks <= 0 || interval <= 0 || ticks % interval != 0) {
+            return;
+        }
+
+        float health = mob.getHealth();
+        float maxHealth = mob.getMaxHealth();
+        double floorPercent = WispbornConfig.DRAIN_FLOOR_PERCENT.getAsDouble();
+        if (DrainMath.atFloor(health, maxHealth, floorPercent)) {
+            return;
+        }
+
+        WispStats stats = player.getData(ModAttachments.STATS);
+        double drainPct = StatMath.drainPercent(
+                WispbornConfig.DRAIN_BASE_PERCENT_PER_PULSE.getAsDouble(),
+                stats.absorption(),
+                WispbornConfig.ABSORPTION_PER_POINT.getAsDouble()
+        );
+        float nextHealth = DrainMath.nextHealth(health, maxHealth, drainPct, floorPercent);
+        mob.setHealth(nextHealth);
+
+        int wispLevel = ProgressManager.level(player);
+        int mobLevel = traitsOpt.get().level();
+        double factor = EpMath.levelFactor(
+                wispLevel,
+                mobLevel,
+                WispbornConfig.EP_LEVEL_GRACE.getAsInt(),
+                WispbornConfig.EP_FALLOFF_PER_LEVEL.getAsDouble()
+        );
+        int baseEp = DrainMath.epPerPulse(
+                mobLevel,
+                WispbornConfig.EP_PER_PULSE_PER_LEVEL.getAsInt(),
+                factor
+        );
+        if (baseEp > 0) {
+            ProgressManager.addEp(player, baseEp);
+        }
+
+        int restoreFood = WispbornConfig.HUNGER_RESTORE_PER_PULSE.getAsInt();
+        float restoreSaturation = (float) WispbornConfig.HUNGER_RESTORE_PER_PULSE_SATURATION.getAsDouble();
+        if (restoreFood > 0 || restoreSaturation > 0.0F) {
+            player.getFoodData().eat(restoreFood, restoreSaturation);
+        }
+
+        ServerLevel serverLevel = player.serverLevel();
+        serverLevel.sendParticles(
+                ParticleTypes.SOUL,
+                mob.getX(),
+                mob.getY() + mob.getBbHeight() * 0.5D,
+                mob.getZ(),
+                4,
+                mob.getBbWidth() * 0.3D,
+                mob.getBbHeight() * 0.3D,
+                mob.getBbWidth() * 0.3D,
+                0.02D
+        );
+        player.displayClientMessage(buildHostHud(player, mob), true);
+    }
+
+    public static ConsumeResult tryConsume(ServerPlayer player) {
+        boolean hostState = isHost(player);
+        Optional<LivingEntity> hostOpt = hostOf(player);
+        Mob mob = (hostOpt.orElse(null) instanceof Mob m) ? m : null;
+        boolean hostAlive = mob != null && mob.isAlive();
+        float health = mob != null ? mob.getHealth() : 0.0F;
+        float maxHealth = mob != null ? mob.getMaxHealth() : 1.0F;
+        double floorPercent = WispbornConfig.DRAIN_FLOOR_PERCENT.getAsDouble();
+
+        ConsumeResult result = ConsumeRules.check(hostState, hostAlive, health, maxHealth, floorPercent);
+        if (result == ConsumeResult.NOT_HOST) {
+            return ConsumeResult.NOT_HOST;
+        }
+        if (result == ConsumeResult.NOT_READY) {
+            int healthPercent = Math.round((health / Math.max(1.0F, maxHealth)) * 100.0F);
+            player.displayClientMessage(Component.translatable("wispborn.consume.not_ready", healthPercent), true);
+            return ConsumeResult.NOT_READY;
+        }
+
+        if (MobTraitsManager.traitsOf(mob).isEmpty()) {
+            release(player, Reason.SNEAK);
+            return ConsumeResult.NOT_HOST;
+        }
+
+        ServerLevel serverLevel = player.serverLevel();
+        Holder<DamageType> consumedType = serverLevel.registryAccess()
+                .registryOrThrow(Registries.DAMAGE_TYPE)
+                .getHolderOrThrow(ModDamageTypes.CONSUMED);
+        DamageSource source = new DamageSource(consumedType, player);
+        mob.hurt(source, Float.MAX_VALUE);
+        return ConsumeResult.OK;
+    }
+
+    public static void onHostConsumed(ServerPlayer player, Mob mob) {
+        int mobLevel = MobTraitsManager.traitsOf(mob).map(MobTraits::level).orElse(1);
+        int wispLevel = ProgressManager.level(player);
+        double factor = EpMath.levelFactor(
+                wispLevel,
+                mobLevel,
+                WispbornConfig.EP_LEVEL_GRACE.getAsInt(),
+                WispbornConfig.EP_FALLOFF_PER_LEVEL.getAsDouble()
+        );
+        int baseEp = ConsumeRules.consumeEp(
+                mobLevel,
+                WispbornConfig.EP_CONSUME_PER_LEVEL.getAsInt(),
+                factor
+        );
+        int gainedEp = baseEp > 0 ? ProgressManager.addEp(player, baseEp) : 0;
+
+        int foodRestore = HungerMath.consumeFood(mobLevel, WispbornConfig.HUNGER_CONSUME_BASE.getAsInt());
+        float saturationRestore = (float) WispbornConfig.HUNGER_CONSUME_SATURATION.getAsDouble();
+        if (foodRestore > 0 || saturationRestore > 0.0F) {
+            player.getFoodData().eat(foodRestore, saturationRestore);
+        }
+
+        ServerLevel serverLevel = player.serverLevel();
+        serverLevel.playSound(
+                null,
+                mob.getX(),
+                mob.getY(),
+                mob.getZ(),
+                SoundEvents.GENERIC_EAT,
+                SoundSource.PLAYERS,
+                1.0F,
+                1.0F
+        );
+        serverLevel.playSound(
+                null,
+                mob.getX(),
+                mob.getY(),
+                mob.getZ(),
+                SoundEvents.SOUL_ESCAPE.value(),
+                SoundSource.PLAYERS,
+                1.0F,
+                1.0F
+        );
+        serverLevel.sendParticles(
+                ParticleTypes.SOUL,
+                mob.getX(),
+                mob.getY() + mob.getBbHeight() * 0.5D,
+                mob.getZ(),
+                20,
+                mob.getBbWidth() * 0.4D,
+                mob.getBbHeight() * 0.4D,
+                mob.getBbWidth() * 0.4D,
+                0.05D
+        );
+
+        Component mobName = mob.getType().getDescription();
+        Component message = gainedEp > 0
+                ? Component.translatable("wispborn.consume.ok", mobName, gainedEp)
+                : Component.translatable("wispborn.consume.ok_no_ep", mobName);
+        player.displayClientMessage(message, true);
+        player.sendSystemMessage(message);
+    }
+
     public static void release(ServerPlayer player, Reason reason) {
         cancelCast(player, false);
         LAST_TARGET_INFO.remove(player.getUUID());
+        DRAIN_TICKS.remove(player.getUUID());
         if (!isHost(player)) {
             return;
         }
@@ -333,12 +525,47 @@ public final class HostManager {
         DAMAGED_DURING_CAST.remove(player.getUUID());
         PENDING_DISMOUNT_POS.remove(player.getUUID());
         LAST_TARGET_INFO.remove(player.getUUID());
+        DRAIN_TICKS.remove(player.getUUID());
     }
 
-    public static Component buildHostHud(LivingEntity host) {
+    public static Component buildHostHud(ServerPlayer player, LivingEntity host) {
         float maxHealth = Math.max(1.0F, host.getMaxHealth());
         int healthPercent = Math.round((host.getHealth() / maxHealth) * 100.0F);
-        return Component.translatable("wispborn.hud.host", host.getType().getDescription(), healthPercent);
+        int mobLevel = (host instanceof Mob mob)
+                ? MobTraitsManager.traitsOf(mob).map(MobTraits::level).orElse(1)
+                : 1;
+        int wispLevel = ProgressManager.level(player);
+        Component epDisplay = ProgressManager.epDisplay(player);
+        int currentMana = Math.round(ProgressManager.getMana(player));
+        int maxMana = ProgressManager.getMaxMana(player);
+
+        MutableComponent hud = Component.translatable(
+                "wispborn.hud.host",
+                host.getType().getDescription(),
+                mobLevel,
+                healthPercent,
+                epDisplay,
+                wispLevel,
+                currentMana,
+                maxMana
+        );
+
+        double floorPercent = WispbornConfig.DRAIN_FLOOR_PERCENT.getAsDouble();
+        if (DrainMath.atFloor(host.getHealth(), maxHealth, floorPercent)) {
+            hud.append(Component.translatable("wispborn.hud.host.consume").withStyle(ChatFormatting.GREEN));
+        }
+
+        double factor = EpMath.levelFactor(
+                wispLevel,
+                mobLevel,
+                WispbornConfig.EP_LEVEL_GRACE.getAsInt(),
+                WispbornConfig.EP_FALLOFF_PER_LEVEL.getAsDouble()
+        );
+        if (factor <= 0.0D) {
+            hud.append(Component.translatable("wispborn.hud.host.no_ep").withStyle(ChatFormatting.GRAY));
+        }
+
+        return hud;
     }
 
     private static void spawnPossessedParticles(ServerLevel serverLevel, LivingEntity host) {

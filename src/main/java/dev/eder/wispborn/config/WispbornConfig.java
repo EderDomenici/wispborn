@@ -63,11 +63,11 @@ public final class WispbornConfig {
     public static final ModConfigSpec.DoubleValue DRAIN_FLOOR_PERCENT =
             BUILDER.defineInRange("drain.floorPercent", 0.20D, 0.0D, 1.0D);
 
-    public static final ModConfigSpec.IntValue EP_PER_PULSE_PER_TIER =
-            BUILDER.defineInRange("ep.perPulsePerTier", 10, 0, 100000);
+    public static final ModConfigSpec.IntValue EP_PER_PULSE_PER_LEVEL =
+            BUILDER.defineInRange("ep.perPulsePerLevel", 3, 0, 100000);
 
-    public static final ModConfigSpec.IntValue EP_CONSUME_BONUS_PER_TIER =
-            BUILDER.defineInRange("ep.consumeBonusPerTier", 100, 0, 1000000);
+    public static final ModConfigSpec.IntValue EP_CONSUME_PER_LEVEL =
+            BUILDER.defineInRange("ep.consumePerLevel", 30, 0, 1000000);
 
     public static final ModConfigSpec.IntValue EP_LEVEL_GRACE =
             BUILDER.defineInRange("ep.levelGrace", 2, 0, 100);
@@ -95,6 +95,18 @@ public final class WispbornConfig {
 
     public static final ModConfigSpec.DoubleValue HUNGER_STARVE_DAMAGE =
             BUILDER.defineInRange("hunger.starveDamage", 1.0D, 0.0D, 1000.0D);
+
+    public static final ModConfigSpec.IntValue HUNGER_RESTORE_PER_PULSE =
+            BUILDER.defineInRange("hunger.restorePerPulse", 1, 0, 20);
+
+    public static final ModConfigSpec.DoubleValue HUNGER_RESTORE_PER_PULSE_SATURATION =
+            BUILDER.defineInRange("hunger.restorePerPulseSaturation", 0.25D, 0.0D, 10.0D);
+
+    public static final ModConfigSpec.IntValue HUNGER_CONSUME_BASE =
+            BUILDER.defineInRange("hunger.consumeBase", 2, 0, 20);
+
+    public static final ModConfigSpec.DoubleValue HUNGER_CONSUME_SATURATION =
+            BUILDER.defineInRange("hunger.consumeSaturation", 0.3D, 0.0D, 10.0D);
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 

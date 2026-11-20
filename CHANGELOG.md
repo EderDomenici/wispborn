@@ -4,6 +4,44 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 
 ---
 
+## [F3-drain-consume] — Drenagem e Consumo com Nível e Fome (`feat/F3-drain-consume`)
+
+**Spec de referência:** `docs/specs/F3-drain-consume.md` (substitui `M4-drain.md` e `M5-consume.md`)
+
+### 1. Resumo das Alterações (`main..feat/F3-drain-consume`)
+- **Drenagem passiva (`HostManager.tickDrain` + `DrainMath`):** a cada `drain.intervalTicks` (`100`) com contador transitório por jogador (sem drenar no tick de entrada), reduz a vida do hospedeiro com `mob.setHealth` até o piso `drain.floorPercent` (`20%`), concede `round(ep.perPulsePerLevel × mobLevel × EpMath.levelFactor)` de EP base via `ProgressManager.addEp`, restaura `hunger.restorePerPulse` (`1`) e `hunger.restorePerPulseSaturation` (`0.25`) de fome mesmo quando `factor == 0`, e emite partículas `ParticleTypes.SOUL`. No piso, cessa drenagem, EP e fome.
+- **Consumo (`HostManager.tryConsume` / `onHostConsumed` + `ConsumeRules`):** tecla `C` (`KeyBindings.CONSUME`) envia `ConsumeRequestPayload`; servidor valida forma `HOST`, hospedeiro vivo e `DrainMath.atFloor` (exibindo `wispborn.consume.not_ready` se acima do piso), aplica dano `wispborn:consumed` (`Float.MAX_VALUE`, `bypasses_armor` e `bypasses_effects`), cancela drops (`LivingDropsEvent`) e XP (`LivingExperienceDropEvent`), concede bônus `round(ep.consumePerLevel × mobLevel × factor)` e `hunger.consumeBase + mobLevel / 2` de fome (`hunger.consumeSaturation = 0.3`), toca `GENERIC_EAT` + `SOUL_ESCAPE`, emite partículas `SOUL`, exibe `wispborn.consume.ok` (ou `wispborn.consume.ok_no_ep` quando `factor == 0`) e expulsa com `Reason.CONSUMED`.
+- **HUD provisório (`HostManager.buildHostHud`):** `<Mob> Nv <mobLv> · <vida>% · EP <ep> · Nv <wispLv> · Mana <atual>/<max>`, acrescentando `· [C] consumir` em verde no piso e `· sem EP` em cinza quando `factor == 0`.
+
+### 2. Detalhamento por Arquivo
+
+| Arquivo | Ação | Detalhes da Implementação |
+|---|---|---|
+| `src/main/java/dev/eder/wispborn/config/WispbornConfig.java` | Modificado | Substituídos `ep.perPulsePerTier` e `ep.consumeBonusPerTier` por `ep.perPulsePerLevel` (`3`) e `ep.consumePerLevel` (`30`); adicionados `hunger.restorePerPulse` (`1`), `hunger.restorePerPulseSaturation` (`0.25`), `hunger.consumeBase` (`2`) e `hunger.consumeSaturation` (`0.3`). |
+| `src/main/java/dev/eder/wispborn/form/HungerMath.java` | Modificado | Adicionado `consumeFood(int mobLevel, int base)`. |
+| `src/main/java/dev/eder/wispborn/host/{DrainMath,ConsumeResult,ConsumeRules}.java` | Criado | Funções puras de drenagem (`nextHealth`, `atFloor`, `epPerPulse`) e consumo (`check`, `consumeEp`). |
+| `src/main/java/dev/eder/wispborn/registry/ModDamageTypes.java` e `data/**` | Criado | `ModDamageTypes.CONSUMED`, `data/wispborn/damage_type/consumed.json` e tags `bypasses_armor` / `bypasses_effects`. |
+| `src/main/java/dev/eder/wispborn/network/{ConsumeRequestPayload,ModPayloads}.java` | Criado/Mod. | Payload C2S `wispborn:consume_request` registrado em `ModPayloads`. |
+| `src/main/java/dev/eder/wispborn/client/KeyBindings.java` | Modificado | Tecla `CONSUME` (`key.wispborn.consume`, padrão `C`) enviando `ConsumeRequestPayload` enquanto `HOST`. |
+| `src/main/java/dev/eder/wispborn/host/HostManager.java` e `event/HostEvents.java` | Modificado | `tickDrain`, `tryConsume`, `onHostConsumed`, `buildHostHud`, supressão de drops/XP para `wispborn:consumed` e `release(CONSUMED)`. |
+| `src/main/resources/assets/wispborn/lang/{en_us,pt_br}.json` | Modificado | Traduções de consumo, mensagem de morte e HUD provisório do hospedeiro. |
+| `src/test/java/dev/eder/wispborn/**` | Criado/Mod. | `DrainMathTest`, `ConsumeRulesTest`, `HungerMathTest` e `PossessionPayloadsTest`. |
+| `docs/specs/F3-drain-consume.md` | Modificado | Preenchido "Dúvidas do implementador" e "Relatório de implementação". |
+
+### 3. Evidências de Verificação
+
+- **`./gradlew build --no-daemon`:** `BUILD SUCCESSFUL in 9s`
+- **`./gradlew test --rerun-tasks --no-daemon`:** `BUILD SUCCESSFUL in 14s`
+- **`./gradlew runServer --no-daemon`:**
+  ```text
+  [22:52:39] [Server thread/INFO] [minecraft/DedicatedServer]: Done (1.692s)! For help, type "help"
+  ```
+
+### 4. Pendências
+- [ ] **Checklist manual in-game (`./gradlew runClient` / `runClient2`):** validação da drenagem, recuperação de fome, piso de 20%, tecla `C` e consumo sem drops a cargo de Eder.
+
+---
+
 ## [fix] — Fome do wisp visível dentro do hospedeiro (`fix/host-hunger-bar`)
 
 - O vanilla trata o hospedeiro como montaria: troca a barra de fome pelos corações do mob. Em HOST a fome

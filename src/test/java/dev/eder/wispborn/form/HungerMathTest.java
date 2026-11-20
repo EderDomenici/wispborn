@@ -32,4 +32,11 @@ class HungerMathTest {
         assertFalse(HungerMath.wispStarves(false, Difficulty.EASY, 0, 6.0F));
         assertFalse(HungerMath.wispStarves(true, Difficulty.PEACEFUL, 0, 6.0F));
     }
+
+    @Test
+    void consumeFoodScalesWithHalfMobLevel() {
+        assertEquals(2, HungerMath.consumeFood(1, 2));
+        assertEquals(6, HungerMath.consumeFood(9, 2));
+        assertEquals(12, HungerMath.consumeFood(20, 2));
+    }
 }

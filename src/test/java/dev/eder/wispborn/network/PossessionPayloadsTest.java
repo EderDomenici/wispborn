@@ -75,4 +75,16 @@ class PossessionPayloadsTest {
             }
         }
     }
+
+    @Test
+    void consumeRequestPayloadStreamCodecRoundTrip() {
+        ByteBuf buf = Unpooled.buffer();
+        try {
+            ConsumeRequestPayload.STREAM_CODEC.encode(buf, ConsumeRequestPayload.INSTANCE);
+            ConsumeRequestPayload decoded = ConsumeRequestPayload.STREAM_CODEC.decode(buf);
+            assertEquals(ConsumeRequestPayload.INSTANCE, decoded);
+        } finally {
+            buf.release();
+        }
+    }
 }

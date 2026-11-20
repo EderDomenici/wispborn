@@ -50,5 +50,14 @@ public final class ModPayloads {
                     }
                 }
         );
+        registrar.playToServer(
+                ConsumeRequestPayload.TYPE,
+                ConsumeRequestPayload.STREAM_CODEC,
+                (payload, context) -> {
+                    if (context.player() instanceof ServerPlayer serverPlayer) {
+                        HostManager.tryConsume(serverPlayer);
+                    }
+                }
+        );
     }
 }
