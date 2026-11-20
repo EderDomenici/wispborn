@@ -34,7 +34,7 @@ shulker 16–20; chefes imunes).
 |---|---|---|
 | Absorção | +0,5% de drenagem por pulso | 2% |
 | Eficiência | +10% de EP | 100% |
-| Reserva de mana | +10 de mana máxima | 50 (regenera 1/s como wisp) |
+| Reserva de mana | +10 de mana máxima | 50 + 5 por nível acima do 1 (regenera 1/s como wisp) |
 | Vitalidade | +1 coração no wisp | 3 corações |
 
 Todos os números ficam em config de servidor ou em JSON de dados.

@@ -3,6 +3,7 @@ package dev.eder.wispborn.progress;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StatMathTest {
 
@@ -25,7 +26,18 @@ class StatMathTest {
 
     @Test
     void maxManaCalculation() {
-        assertEquals(70, StatMath.maxMana(50, 2, 10));
+        assertEquals(50, StatMath.maxMana(50, 1, 5, 0, 10));
+        assertEquals(70, StatMath.maxMana(50, 1, 5, 2, 10));
+        assertEquals(145, StatMath.maxMana(50, 20, 5, 0, 10));
+        assertEquals(245, StatMath.maxMana(50, 20, 5, 10, 10));
+    }
+
+    @Test
+    void maxManaAlwaysPaysForMobOfSameLevel() {
+        int costPerLevel = 5;
+        for (int level = 1; level <= 20; level++) {
+            assertTrue(StatMath.maxMana(50, level, 5, 0, 10) >= costPerLevel * level, "Nv " + level);
+        }
     }
 
     @Test

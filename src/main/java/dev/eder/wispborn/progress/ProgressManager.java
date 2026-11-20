@@ -121,6 +121,8 @@ public final class ProgressManager {
         WispStats stats = player.getData(ModAttachments.STATS);
         return StatMath.maxMana(
                 WispbornConfig.MANA_BASE.get(),
+                level(player),
+                WispbornConfig.MANA_PER_LEVEL.get(),
                 stats.reserve(),
                 WispbornConfig.RESERVE_PER_POINT.get()
         );

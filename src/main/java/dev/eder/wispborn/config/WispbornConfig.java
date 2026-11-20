@@ -39,6 +39,9 @@ public final class WispbornConfig {
     public static final ModConfigSpec.IntValue MANA_BASE =
             BUILDER.defineInRange("mana.base", 50, 0, 100000);
 
+    public static final ModConfigSpec.IntValue MANA_PER_LEVEL =
+            BUILDER.defineInRange("mana.perLevel", 5, 0, 100000);
+
     public static final ModConfigSpec.DoubleValue MANA_REGEN_PER_SECOND =
             BUILDER.defineInRange("mana.regenPerSecond", 1.0D, 0.0D, 10000.0D);
 

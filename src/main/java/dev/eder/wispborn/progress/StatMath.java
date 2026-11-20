@@ -20,8 +20,13 @@ public final class StatMath {
         return (int) Math.round(baseEp * multiplier);
     }
 
-    public static int maxMana(int base, int reservePts, int perPoint) {
-        return base + perPoint * reservePts;
+    /**
+     * Mana máxima = base + perLevel × (nível − 1) + perPoint × pontos em Reserva.
+     * Com os padrões (50, 5, 10) e custo de infestação 5 × nível do mob, mana cheia sempre
+     * paga um mob do mesmo nível do wisp; a Reserva dá folga para encadear possessões.
+     */
+    public static int maxMana(int base, int level, int perLevel, int reservePts, int perPoint) {
+        return base + perLevel * Math.max(0, level - 1) + perPoint * reservePts;
     }
 
     public static double vitalityBonusHealth(int vitalityPts, int heartsPerPoint) {

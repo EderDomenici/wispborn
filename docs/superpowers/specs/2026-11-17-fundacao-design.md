@@ -98,6 +98,10 @@ de partida para o primeiro playtest.
 - Sexo: 50/50 (`traits.femaleChance = 0,5`).
 - Infestar exige `nível do mob ≤ nível do wisp + infest.levelGateMargin (0)`.
 - Custo de mana: `mana.infestCostPerLevel (5) × nível do mob`.
+- Mana máxima (revisão de 19/11): `mana.base (50) + mana.perLevel (5) × (nível do wisp − 1) + 10 × Reserva`.
+  Nv 1 = 50, Nv 20 = 145. Mana cheia sempre paga um mob do mesmo nível; a Reserva dá folga para
+  encadear possessões. Antes a mana só crescia pela Reserva e um wisp Nv 20 sem pontos nela não
+  possuía nada acima do Nv 10.
 - Fator de EP pelo nível: 1,0 até 2 níveis abaixo do wisp; cai 25% por nível; 0 a partir de 6 abaixo
   (`ep.levelGrace = 2`, `ep.falloffPerLevel = 0,25`).
 
