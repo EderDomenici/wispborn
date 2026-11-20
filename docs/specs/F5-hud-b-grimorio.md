@@ -36,7 +36,8 @@ Grimório, atlas de GUI, `wispborn:grimoire/<nome>`:
 | `button`, `button_hover`, `button_disabled` | 20×20, nine-slice borda 3 | Botões `−`, `+` e Cancelar |
 | `button_primary`, `button_primary_hover`, `button_primary_disabled` | 20×20, nine-slice borda 3 | Confirmar |
 | `points_box_active`, `points_box_empty` | 24×24, nine-slice borda 4 | Contador `+N` (com pontos / sem pontos) |
-| `bar_background`, `bar_life`, `bar_mana`, `bar_hunger`, `bar_ep` | 120×5 | Barras da página (estáticas) |
+| `bar_background`, `bar_ep` | 120×5 | Barra de EP da página (estática) |
+| `bar_background_short`, `bar_life`, `bar_mana`, `bar_hunger` | 90×5 | Vida, mana e fome da página (estáticas) |
 
 Copiar PNG e `.png.mcmeta` juntos. O nine-slice vem no `.mcmeta` (`gui.scaling.type = nine_slice`).
 
@@ -80,14 +81,16 @@ Copiar PNG e `.png.mcmeta` juntos. O nine-slice vem no `.mcmeta` (`gui.scaling.t
    | Abas: Wisp (ativa), Traços, Aspectos, Habilidades, Bestiário | a partir de 74, 7, separadas por 8 | fonte; desativadas em `#6F655A` |
    | `tab_underline` sob a aba ativa | largura do texto, y 17 | 3 de altura |
    | `portrait_frame` + wisp 3D | 8, 24 | 100×168 |
-   | "Lvl N" e "EP atual / próximo" | 116, 26 | fonte |
-   | `bar_ep` | 116, 38 | 120×5 |
-   | Vida, Mana, Fome: rótulo + barra + valor | 116, 48 / 58 / 68 | barras 120×5 |
-   | Contador de pontos (`points_box_*` + `+N`) | 270, 24 | 38×28 |
-   | Rótulo do contador (`pontos livres`) | centrado sob o contador | fonte |
+   | "Lvl N" | 116, 26 | fonte |
+   | "EP atual / próximo" (`wispborn.grimoire.ep`) | alinhado à direita em 236, y 26 | fonte, `#B5A88F` |
+   | `bar_ep` sobre `bar_background` | 116, 38 | 120×5 |
+   | Vida, Mana, Fome: rótulo (`#B5A88F`) | 116, 48 / 58 / 68 | fonte |
+   | Barras de vida, mana e fome sobre `bar_background_short` | 146, 49 / 59 / 69 | 90×5 (terminam em 236, junto com a de EP) |
+   | Valor de cada barra (`atual/máximo`) | 240, 48 / 58 / 68 | fonte, à direita da barra, nunca em cima |
+   | Contador de pontos (`points_box_*` + `+N`) | 270, 24 | 38×28, sem legenda |
    | 4 linhas de atributo | 116, 84 + 22×i | ver regra 10 |
    | Cancelar e Confirmar | canto inferior direito, y 176 | 56×18 cada |
-   | Dica (`wispborn.grimoire.hint.*`) | 116, 181 | fonte, `#B5A88F` |
+   | Dica (`wispborn.grimoire.hint.*`) | 116, 181 | fonte; `#B5A88F` sem pendentes, `#E2775F` com pendentes; até 70 px |
 
 9. **Wisp 3D:** `InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, x1, y1, x2, y2, scale,
    yOffset, mouseX, mouseY, player)` dentro do quadro. Com a forma WISP, o `RenderPlayerEvent` do mod já troca
@@ -136,8 +139,9 @@ Copiar PNG e `.png.mcmeta` juntos. O nine-slice vem no `.mcmeta` (`gui.scaling.t
   barras, atributos, rodapé); `client/grimoire/GrimoireSprites` (constantes `wispborn:grimoire/*`);
   `client/hud/HudSprites.DNA_ORB`.
 - Lang (pt_br e en_us): `key.wispborn.grimoire`, `wispborn.grimoire.title`, `wispborn.grimoire.tab.wisp|traits|aspects|skills|bestiary`,
-  `wispborn.grimoire.points` (`pontos livres` / `points left`), `wispborn.grimoire.cancel`, `wispborn.grimoire.confirm`,
-  `wispborn.grimoire.hint.idle`, `wispborn.grimoire.hint.pending`, os 4 formatos de efeito, e
+  `wispborn.grimoire.cancel`, `wispborn.grimoire.confirm`, `wispborn.grimoire.hint.idle` (`Clique em +`),
+  `wispborn.grimoire.hint.pending_one` (`1 pendente`) e `wispborn.grimoire.hint.pending` (`%s pendentes`),
+  os 4 formatos de efeito, e
   `wispborn.grimoire.allocate.empty|negative|not_enough_points|over_max`.
 
 ## Testes (JUnit)
@@ -226,7 +230,7 @@ Nenhuma. A arte A4 (`art/hud/sprites/` e `art/hud/grimoire/`) passou no `validat
 ### Decisões tomadas
 - **Zero `fill` ou gradiente no Grimório:** `GrimoireScreen.renderBackground` foi sobrescrito vazio para impedir o `fillGradient` escuro padrão do `Screen` vanilla, mantendo 100% da renderização em `GuiGraphics.blitSprite` e `Font`.
 - **Retrato 3D na forma `HOST`:** como o jogador em `HOST` fica invisível e `WispRenderHandler.onRenderPlayerPre` cancela a renderização no mundo, `GrimoireScreen.renderPortrait` envolve `InventoryScreen.renderEntityInInventoryFollowsMouse` com `WispRenderHandler.setRenderingGrimoirePortrait(true/false)` para que o modelo 3D do wisp apareça no retrato tanto em `WISP` quanto em `HOST`.
-- **Legenda do contador de pontos:** `wispborn.grimoire.points` (`"pontos livres"` / `"points left"`) é quebrada com `font.split(..., 40)` sob a caixa `38×28` em `(270, 24)` conforme `art/hud/LAYOUT.md`, evitando colisão com as barras de recursos (`x = 146..266`).
+- **Legenda do contador de pontos:** removida na revisão de 20/11 (layout do Gemini aprovado por Eder). A legenda sob a caixa colidia com o valor da mana; o `+N` sozinho basta.
 
 ### O que não foi feito
 - Páginas Traços, Aspectos, Habilidades e Bestiário (exibidas apenas como abas desativadas, fora de escopo).

@@ -59,16 +59,20 @@
     120,
     5
   ],
+  "bar_background_short": [
+    90,
+    5
+  ],
   "bar_life": [
-    120,
+    90,
     5
   ],
   "bar_mana": [
-    120,
+    90,
     5
   ],
   "bar_hunger": [
-    120,
+    90,
     5
   ],
   "bar_ep": [

@@ -244,12 +244,14 @@ def make_grimoire():
         d.rectangle((3,3,20,20),fill='#26211C' if active else '#2B2621')
         d.line((4,20,19,20),fill='#C4573A' if active else '#4A4137')
         put('points_box_'+('active' if active else 'empty'),image,4)
+    # EP keeps the full 120 px; life, mana and hunger are 90 px so their values fit to the right.
     put('bar_background',bar((120,5),('#26211C',)*3))
-    for name,colors in [('life',('#B5402F','#F7CBB8','#7D2A21')),
-                        ('mana',('#3F5AA8','#9FB4EE','#24346A')),
-                        ('hunger',('#C9A55A','#F2E2B0','#6E5A2A')),
-                        ('ep',('#A8976A','#FFF6D8','#6F644A'))]:
-        put('bar_'+name,bar((120,5),colors,True))
+    put('bar_background_short',bar((90,5),('#26211C',)*3))
+    for name,colors,width in [('life',('#B5402F','#F7CBB8','#7D2A21'),90),
+                              ('mana',('#3F5AA8','#9FB4EE','#24346A'),90),
+                              ('hunger',('#C9A55A','#F2E2B0','#6E5A2A'),90),
+                              ('ep',('#A8976A','#FFF6D8','#6F644A'),120)]:
+        put('bar_'+name,bar((width,5),colors,True))
     (ROOT/'grimoire_manifest.json').write_text(json.dumps({k:list(v.size) for k,v in kit.items()},indent=2)+'\n')
     return kit
 
@@ -453,20 +455,19 @@ def grimoire_mockup(kit):
     label('WISP',58,153,center=True)
     label('RETRATO 3D',58,167,'#B5A88F',True)
     label('LVL 7',116,26)
-    label('EP 8920/9800',154,26,'#FFF6D8')
+    ep='8920 / 9800'
+    label(ep,236-(sum(len(FONT[c][0])+1 for c in ep)-1),26,'#B5A88F')
     paste('bar_background',116,38)
-    canvas.alpha_composite(kit['bar_ep'].crop((0,0,109,5)),(ox+116,oy+38))
-    for title,name,y,value,numbers in [('VIDA','life',48,5/6,'5/6'),('MANA','mana',58,.6,'42/70'),('FOME','hunger',68,.7,'14/20')]:
-        label(title,116,y)
-        paste('bar_background',146,y+1)
-        canvas.alpha_composite(kit['bar_'+name].crop((0,0,math.floor(120*value),5)),(ox+146,oy+y+1))
-        label(numbers,206,y,'#F3EAD6',True)
+    canvas.alpha_composite(kit['bar_ep'].crop((0,0,85,5)),(ox+116,oy+38))
+    # Bars end at 236, aligned with the EP bar; values start at 240, clear of the bars.
+    for title,name,y,value,numbers in [('VIDA','life',48,1,'8/8'),('MANA','mana',58,92/125,'92/125'),('FOME','hunger',68,.7,'14/20')]:
+        label(title,116,y,'#B5A88F')
+        paste('bar_background_short',146,y+1)
+        canvas.alpha_composite(kit['bar_'+name].crop((0,0,math.floor(90*value),5)),(ox+146,oy+y+1))
+        label(numbers,240,y)
+    # The +N counter needs no caption; a caption would collide with the mana value.
     paste('points_box_active',270,24,(38,28),4)
     label('+2',289,33,'#FFB9A3',True)
-    # The two-line caption fits below the box without colliding with resource values.
-    label('PONTOS',289,53,'#B5A88F',True)
-    label('LIVRES',289,61,'#B5A88F',True)
-    # Values sit over the bars so the points caption retains its own column.
     for i,(name,effect,spent,pending) in enumerate([
             ('ABSORCAO','3.0%/PULSO',2,1),('EFICIENCIA','EP X1.3',3,0),
             ('RESERVA','70 MANA',4,0),('VITALIDADE','3 NUCLEOS',1,0)]):
@@ -482,7 +483,7 @@ def grimoire_mockup(kit):
     paste('button',190,176,(56,18),3)
     paste('button_primary',252,176,(56,18),3)
     label('CANCELAR',218,181,center=True);label('CONFIRMAR',280,181,center=True)
-    label('1 PENDENTE',116,181,'#B5A88F')
+    label('1 PENDENTE',116,181,'#E2775F')
     return canvas.resize((854,480),Image.Resampling.NEAREST)
 
 

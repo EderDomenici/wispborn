@@ -98,7 +98,9 @@ Os valores exatos de Y são ponto de partida; quem implementa ajusta ±2 px comp
 ## Grimório: página do Wisp
 
 - **Abrir:** tecla configurável, padrão `K` (era a tecla planejada na M6). Só como parasita. `Esc` fecha.
-- **Layout** (prancha "Grimório · página do wisp"): cabeçalho com "Grimório" e as abas (Wisp ativa; as
+- **Layout** (revisado em 20/11: Eder aprovou o layout compacto testado no mockup do Gemini, em
+  `art/hud/mockup_grimoire.png`; barras de vida, mana e fome com 90 px e o valor à direita, sem legenda sob
+  o `+N`). Cabeçalho com "Grimório" e as abas (Wisp ativa; as
   outras visíveis e desativadas). À esquerda, o wisp grande; à direita, nível, EP, vida, mana, fome, o
   contador de pontos e os quatro atributos.
 - **Wisp:** o modelo 3D animado, renderizado como o boneco do jogador no inventário, girando devagar ou

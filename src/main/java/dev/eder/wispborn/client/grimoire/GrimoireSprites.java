@@ -27,6 +27,7 @@ public final class GrimoireSprites {
     public static final ResourceLocation POINTS_BOX_EMPTY = grimoire("points_box_empty");
 
     public static final ResourceLocation BAR_BACKGROUND = grimoire("bar_background");
+    public static final ResourceLocation BAR_BACKGROUND_SHORT = grimoire("bar_background_short");
     public static final ResourceLocation BAR_LIFE = grimoire("bar_life");
     public static final ResourceLocation BAR_MANA = grimoire("bar_mana");
     public static final ResourceLocation BAR_HUNGER = grimoire("bar_hunger");

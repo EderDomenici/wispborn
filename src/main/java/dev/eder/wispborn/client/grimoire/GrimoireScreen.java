@@ -20,12 +20,10 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-import java.util.List;
 import java.util.Locale;
 
 /**
@@ -42,7 +40,11 @@ public final class GrimoireScreen extends Screen {
     private static final int COLOR_POINTS_ACTIVE = 0xFFB9A3;
     private static final int COLOR_CONFIRM_ACTIVE = 0xFFF3D6;
 
-    private static final int BAR_WIDTH = 120;
+    private static final int EP_BAR_WIDTH = 120;
+    /** Vida, mana e fome: mais curtas que a de EP para o valor caber à direita da barra. */
+    private static final int STAT_BAR_WIDTH = 90;
+    private static final int BARS_RIGHT = 236;
+    private static final int STAT_VALUE_X = BARS_RIGHT + 4;
     private static final int BAR_HEIGHT = 5;
     private static final int STAT_TEXT_MAX_WIDTH = 84;
     private static final int STEP_BTN_SIZE = 11;
@@ -179,27 +181,27 @@ public final class GrimoireScreen extends Screen {
                 ? Component.translatable("wispborn.grimoire.ep_max", state.totalEp())
                 : Component.translatable("wispborn.grimoire.ep", state.totalEp(), state.nextLevelEp());
         graphics.drawString(font, levelLabel, left + 116, top + 26, COLOR_TEXT_PRIMARY, true);
-        graphics.drawString(font, epLabel, left + 154, top + 26, COLOR_TEXT_SECONDARY, true);
+        graphics.drawString(font, epLabel, left + BARS_RIGHT - font.width(epLabel), top + 26, COLOR_TEXT_SECONDARY, true);
 
         int epFill;
         if (state.nextLevelEp() < 0) {
-            epFill = BAR_WIDTH;
+            epFill = EP_BAR_WIDTH;
         } else {
             int inLevel = Math.max(0, state.totalEp() - state.levelStartEp());
             int span = Math.max(1, state.nextLevelEp() - state.levelStartEp());
-            epFill = HudMath.progressWidth(inLevel, span, BAR_WIDTH);
+            epFill = HudMath.progressWidth(inLevel, span, EP_BAR_WIDTH);
         }
 
         float health = player.getHealth();
         float maxHealth = Math.max(1.0F, player.getMaxHealth());
-        int lifeFill = HudMath.progressWidth(health, maxHealth, BAR_WIDTH);
+        int lifeFill = HudMath.progressWidth(health, maxHealth, STAT_BAR_WIDTH);
 
         float mana = state.mana();
         int maxMana = Math.max(1, state.maxMana());
-        int manaFill = HudMath.progressWidth(mana, maxMana, BAR_WIDTH);
+        int manaFill = HudMath.progressWidth(mana, maxMana, STAT_BAR_WIDTH);
 
         int food = player.getFoodData().getFoodLevel();
-        int hungerFill = HudMath.progressWidth(food, 20.0F, BAR_WIDTH);
+        int hungerFill = HudMath.progressWidth(food, 20.0F, STAT_BAR_WIDTH);
 
         int remaining = this.pending.remainingPoints();
         boolean hasPoints = remaining > 0;
@@ -208,10 +210,10 @@ public final class GrimoireScreen extends Screen {
                 : GrimoireSprites.POINTS_BOX_EMPTY;
 
         RenderSystem.enableBlend();
-        drawBar(graphics, GrimoireSprites.BAR_EP, left + 116, top + 38, epFill);
-        drawBar(graphics, GrimoireSprites.BAR_LIFE, left + 146, top + 49, lifeFill);
-        drawBar(graphics, GrimoireSprites.BAR_MANA, left + 146, top + 59, manaFill);
-        drawBar(graphics, GrimoireSprites.BAR_HUNGER, left + 146, top + 69, hungerFill);
+        drawBar(graphics, GrimoireSprites.BAR_BACKGROUND, GrimoireSprites.BAR_EP, EP_BAR_WIDTH, left + 116, top + 38, epFill);
+        drawBar(graphics, GrimoireSprites.BAR_BACKGROUND_SHORT, GrimoireSprites.BAR_LIFE, STAT_BAR_WIDTH, left + 146, top + 49, lifeFill);
+        drawBar(graphics, GrimoireSprites.BAR_BACKGROUND_SHORT, GrimoireSprites.BAR_MANA, STAT_BAR_WIDTH, left + 146, top + 59, manaFill);
+        drawBar(graphics, GrimoireSprites.BAR_BACKGROUND_SHORT, GrimoireSprites.BAR_HUNGER, STAT_BAR_WIDTH, left + 146, top + 69, hungerFill);
         graphics.blitSprite(pointsBox, left + 270, top + 24, 38, 28);
         RenderSystem.disableBlend();
 
@@ -219,21 +221,15 @@ public final class GrimoireScreen extends Screen {
         graphics.drawString(font, Component.translatable("wispborn.grimoire.mana"), left + 116, top + 58, COLOR_TEXT_SECONDARY, true);
         graphics.drawString(font, Component.translatable("wispborn.grimoire.hunger"), left + 116, top + 68, COLOR_TEXT_SECONDARY, true);
 
-        int barCenterX = left + 146 + BAR_WIDTH / 2;
-        graphics.drawCenteredString(font, Mth.ceil(health) + "/" + Mth.ceil(maxHealth), barCenterX, top + 48, COLOR_TEXT_PRIMARY);
-        graphics.drawCenteredString(font, Mth.floor(mana) + "/" + state.maxMana(), barCenterX, top + 58, COLOR_TEXT_PRIMARY);
-        graphics.drawCenteredString(font, food + "/20", barCenterX, top + 68, COLOR_TEXT_PRIMARY);
+        int valueX = left + STAT_VALUE_X;
+        graphics.drawString(font, Mth.ceil(health) + "/" + Mth.ceil(maxHealth), valueX, top + 48, COLOR_TEXT_PRIMARY, true);
+        graphics.drawString(font, Mth.floor(mana) + "/" + state.maxMana(), valueX, top + 58, COLOR_TEXT_PRIMARY, true);
+        graphics.drawString(font, food + "/20", valueX, top + 68, COLOR_TEXT_PRIMARY, true);
 
         String pointsText = "+" + remaining;
         int pointsColor = hasPoints ? COLOR_POINTS_ACTIVE : COLOR_TEXT_DISABLED;
+        // Sem legenda: o "+N" basta, e uma legenda sob a caixa colidiria com o valor da mana.
         graphics.drawCenteredString(font, pointsText, left + 289, top + 24 + (28 - font.lineHeight) / 2, pointsColor);
-
-        List<FormattedCharSequence> captionLines = font.split(Component.translatable("wispborn.grimoire.points"), 40);
-        for (int i = 0; i < captionLines.size(); i++) {
-            FormattedCharSequence line = captionLines.get(i);
-            int lineW = font.width(line);
-            graphics.drawString(font, line, left + 289 - lineW / 2, top + 54 + i * 8, COLOR_TEXT_SECONDARY, true);
-        }
     }
 
     private void renderAttributes(
@@ -303,11 +299,17 @@ public final class GrimoireScreen extends Screen {
 
     private void renderFooter(GuiGraphics graphics, Font font, int left, int top, int mouseX, int mouseY) {
         boolean hasPending = this.pending.hasPending();
-        Component hint = hasPending
-                ? Component.translatable("wispborn.grimoire.hint.pending", this.pending.toDelta().total())
-                : Component.translatable("wispborn.grimoire.hint.idle");
+        int pendingCount = this.pending.toDelta().total();
+        Component hint;
+        if (!hasPending) {
+            hint = Component.translatable("wispborn.grimoire.hint.idle");
+        } else if (pendingCount == 1) {
+            hint = Component.translatable("wispborn.grimoire.hint.pending_one");
+        } else {
+            hint = Component.translatable("wispborn.grimoire.hint.pending", pendingCount);
+        }
         String hintStr = ellipsize(font, hint.getString(), 70);
-        graphics.drawString(font, hintStr, left + 116, top + 181, COLOR_TEXT_SECONDARY, true);
+        graphics.drawString(font, hintStr, left + 116, top + 181, hasPending ? COLOR_RUST_LIGHT : COLOR_TEXT_SECONDARY, true);
 
         int cancelX = left + 190;
         int confirmX = left + 252;
@@ -391,10 +393,18 @@ public final class GrimoireScreen extends Screen {
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    private static void drawBar(GuiGraphics graphics, ResourceLocation fillSprite, int x, int y, int fillWidth) {
-        graphics.blitSprite(GrimoireSprites.BAR_BACKGROUND, x, y, BAR_WIDTH, BAR_HEIGHT);
+    private static void drawBar(
+            GuiGraphics graphics,
+            ResourceLocation backgroundSprite,
+            ResourceLocation fillSprite,
+            int width,
+            int x,
+            int y,
+            int fillWidth
+    ) {
+        graphics.blitSprite(backgroundSprite, x, y, width, BAR_HEIGHT);
         if (fillWidth > 0) {
-            graphics.blitSprite(fillSprite, BAR_WIDTH, BAR_HEIGHT, 0, 0, x, y, fillWidth, BAR_HEIGHT);
+            graphics.blitSprite(fillSprite, width, BAR_HEIGHT, 0, 0, x, y, fillWidth, BAR_HEIGHT);
         }
     }
 

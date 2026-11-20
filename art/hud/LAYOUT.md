@@ -101,7 +101,8 @@ scaling separately to the nine regions; corners retain their pixel size.
 | `button`, `button_hover`, `button_disabled` | 20×20 | 3 |
 | `button_primary`, `button_primary_hover`, `button_primary_disabled` | 20×20 | 3 |
 | `points_box_active`, `points_box_empty` | 24×24 | 4 |
-| `bar_background`, `bar_life`, `bar_mana`, `bar_hunger`, `bar_ep` | 120×5 | none |
+| `bar_background`, `bar_ep` | 120×5 | none |
+| `bar_background_short`, `bar_life`, `bar_mana`, `bar_hunger` | 90×5 | none |
 
 ## Grimoire mockup layout
 
@@ -116,16 +117,16 @@ All coordinates below are relative to the panel's top-left.
 | Tabs | starting 74,7 | Wisp active; others disabled; 6 px gap (allowed -2 adjustment) |
 | Active underline | tab X,17 | Text width ×3 |
 | Portrait frame | 8,24 | 100×168 |
-| Level / EP label | 116,26 / 154,26 | Lvl 7; EP 8920/9800 |
+| Level / EP label | 116,26 / right-aligned at 236,26 | Lvl 7; 8920 / 9800 |
 | EP bar | 116,38 | 120×5 |
-| Life / mana / hunger labels | 116,48 / 58 / 68 | Values 5/6, 42/70, 14/20 |
-| Resource bars | 146,49 / 59 / 69 | 120×5; values centered at X=206 over the bars |
-| Points box | 270,24 | 38×28; +2 remaining |
-| Points caption | centered at 289,53 and 61 | Two lines avoid the resource column |
+| Life / mana / hunger labels | 116,48 / 58 / 68 | Muted text |
+| Resource bars | 146,49 / 59 / 69 | 90×5, ending at 236 with the EP bar |
+| Resource values | 240,48 / 58 / 68 | Left-aligned after the bars: 8/8, 92/125, 14/20 |
+| Points box | 270,24 | 38×28; +2 remaining; no caption |
 | Attribute rows | 116,84 + 22*i | Name; effect 10 px below |
 | Minus / pips / plus | 202 / 215 / 297 | 11×11 buttons; ten 7×7 pips at 8 px pitch |
 | Cancel / confirm | 190,176 / 252,176 | 56×18 |
-| Pending hint | 116,181 | One pending point |
+| Pending hint | 116,181 | One pending point, rust #E2775F |
 
 Example: Absorption has two committed pips plus one pending; Efficiency 3,
 Reserve 4, Vitality 1. The +2 box means **two remaining after the displayed pending
