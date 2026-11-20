@@ -24,7 +24,7 @@
   "wispborn.hud.stat_points": "+%s",
   "wispborn.hud.mana": "Mana %s/%s",
   "wispborn.hud.consume_prompt": "Consume [%s]",
-  "wispborn.target.ready_cost": "[%s] Possess · %s mana",
+  "wispborn.target.infest": "Possess",
   "wispborn.infest.immune": "This creature is immune to possession.",
   "wispborn.infest.has_passenger": "This creature is already occupied.",
   "wispborn.infest.too_strong": "Too strong (Lv %s; you Lv %s)",

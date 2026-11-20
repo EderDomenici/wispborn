@@ -27,6 +27,16 @@ public final class HudMath {
         return states;
     }
 
+    /** Y do slot do topo: {@code defaultTop}, ou 2 px abaixo da última barra de boss quando houver. */
+    public static int topSlotY(int defaultTop, int bossBottom) {
+        return bossBottom > 0 ? Math.max(defaultTop, bossBottom + 2) : defaultTop;
+    }
+
+    /** Largura do cartão do alvo: maior linha + margens, entre {@code min} e {@code max}. */
+    public static int cardWidth(int widestLine, int padding, int min, int max) {
+        return Math.clamp(widestLine + padding * 2L, min, max);
+    }
+
     public static int floorMarkerX(double floorPercent, int barWidth) {
         if (barWidth <= 0) {
             return 0;

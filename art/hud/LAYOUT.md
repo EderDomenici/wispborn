@@ -49,7 +49,7 @@ Compact panel at the **top center**, absolute Y from the top of the screen (not 
 
 | Element | X (from center) | Y (from top) | Size |
 | --- | ---: | ---: | --- |
-| `host_frame` | -64 | 4 | 128×24 |
+| `host_frame` (nine-slice, border 4) | -64 | top slot (2, below boss bars) | 128×24 |
 | Host name | -59 | 8 | Measured, ellipsized before the suffix |
 | Sex badge / level | after name + 3 px | 7 / 8 | Badge 9×9 (`U+E003`/`U+E004`); level text |
 | `no_ep` (when the prey gives no EP) | left of the percentage, 2 px gap | 7 | 9×9 |
@@ -73,17 +73,20 @@ Its bottom edge sits 56 px above the screen bottom and moves up with extra healt
 | "Consumir [key]" text | same | -21 | badge top + 5 | Font, `#C7FFE8` |
 | Cast background/progress | WISP while casting | -66 | 56 (top at 64) | 132×4 |
 
-## Target panel (revisado em 20/11/2026)
+## Target card (opção B, 20/11/2026)
 
-| Element | X | Y | Size |
+Card at the **top center**, same slot as the host panel (they never show together). Its
+top is Y = 2, or 2 px below the last boss bar when one is on screen.
+
+| Element | X (from card left) | Y (from card top) | Size |
 | --- | ---: | ---: | --- |
-| `target_frame` | -75 | `H/2 - 47` | 150×26 |
-| Target name, sex badge, level | -66 | frame + 6 | Measured text; leave 21 px for status |
-| `target_ok` / `target_blocked` | 55 | frame + 4 | 9×9 |
-| Action label | -66 | frame + 16 | Font height 7–9 |
+| `target_frame` (nine-slice, border 4) | centered | 0 | width = widest line + 12, 72–160; height 36 |
+| Target name | 6 | 5 | Ellipsized to 148 px |
+| Sex badge + level | 6 | 14 / 15 | Badge 9×9; level in `#A7C9C4` |
+| `target_ok` / `target_blocked` | 6 | 24 | 9×9 |
+| "Infestar" | 18 | 25 | Green `#55DCA0` when possible, red `#FF7B7B` when not |
 
-The cast bar left this panel and lives in the central bottom slot. The panel still
-ends 21 GUI pixels above the crosshair. No panel may cover the central crosshair region.
+No key and no mana cost on the card. The cast bar lives in the central bottom slot.
 
 ## Sprite inventory and alpha
 

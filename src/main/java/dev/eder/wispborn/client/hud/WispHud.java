@@ -74,16 +74,19 @@ public final class WispHud {
     private static final int COLOR_MANA_TEXT = 0xD0CAFF;
     private static final int COLOR_POINTS_TEXT = 0x8BE8BD;
     private static final int COLOR_CONSUME_PROMPT = 0xC7FFE8;
-    private static final int COLOR_TARGET_OK = 0xA1EFD6;
-    private static final int COLOR_TARGET_FAIL = 0xFF7B7B;
+    private static final int COLOR_TEXT_MUTED = 0xA7C9C4;
+    private static final int COLOR_INFEST_OK = 0x55DCA0;
+    private static final int COLOR_INFEST_FAIL = 0xFF7B7B;
 
     /** Layout revisado em 20/11/2026: painel do hospedeiro no topo, selo e conjuração no centro inferior. */
     private static final int HOST_FRAME_W = 128;
     private static final int HOST_FRAME_H = 24;
-    private static final int HOST_FRAME_TOP = 4;
     private static final int HOST_BAR_W = 118;
     private static final int HOST_BAR_H = 5;
-    private static final int TARGET_FRAME_H = 26;
+    private static final int TARGET_CARD_H = 36;
+    private static final int TARGET_CARD_PAD = 6;
+    private static final int TARGET_CARD_MIN_W = 72;
+    private static final int TARGET_CARD_MAX_W = 160;
     private static final int CONSUME_BADGE_W = 84;
     private static final int CONSUME_BADGE_H = 16;
     private static final int CAST_BAR_W = 132;
@@ -291,7 +294,7 @@ public final class WispHud {
         SyncWispStatePayload state = ClientWispState.get();
         int cx = graphics.guiWidth() / 2;
         int frameX = cx - HOST_FRAME_W / 2;
-        int frameY = HOST_FRAME_TOP;
+        int frameY = TopSlot.top();
         int barX = frameX + 5;
         int barY = frameY + 15;
 
@@ -406,6 +409,10 @@ public final class WispHud {
         RenderSystem.disableBlend();
     }
 
+    /**
+     * Cartão do alvo no topo central (opção B, 20/11/2026): nome; selo de sexo + nível; ícone + "Infestar"
+     * em verde (pode) ou vermelho (não pode). A largura acompanha a linha mais longa.
+     */
     private static void renderPossessTarget(GuiGraphics graphics, DeltaTracker deltaTracker) {
         Minecraft mc = Minecraft.getInstance();
         Player player = activeParasitePlayer(mc);
@@ -423,64 +430,39 @@ public final class WispHud {
             return;
         }
 
-        int cx = graphics.guiWidth() / 2;
-        int h = graphics.guiHeight();
-        int frameX = cx - 75;
-        // A moldura termina 21 px acima da mira, como no LAYOUT.
-        int frameY = Math.max(4, h / 2 - 21 - TARGET_FRAME_H);
-
-        ResourceLocation statusIcon = info.result() == InfestResult.OK
-                ? HudSprites.TARGET_OK
-                : HudSprites.TARGET_BLOCKED;
-
-        RenderSystem.enableBlend();
-        graphics.blitSprite(HudSprites.TARGET_FRAME, frameX, frameY, 150, TARGET_FRAME_H);
-        graphics.blitSprite(statusIcon, cx + 55, frameY + 4, 9, 9);
-        RenderSystem.disableBlend();
-
         Font font = mc.font;
-        int topRowY = frameY + 6;
-        int nameX = cx - 66;
-        int maxRight = cx + 52;
+        boolean canInfest = info.result() == InfestResult.OK;
         Component targetName = target instanceof Player
                 ? target.getDisplayName()
                 : target.getType().getDescription();
+        boolean hasTraits = info.mobLevel() > 0 && info.sex().isPresent();
+        Component sexGlyph = hasTraits ? info.sex().get().glyphComponent() : Component.empty();
+        Component levelText = hasTraits
+                ? Component.translatable("wispborn.hud.level", info.mobLevel())
+                : Component.empty();
+        Component action = Component.translatable("wispborn.target.infest");
 
-        if (info.mobLevel() > 0 && info.sex().isPresent()) {
-            Component sexGlyph = info.sex().get().glyphComponent();
-            Component levelText = Component.translatable("wispborn.hud.level", info.mobLevel());
-            int suffixWidth = 5 + font.width(sexGlyph) + 3 + font.width(levelText);
-            int maxNameWidth = Math.max(16, maxRight - nameX - suffixWidth);
-            String nameStr = ellipsize(font, targetName.getString(), maxNameWidth);
-            graphics.drawString(font, nameStr, nameX, topRowY, COLOR_TEXT_PRIMARY, true);
+        int traitsWidth = hasTraits ? font.width(sexGlyph) + 3 + font.width(levelText) : 0;
+        int actionWidth = 9 + 3 + font.width(action);
+        int maxNameWidth = TARGET_CARD_MAX_W - TARGET_CARD_PAD * 2;
+        String nameStr = ellipsize(font, targetName.getString(), maxNameWidth);
+        int widest = Math.max(font.width(nameStr), Math.max(traitsWidth, actionWidth));
+        int w = HudMath.cardWidth(widest, TARGET_CARD_PAD, TARGET_CARD_MIN_W, TARGET_CARD_MAX_W);
+        int x = graphics.guiWidth() / 2 - w / 2;
+        int y = TopSlot.top();
+        int textX = x + TARGET_CARD_PAD;
 
-            int glyphX = nameX + font.width(nameStr) + 5;
-            graphics.drawString(font, sexGlyph, glyphX, topRowY - 1, 0xFFFFFF, false);
-            int levelX = glyphX + font.width(sexGlyph) + 3;
-            graphics.drawString(font, levelText, levelX, topRowY, COLOR_TEXT_PRIMARY, true);
-        } else {
-            String nameStr = ellipsize(font, targetName.getString(), Math.max(16, maxRight - nameX));
-            graphics.drawString(font, nameStr, nameX, topRowY, COLOR_TEXT_PRIMARY, true);
+        RenderSystem.enableBlend();
+        graphics.blitSprite(HudSprites.TARGET_FRAME, x, y, w, TARGET_CARD_H);
+        graphics.blitSprite(canInfest ? HudSprites.TARGET_OK : HudSprites.TARGET_BLOCKED, textX, y + 24, 9, 9);
+        RenderSystem.disableBlend();
+
+        graphics.drawString(font, nameStr, textX, y + 5, COLOR_TEXT_PRIMARY, true);
+        if (hasTraits) {
+            graphics.drawString(font, sexGlyph, textX, y + 14, 0xFFFFFF, false);
+            graphics.drawString(font, levelText, textX + font.width(sexGlyph) + 3, y + 15, COLOR_TEXT_MUTED, true);
         }
-
-        Component actionComp = buildTargetActionLine(info);
-        String actionStr = ellipsize(font, actionComp.getString(), 132);
-        int actionColor = info.result() == InfestResult.OK ? COLOR_TARGET_OK : COLOR_TARGET_FAIL;
-        graphics.drawString(font, actionStr, cx - 66, frameY + 16, actionColor, true);
-    }
-
-    private static Component buildTargetActionLine(TargetInfoPayload info) {
-        return switch (info.result()) {
-            case OK -> Component.translatable(
-                    "wispborn.target.ready_cost",
-                    KeyBindings.POSSESS.getTranslatedKeyMessage(),
-                    info.manaCost()
-            );
-            case IMMUNE, NOT_A_MOB -> Component.translatable("wispborn.infest.immune");
-            case HAS_PASSENGER -> Component.translatable("wispborn.infest.has_passenger");
-            case TOO_STRONG -> Component.translatable("wispborn.infest.too_strong", info.mobLevel(), info.wispLevel());
-            case NO_MANA -> Component.translatable("wispborn.infest.no_mana", info.manaCost());
-        };
+        graphics.drawString(font, action, textX + 12, y + 25, canInfest ? COLOR_INFEST_OK : COLOR_INFEST_FAIL, true);
     }
 
     private static Player activeParasitePlayer(Minecraft mc) {

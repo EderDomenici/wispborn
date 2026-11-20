@@ -224,6 +224,11 @@ def make_sprites():
             },indent=2)+'\n')
     put('dna_icon',icon(['.##...##.','#le#.#wl#','.#el#wl#.','..#ele#..','...#e#...','..#wle#..','.#wl#el#.','#wl#.#el#','.##...##.']))
     put('host_frame',frame((128,24)));put('target_frame',frame((150,26)))
+    # Molduras em nine-slice: o jogo desenha em qualquer tamanho sem esticar o chanfro (20/11/2026).
+    for name,size in (('host_frame',(128,24)),('target_frame',(150,26))):
+        (ROOT/'sprites'/(name+'.png.mcmeta')).write_text(json.dumps({
+            'gui':{'scaling':{'type':'nine_slice','width':size[0],'height':size[1],'border':4}}
+        },indent=2)+'\n')
     marker=Image.new('RGBA',(3,8));d=ImageDraw.Draw(marker)
     d.rectangle((0,0,2,7),fill=EDGE);d.line((1,0,1,7),fill='#ffd694')
     put('host_floor_marker',marker)
@@ -315,12 +320,13 @@ def mockup(sprites,glyphs,host):
         paste('consume_ready',cx-37,171)
         text(canvas,'CONSUMIR C',cx-24,172,color='#c7ffe8')
     else:
-        paste('target_frame',cx-75,73)
-        text(canvas,'ZUMBI',cx-66,79)
-        canvas.alpha_composite(glyphs['sex_female_badge'],(cx-31,78))
-        text(canvas,'NV 6',cx-20,79)
-        paste('target_ok',cx+55,77)
-        text(canvas,'R INFESTAR 30',cx-66,89,color='#a1efd6')
+        # Cartao do alvo no topo central (opcao B, 20/11/2026): nome, sexo e nivel, estado.
+        canvas.alpha_composite(frame((96,36)),(cx-48,2))
+        text(canvas,'ZUMBI',cx-42,7)
+        canvas.alpha_composite(glyphs['sex_female_badge'],(cx-42,16))
+        text(canvas,'NV 6',cx-30,17,color='#a7c9c4')
+        paste('target_ok',cx-42,26)
+        text(canvas,'INFESTAR',cx-30,27,color='#55dca0')
         # Barra de conjuracao so durante o cast, no centro inferior.
         paste('cast_bar_background',cx-66,178)
         canvas.alpha_composite(sprites['cast_bar_progress'].crop((0,0,79,4)),(cx-66,178))

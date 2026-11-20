@@ -28,4 +28,18 @@ class HudMathTest {
         assertEquals(20, HudMath.floorMarkerX(0.2D, 100));
         assertEquals(32, HudMath.floorMarkerX(0.2D, 164));
     }
+
+    @Test
+    void topSlotYDropsBelowBossBars() {
+        assertEquals(2, HudMath.topSlotY(2, 0));
+        assertEquals(21, HudMath.topSlotY(2, 19));
+        assertEquals(40, HudMath.topSlotY(2, 38));
+    }
+
+    @Test
+    void cardWidthFitsWidestLineWithinLimits() {
+        assertEquals(72, HudMath.cardWidth(20, 6, 72, 160));
+        assertEquals(96, HudMath.cardWidth(84, 6, 72, 160));
+        assertEquals(160, HudMath.cardWidth(300, 6, 72, 160));
+    }
 }
