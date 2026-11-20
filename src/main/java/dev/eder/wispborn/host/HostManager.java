@@ -17,14 +17,12 @@ import dev.eder.wispborn.registry.ModAttachments;
 import dev.eder.wispborn.registry.ModDamageTypes;
 import dev.eder.wispborn.traits.MobTraits;
 import dev.eder.wispborn.traits.MobTraitsManager;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -527,46 +525,6 @@ public final class HostManager {
         LAST_TARGET_INFO.remove(player.getUUID());
         DRAIN_TICKS.remove(player.getUUID());
         DrainFx.clear(player.getUUID());
-    }
-
-    public static Component buildHostHud(ServerPlayer player, LivingEntity host) {
-        float maxHealth = Math.max(1.0F, host.getMaxHealth());
-        int healthPercent = Math.round((host.getHealth() / maxHealth) * 100.0F);
-        int mobLevel = (host instanceof Mob mob)
-                ? MobTraitsManager.traitsOf(mob).map(MobTraits::level).orElse(1)
-                : 1;
-        int wispLevel = ProgressManager.level(player);
-        Component epDisplay = ProgressManager.epDisplay(player);
-        int currentMana = Math.round(ProgressManager.getMana(player));
-        int maxMana = ProgressManager.getMaxMana(player);
-
-        MutableComponent hud = Component.translatable(
-                "wispborn.hud.host",
-                host.getType().getDescription(),
-                mobLevel,
-                healthPercent,
-                epDisplay,
-                wispLevel,
-                currentMana,
-                maxMana
-        );
-
-        double floorPercent = WispbornConfig.DRAIN_FLOOR_PERCENT.getAsDouble();
-        if (DrainMath.atFloor(host.getHealth(), maxHealth, floorPercent)) {
-            hud.append(Component.translatable("wispborn.hud.host.consume", Component.keybind("key.wispborn.consume")).withStyle(ChatFormatting.GREEN));
-        }
-
-        double factor = EpMath.levelFactor(
-                wispLevel,
-                mobLevel,
-                WispbornConfig.EP_LEVEL_GRACE.getAsInt(),
-                WispbornConfig.EP_FALLOFF_PER_LEVEL.getAsDouble()
-        );
-        if (factor <= 0.0D) {
-            hud.append(Component.translatable("wispborn.hud.host.no_ep").withStyle(ChatFormatting.GRAY));
-        }
-
-        return hud;
     }
 
     private static void spawnPossessedParticles(ServerLevel serverLevel, LivingEntity host) {

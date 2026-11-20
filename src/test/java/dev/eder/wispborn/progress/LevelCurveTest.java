@@ -33,4 +33,14 @@ class LevelCurveTest {
         assertEquals(OptionalInt.empty(), LevelCurve.nextThreshold(136_800, DEFAULT_THRESHOLDS));
         assertEquals(OptionalInt.empty(), LevelCurve.nextThreshold(200_000, DEFAULT_THRESHOLDS));
     }
+
+    @Test
+    void levelStartEpIsThePreviousThreshold() {
+        assertEquals(0, LevelCurve.levelStartEp(1, DEFAULT_THRESHOLDS));
+        assertEquals(300, LevelCurve.levelStartEp(2, DEFAULT_THRESHOLDS));
+        assertEquals(800, LevelCurve.levelStartEp(3, DEFAULT_THRESHOLDS));
+        assertEquals(136_800, LevelCurve.levelStartEp(20, DEFAULT_THRESHOLDS));
+        assertEquals(136_800, LevelCurve.levelStartEp(99, DEFAULT_THRESHOLDS));
+        assertEquals(0, LevelCurve.levelStartEp(5, List.of()));
+    }
 }
