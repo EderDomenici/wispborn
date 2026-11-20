@@ -86,12 +86,13 @@ Iguais ao M5: `data/wispborn/damage_type/consumed.json`, as tags `bypasses_armor
 - [ ] Wisp Nv 1 dentro de galinha Nv 1: a % cai 2 pontos por pulso, +3 EP por pulso e a fome sobe 1 por pulso.
 - [ ] No piso de 20%: para de drenar, de dar EP e de dar fome; aparece `[C] consumir`.
 - [ ] `C` com 80% → "Ainda resiste: 80%". `C` no piso → galinha morre sem drops, `+30 EP`, fome sobe 2 pontos, wisp sai visível.
-- [ ] `/wispborn ep set Dev 13600` (Nv 10) e infestar galinha Nv 1: drena, devolve fome, **sem EP** (`· sem EP` no HUD); consumo mostra "fraco demais para evoluir".
+- [ ] `/wispborn ep set 13600` (Nv 10) e infestar galinha Nv 1: drena, devolve fome, **sem EP** (`· sem EP` no HUD); consumo mostra "fraco demais para evoluir".
 - [ ] Wisp Nv 10 em zumbi Nv 7 (3 abaixo): EP por pulso = 21 × 0,75 = 16.
 - [ ] Hospedeiro morto por outra causa antes de 20%: expulso, sem bônus (regra do M3).
 - [ ] Ponta a ponta com `intervalTicks = 100`: começando no Nv 1 com fome cheia, chegar ao Nv 3 só
       parasitando, sem morrer de fome.
-- [ ] Multiplayer: o Player2 vê o mob morrer e a mensagem `... foi consumido por Dev`.
+- [ ] Multiplayer: o Player2 vê o mob morrer, sem drops. (O vanilla só anuncia morte de jogador e de
+      pet com dono; a mensagem `... foi consumido por Dev` aparece nesses casos.)
 - [ ] Servidor dedicado sobe sem crash.
 
 ## Fora de escopo

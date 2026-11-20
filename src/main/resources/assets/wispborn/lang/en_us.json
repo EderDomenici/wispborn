@@ -22,7 +22,7 @@
   "wispborn.hud.max": "%s · max",
   "wispborn.hud.points": " · %s pts",
   "wispborn.hud.host": "%s Lv %s · %s%% · EP %s · Lv %s · Mana %s/%s",
-  "wispborn.hud.host.consume": " · [C] consume",
+  "wispborn.hud.host.consume": " · [%s] consume",
   "wispborn.hud.host.no_ep": " · no EP",
   "wispborn.target.info": "%s %s · Lv %s · %s mana",
   "wispborn.target.ready": "Hold [%s] to possess",

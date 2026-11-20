@@ -552,7 +552,7 @@ public final class HostManager {
 
         double floorPercent = WispbornConfig.DRAIN_FLOOR_PERCENT.getAsDouble();
         if (DrainMath.atFloor(host.getHealth(), maxHealth, floorPercent)) {
-            hud.append(Component.translatable("wispborn.hud.host.consume").withStyle(ChatFormatting.GREEN));
+            hud.append(Component.translatable("wispborn.hud.host.consume", Component.keybind("key.wispborn.consume")).withStyle(ChatFormatting.GREEN));
         }
 
         double factor = EpMath.levelFactor(
