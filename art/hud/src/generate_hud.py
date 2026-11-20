@@ -77,6 +77,37 @@ def frame(size):
     return image
 
 
+BADGE_FRAMES = 16
+BADGE_FRAME_TICKS = 2
+
+
+def mix(a, b, t):
+    ca=[int(a[i:i+2],16) for i in (1,3,5)];cb=[int(b[i:i+2],16) for i in (1,3,5)]
+    return '#'+''.join(f'{round(x+(y-x)*t):02x}' for x,y in zip(ca,cb))
+
+
+def consume_badge(phase):
+    """Selo 'Consumir' (20/11/2026): corpo chanfrado com presas nas pontas; a borda pulsa em 16 quadros."""
+    w,h=84,16
+    t=(1-math.cos(2*math.pi*phase/BADGE_FRAMES))/2
+    glow=mix('#2c8a6b','#a8ffdc',t)
+    image=Image.new('RGBA',(w,h));d=ImageDraw.Draw(image)
+    body=[(7,1),(w-8,1),(w-6,3),(w-6,h-4),(w-8,h-2),(7,h-2),(5,h-4),(5,3)]
+    d.polygon(body,fill='#0c1720')
+    d.line(body+[body[0]],fill=glow)
+    d.line((8,2,w-9,2),fill='#1d3a3a')
+    # presas: tres pixels apontando para fora em cada lado
+    for x0,dx in ((4,-1),(w-5,1)):
+        for i,(yy,ln) in enumerate(((5,2),(7,3),(9,3),(11,2))):
+            for k in range(ln):
+                d.point((x0+dx*k,yy if i<2 else yy),fill=glow if k<ln-1 else mix('#2c8a6b','#e9fff5',t))
+    # brilho que percorre a borda de cima
+    run=round((w-20)*phase/BADGE_FRAMES)+9
+    for k in range(3):
+        if 8<=run+k<=w-9:d.point((run+k,1),fill='#e9fff5')
+    return image
+
+
 def animated_bar(kind, phase):
     """Sixty-four looping pixel frames with half-pixel phase steps at 20 fps."""
     height=9 if kind=='mana' else 7
@@ -178,7 +209,7 @@ def make_sprites():
     put('hunger_empty',hunger_empty);put('hunger_full',flame);put('hunger_half',half(flame,hunger_empty))
     for kind,colors,size in [('mana',('#6252c9','#b5adff','#35459b'),(182,9)),
                              ('dna',('#299a79','#c7ffe8','#196359'),(182,7)),
-                             ('host_health',('#42b994','#a1f1d0','#23735d'),(164,6)),
+                             ('host_health',('#42b994','#a1f1d0','#23735d'),(118,5)),
                              ('cast',('#409ba9','#cbfff8','#286177'),(132,4))]:
         prefix=kind+'_bar' if kind in ('mana','dna','cast') else kind
         put(prefix+'_background',bar(size,colors))
@@ -192,7 +223,7 @@ def make_sprites():
                 'animation':{'width':size[0],'height':size[1],'frametime':BAR_FRAME_TICKS,'interpolate':False}
             },indent=2)+'\n')
     put('dna_icon',icon(['.##...##.','#le#.#wl#','.#el#wl#.','..#ele#..','...#e#...','..#wle#..','.#wl#el#.','#wl#.#el#','.##...##.']))
-    put('host_frame',frame((182,44)));put('target_frame',frame((150,32)))
+    put('host_frame',frame((128,24)));put('target_frame',frame((150,26)))
     marker=Image.new('RGBA',(3,8));d=ImageDraw.Draw(marker)
     d.rectangle((0,0,2,7),fill=EDGE);d.line((1,0,1,7),fill='#ffd694')
     put('host_floor_marker',marker)
@@ -200,6 +231,13 @@ def make_sprites():
     put('no_ep',icon(['..#####..','.#ddddd#.','#drdddrd#','#ddrdrdd#','#dddrddd#','#ddrdrdd#','#drdddrd#','.#ddddd#.','..#####..']))
     put('target_ok',icon(['.........','......##.','.....#el#','....#el#.','.###el#..','#elel#...','.#el#....','..##.....','.........']))
     put('target_blocked',icon(['.........','.##...##.','#rr#.#rr#','.#rr#rr#.','..#rrr#..','.#rr#rr#.','#rr#.#rr#','.##...##.','.........']))
+    sheet=Image.new('RGBA',(84,16*BADGE_FRAMES))
+    for phase in range(BADGE_FRAMES):sheet.paste(consume_badge(phase),(0,phase*16))
+    save(sheet,'sprites','consume_badge')
+    sprites['consume_badge']=consume_badge(0)
+    (ROOT/'sprites'/'consume_badge.png.mcmeta').write_text(json.dumps({
+        'animation':{'width':84,'height':16,'frametime':BADGE_FRAME_TICKS,'interpolate':False}
+    },indent=2)+'\n')
     vignette=Image.new('RGBA',(256,256))
     for y in range(256):
         for x in range(256):
@@ -215,15 +253,21 @@ def make_glyphs():
     patterns={
       'sex_male':['....###','.....##','.###.#.','#...#..','#...#..','#...#..','.###...','.......'],
       'sex_female':['.###.','#...#','#...#','.###.','..#..','.###.','..#..','.....'],
-      'dna':['#...#','.###.','..#..','.###.','#...#','.###.','..#..','.....']}
+      'dna':['#...#','.###.','..#..','.###.','#...#','.###.','..#..','.....'],
+      'sex_male_badge':['..#####..','.#bbbbb#.','#bbbbwww#','#bbbbbww#','#bwwwbwb#','#wbbbwbb#','#wbbbwbb#','.#wwwbb#.','..#####..'],
+      'sex_female_badge':['..#####..','.#ppppp#.','#ppwwwpp#','#pwpppwp#','#ppwwwpp#','#pppwppp#','#ppwwwpp#','.#ppwpp#.','..#####..']}
     colors={'sex_male':'#64b5f6','sex_female':'#f48fb1','dna':'#ffffff'}
-    glyphs={name:save(icon(rows,{'#':colors[name]}),'font',name) for name,rows in patterns.items()}
+    badge={'b':'#3d8fd6','p':'#d9628f','w':'#ffffff','#':EDGE}
+    glyphs={name:save(icon(rows,badge if name.endswith('_badge') else {'#':colors[name]}),'font',name)
+            for name,rows in patterns.items()}
     preview=Image.new('RGBA',(180,64),'#111e2a')
     for name,label,x in [('sex_female','FEMEA',12),('sex_male','MACHO',100)]:
         preview.alpha_composite(glyphs[name].resize((glyphs[name].width*4,32),Image.Resampling.NEAREST),(x+4,8))
         text(preview,label,x,48,color=colors[name])
     preview.resize((720,256),Image.Resampling.NEAREST).save(ROOT/'gender_symbols.png')
-    providers=[{'type':'bitmap','file':f'wispborn:font/{name}.png','ascent':7,'height':8,'chars':[chr(0xE000+i)]}
+    providers=[{'type':'bitmap','file':f'wispborn:font/{name}.png',
+                'ascent':8 if name.endswith('_badge') else 7,'height':9 if name.endswith('_badge') else 8,
+                'chars':[chr(0xE000+i)]}
                for i,name in enumerate(patterns)]
     (ROOT/'font/icons.json').write_text(json.dumps({'providers':providers},indent=2)+'\n')
     return glyphs
@@ -257,24 +301,29 @@ def mockup(sprites,glyphs,host):
         canvas.alpha_composite(sprites[kind+'_bar_progress'].crop((0,0,math.floor(182*value),height)),(cx-91,y))
     text(canvas,'MANA 42/70',cx,219,color='#d0caff',center=True)
     if host:
-        paste('host_frame',cx-91,141)
-        text(canvas,'ZUMBI',cx-82,147)
-        canvas.alpha_composite(glyphs['sex_female'],(cx-47,147))
-        text(canvas,'NV 6',cx-36,147)
-        text(canvas,'62%',cx+56,147)
-        paste('host_health_background',cx-82,160)
-        canvas.alpha_composite(sprites['host_health_progress'].crop((0,0,101,6)),(cx-82,160))
-        paste('host_floor_marker',cx-82+32-1,159)
-        text(canvas,'CONSUMIR: ATE 20%',cx-82,172,color='#e4cba6')
+        # Painel compacto no topo central (20/11/2026).
+        paste('host_frame',cx-64,4)
+        text(canvas,'ZUMBI',cx-59,8)
+        canvas.alpha_composite(glyphs['sex_female_badge'],(cx-30,7))
+        text(canvas,'NV 6',cx-19,8)
+        text(canvas,'18%',cx+46,8)
+        paste('host_health_background',cx-59,19)
+        canvas.alpha_composite(sprites['host_health_progress'].crop((0,0,21,5)),(cx-59,19))
+        paste('host_floor_marker',cx-59+23-1,17)
+        # Selo de consumo no centro inferior, acima da linha do nivel.
+        paste('consume_badge',cx-42,167)
+        paste('consume_ready',cx-37,171)
+        text(canvas,'CONSUMIR C',cx-24,172,color='#c7ffe8')
     else:
-        paste('target_frame',cx-75,67)
-        text(canvas,'ZUMBI',cx-66,73)
-        canvas.alpha_composite(glyphs['sex_female'],(cx-31,73))
-        text(canvas,'NV 6',cx-20,73)
-        paste('target_ok',cx+55,71)
-        text(canvas,'INFESTAR',cx-66,83,color='#a1efd6')
-        paste('cast_bar_background',cx-66,91)
-        canvas.alpha_composite(sprites['cast_bar_progress'].crop((0,0,79,4)),(cx-66,91))
+        paste('target_frame',cx-75,73)
+        text(canvas,'ZUMBI',cx-66,79)
+        canvas.alpha_composite(glyphs['sex_female_badge'],(cx-31,78))
+        text(canvas,'NV 6',cx-20,79)
+        paste('target_ok',cx+55,77)
+        text(canvas,'R INFESTAR 30',cx-66,89,color='#a1efd6')
+        # Barra de conjuracao so durante o cast, no centro inferior.
+        paste('cast_bar_background',cx-66,178)
+        canvas.alpha_composite(sprites['cast_bar_progress'].crop((0,0,79,4)),(cx-66,178))
     return canvas.resize((854,480),Image.Resampling.NEAREST)
 
 

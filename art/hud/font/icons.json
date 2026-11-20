@@ -26,6 +26,24 @@
       "chars": [
         "\ue002"
       ]
+    },
+    {
+      "type": "bitmap",
+      "file": "wispborn:font/sex_male_badge.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue003"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "wispborn:font/sex_female_badge.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue004"
+      ]
     }
   ]
 }

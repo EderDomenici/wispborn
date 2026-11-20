@@ -29,14 +29,15 @@ Nenhuma barra, ícone ou moldura desenhada com `fill`, gradiente ou forma geomé
 | `mana_bar_background`, `mana_bar_progress` | 182×9 | Barra de mana (cor de mana); progresso recortado pela largura |
 | `dna_bar_background`, `dna_bar_progress` | 182×7 | EP dentro do nível atual, no lugar da barra de XP |
 | `dna_icon` | 9×9 | Ícone ao lado do número de nível |
-| `host_frame` | definido no LAYOUT | Moldura do painel do hospedeiro |
-| `host_health_background`, `host_health_progress` | definido no LAYOUT | Vida do hospedeiro |
+| `host_frame` | 128×24 | Moldura do painel compacto do hospedeiro (topo central) |
+| `host_health_background`, `host_health_progress` | 118×5 | Vida do hospedeiro |
 | `host_floor_marker` | definido no LAYOUT | Marca de 20% na barra do hospedeiro |
-| `consume_ready` | 9×9 | Indicador "pode consumir" |
+| `consume_ready` | 9×9 | Ícone dentro do selo de consumo |
+| `consume_badge` | 84×16 | Selo "Consumir" animado (16 quadros, 2 ticks), centro inferior, só no piso |
 | `no_ep` | 9×9 | Indicador "presa fraca demais para dar EP" |
-| `target_frame` | definido no LAYOUT | Fundo do painel do alvo (substitui o texto do M3b) |
+| `target_frame` | 150×26 | Fundo do painel do alvo (sem a barra de conjuração) |
 | `target_ok`, `target_blocked` | 9×9 | Situação do alvo |
-| `cast_bar_background`, `cast_bar_progress` | definido no LAYOUT | Barra de conjuração (substitui o `fill` atual) |
+| `cast_bar_background`, `cast_bar_progress` | 132×4 | Barra de conjuração, centro inferior, só durante o cast |
 
 As dimensões das barras correspondem a um frame. Os sprites de progresso usam 64 frames
 verticais com `.png.mcmeta` (1 tick por frame, 20 fps, sem interpolação). Copiar PNG e metadata
@@ -49,6 +50,8 @@ Provider `bitmap` com glifos em PNG na Área de Uso Privado:
 | `U+E000` | ♂ (macho) |
 | `U+E001` | ♀ (fêmea) |
 | `U+E002` | DNA pequeno (para texto e chat) |
+| `U+E003` | Selo macho 9×9 (placa e painéis) |
+| `U+E004` | Selo fêmea 9×9 (placa e painéis) |
 
 Componentes usam `Style.withFont(ResourceLocation.fromNamespaceAndPath(MOD_ID, "icons"))` para esses
 caracteres. A placa da F2 e o painel do alvo passam a usar os glifos.

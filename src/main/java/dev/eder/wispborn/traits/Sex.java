@@ -16,8 +16,8 @@ import java.util.Optional;
 import java.util.function.IntFunction;
 
 public enum Sex implements StringRepresentable {
-    MALE("male", "♂", "\uE000"),
-    FEMALE("female", "♀", "\uE001");
+    MALE("male", "♂", "\uE003"),
+    FEMALE("female", "♀", "\uE004");
 
     public static final ResourceLocation ICONS_FONT =
             ResourceLocation.fromNamespaceAndPath(WispbornMod.MOD_ID, "icons");

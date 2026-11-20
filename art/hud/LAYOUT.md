@@ -35,7 +35,7 @@ empty sparks (14/20). Hunger depletes from left to right: the three empty
 slots are on the left and the seven full slots remain on the right. For slot
 `i` from left to right (0–9), its fill is `clamp(food - 2 * (9 - i), 0, 2)`.
 A partially depleted slot uses `hunger_half`, with its remaining bright half on the right. Extra health rows grow upward at a 10 px pitch, at most ten
-icons per row. With `r` health rows, move the level row and host panel upward by
+icons per row. With `r` health rows, move the level row and the central bottom slot upward by
 `10 * (r - 1)` GUI pixels. F4 must account for these rows in vanilla HUD stacking.
 This art mockup does not implement GUI events or vanilla bubble positioning.
 
@@ -43,42 +43,51 @@ Health uses `core_container` underneath `core_full`/`core_half`. The right half 
 `core_half` is transparent so the container remains visible. Hunger variants are
 complete icons including their empty portions. Blinking containers are brighter.
 
-## Host panel
+## Host panel (revisado em 20/11/2026)
+
+Compact panel at the **top center**, absolute Y from the top of the screen (not from the bottom).
+
+| Element | X (from center) | Y (from top) | Size |
+| --- | ---: | ---: | --- |
+| `host_frame` | -64 | 4 | 128×24 |
+| Host name | -59 | 8 | Measured, ellipsized before the suffix |
+| Sex badge / level | after name + 3 px | 7 / 8 | Badge 9×9 (`U+E003`/`U+E004`); level text |
+| `no_ep` (when the prey gives no EP) | left of the percentage, 2 px gap | 7 | 9×9 |
+| Health percent | right aligned at 59 | 8 | Font height 7–9 |
+| Health background/progress | -59 | 19 | 118×5 |
+| `host_floor_marker` | `-59 + floor(118 * floorPercent) - 1` | 17 | 3×8 |
+
+There is no consume text in the panel: the floor marker on the bar is the only hint
+until the host reaches the floor.
+
+## Central bottom slot (revisado em 20/11/2026)
+
+A single slot centered above the level row (DNA icon + level, Y = 54 from the bottom).
+Its bottom edge sits 56 px above the screen bottom and moves up with extra health rows
+(`10 * (r - 1)`). HOST and WISP never use it at the same time.
+
+| Element | When | X | Y (bottom edge, from bottom) | Size |
+| --- | --- | ---: | ---: | --- |
+| `consume_badge` (animated, 16 frames × 2 ticks) | HOST at the floor | -42 | 56 | 84×16 |
+| `consume_ready` inside the badge | same | -33 | badge top + 4 | 9×9 |
+| "Consumir [key]" text | same | -21 | badge top + 5 | Font, `#C7FFE8` |
+| Cast background/progress | WISP while casting | -66 | 56 (top at 64) | 132×4 |
+
+## Target panel (revisado em 20/11/2026)
 
 | Element | X | Y | Size |
 | --- | ---: | ---: | --- |
-| `host_frame` | -91 | 99 | 182×44 |
-| Host name | -82 | 93 | Available text width depends on trailing labels |
-| Sex glyph / level | after measured name + 5 px | 93 | Glyph 5×8; level text |
-| Health percent | right aligned at 82 | 93 | Font height 7–9 |
-| Health background/progress | -82 | 80 | 164×6 |
-| `host_floor_marker` | `-82 + floor(164 * floorPercent) - 1` | 81 | 3×8 |
-| Consume status / configured key | -82 | 68 | Font height 7–9 |
-| `consume_ready` | -82 | 69 | 9×9; shift following text right by 12 px |
-| `no_ep` | 70 | 69 | 9×9; reserve its trailing space when visible |
+| `target_frame` | -75 | `H/2 - 47` | 150×26 |
+| Target name, sex badge, level | -66 | frame + 6 | Measured text; leave 21 px for status |
+| `target_ok` / `target_blocked` | 55 | frame + 4 | 9×9 |
+| Action label | -66 | frame + 16 | Font height 7–9 |
 
-Draw marker after both bar layers. The example uses Zombie, female, level 6,
-62% health (101/164 px progress) and the 20% marker at pixel 32. At 62% the
-consume-ready icon is hidden. Localized names must be measured and ellipsized;
-reserve the percentage and level regions rather than letting text overlap.
-
-## Target panel
-
-| Element | X | Y | Size |
-| --- | ---: | ---: | --- |
-| `target_frame` | -75 | `H/2 + 53` | 150×32 |
-| Target name, sex, level | -66 | `H/2 + 47` | Measured text; leave 21 px for status |
-| `target_ok` / `target_blocked` | 55 | `H/2 + 49` | 9×9 |
-| Action label | -66 | `H/2 + 37` | Font height 7–9 |
-| Cast background/progress | -66 | `H/2 + 29` | 132×4 |
-
-The panel ends 21 GUI pixels above the crosshair. No panel may cover the central
-crosshair region. HOST mode normally has no target panel. Compact screens or
-exceptionally many health rows require an F4 layout check; do not silently overlap.
+The cast bar left this panel and lives in the central bottom slot. The panel still
+ends 21 GUI pixels above the crosshair. No panel may cover the central crosshair region.
 
 ## Sprite inventory and alpha
 
-`manifest.json` lists all 24 sprite dimensions, including all 23 F4 assets plus
+`manifest.json` lists all 25 sprite dimensions, including all 24 F4 assets plus
 `cast_vignette` (256×256). All sprites are RGBA. Alpha is binary except for
 `host_frame`, `target_frame`, and `cast_vignette`. Frames have opaque 1 px borders
 and translucent interiors. Bars retain a dark outline and use short palettes.

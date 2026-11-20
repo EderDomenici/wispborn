@@ -25,6 +25,7 @@ public final class HudSprites {
     public static final ResourceLocation HOST_HEALTH_PROGRESS = hud("host_health_progress");
     public static final ResourceLocation HOST_FLOOR_MARKER = hud("host_floor_marker");
     public static final ResourceLocation CONSUME_READY = hud("consume_ready");
+    public static final ResourceLocation CONSUME_BADGE = hud("consume_badge");
     public static final ResourceLocation NO_EP = hud("no_ep");
 
     public static final ResourceLocation TARGET_FRAME = hud("target_frame");

@@ -44,12 +44,12 @@
     7
   ],
   "host_health_background": [
-    164,
-    6
+    118,
+    5
   ],
   "host_health_progress": [
-    164,
-    6
+    118,
+    5
   ],
   "cast_bar_background": [
     132,
@@ -64,12 +64,12 @@
     9
   ],
   "host_frame": [
-    182,
-    44
+    128,
+    24
   ],
   "target_frame": [
     150,
-    32
+    26
   ],
   "host_floor_marker": [
     3,
@@ -90,6 +90,10 @@
   "target_blocked": [
     9,
     9
+  ],
+  "consume_badge": [
+    84,
+    16
   ],
   "cast_vignette": [
     256,
