@@ -164,7 +164,7 @@ public final class WispHud {
             int row = i / 10;
             int col = i % 10;
             int sx = cx - 100 + col * 8;
-            int sy = h - 28 - row * 10;
+            int sy = h - 24 - row * 10;
             graphics.blitSprite(containerSprite, sx, sy, 9, 9);
             if (states[i] == 2) {
                 graphics.blitSprite(HudSprites.CORE_FULL, sx, sy, 9, 9);
@@ -174,7 +174,7 @@ public final class WispHud {
         }
         RenderSystem.disableBlend();
 
-        mc.gui.leftHeight = 38 + (rows - 1) * 10;
+        mc.gui.leftHeight = 34 + (rows - 1) * 10;
     }
 
     private static void renderWispHunger(GuiGraphics graphics, DeltaTracker deltaTracker) {
@@ -197,7 +197,7 @@ public final class WispHud {
         RenderSystem.enableBlend();
         for (int i = 0; i < 10; i++) {
             int sx = cx + 20 + i * 8;
-            int sy = h - 36 - extraRowsShift;
+            int sy = h - 32 - extraRowsShift;
             if (saturation <= 0.0F && guiTicks % (foodLevel * 3 + 1) == 0) {
                 sy += RANDOM.nextInt(3) - 1;
             }
@@ -211,7 +211,7 @@ public final class WispHud {
         }
         RenderSystem.disableBlend();
 
-        mc.gui.rightHeight = 46 + extraRowsShift;
+        mc.gui.rightHeight = 42 + extraRowsShift;
     }
 
     private static void renderWispMana(GuiGraphics graphics, DeltaTracker deltaTracker) {
@@ -226,7 +226,7 @@ public final class WispHud {
         int h = graphics.guiHeight();
         int extraRowsShift = 10 * (healthRows(player) - 1);
         int barX = cx + 20;
-        int barY = h - 26 - extraRowsShift;
+        int barY = h - 22 - extraRowsShift;
 
         RenderSystem.enableBlend();
         graphics.blitSprite(HudSprites.MANA_BAR_BACKGROUND, barX, barY, MANA_BAR_W, MANA_BAR_H);

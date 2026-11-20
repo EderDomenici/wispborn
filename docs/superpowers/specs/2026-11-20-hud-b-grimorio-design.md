@@ -78,11 +78,11 @@ Largura total de 200 (`cx-100` a `cx+100`).
 | Peça | Posição | Tamanho | Observação |
 |---|---|---|---|
 | Barra de EP (DNA, animada) | `cx-100`, `h-14` | 200 × 6 | Largura toda; sem caixa de nível |
-| Núcleos de vida | a partir de `cx-100`, topo em `h-28` | 9 × 9, passo 8 | Mais de 10: segunda linha 10 px acima |
+| Núcleos de vida | a partir de `cx-100`, topo em `h-24` | 9 × 9, passo 8 | Mais de 10: segunda linha 10 px acima |
 | Orbe de DNA | centrado em `cx`, topo em `h-34` | 19 × 19 | Ícone de DNA no meio |
 | EP total | centrado em `cx`, acima do orbe (`h-43`) | fonte | Ex.: `8920`, cor `#FFF6D8` |
-| Chamas da fome | de `cx+20` a `cx+100`, topo em `h-36` | 9 × 9, passo 8 | Esvazia da esquerda para a direita (como hoje) |
-| Mana (animada) | `cx+20`, topo em `h-26` | 80 × 6 | Exatamente embaixo das chamas |
+| Chamas da fome | de `cx+20` a `cx+100`, topo em `h-32` | 9 × 9, passo 8 | Esvazia da esquerda para a direita (como hoje) |
+| Mana (animada) | `cx+20`, topo em `h-22` | 80 × 6 | Exatamente embaixo das chamas |
 | Slot acima do orbe | centrado, base logo acima do EP total | — | Selo Consumir (HOST no piso) ou barra de conjuração (WISP conjurando) |
 | Bolhas de ar | acima das chamas | vanilla | Só debaixo d'água (`Gui.rightHeight`) |
 

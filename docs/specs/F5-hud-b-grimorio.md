@@ -50,17 +50,17 @@ Copiar PNG e `.png.mcmeta` juntos. O nine-slice vem no `.mcmeta` (`gui.scaling.t
    | Peça | Posição | Tamanho |
    |---|---|---|
    | `dna_bar_*` (EP no nível atual) | `cx-100`, topo `h-14` | 200×6 |
-   | Núcleos de vida (`core_*`) | a partir de `cx-100`, passo 8, topo `h-28` | 9×9 |
+   | Núcleos de vida (`core_*`) | a partir de `cx-100`, passo 8, topo `h-24` | 9×9 |
    | `dna_orb` | centrado em `cx`, topo `h-34` | 19×19 |
    | EP total (texto, `#FFF6D8`) | centrado em `cx`, `h-43` | fonte |
-   | Chamas da fome (`hunger_*`) | de `cx+20` a `cx+100`, passo 8, topo `h-36` | 9×9 |
-   | `mana_bar_*` | `cx+20`, topo `h-26` | 80×6 |
+   | Chamas da fome (`hunger_*`) | de `cx+20` a `cx+100`, passo 8, topo `h-32` | 9×9 |
+   | `mana_bar_*` | `cx+20`, topo `h-22` | 80×6; 2 px acima da barra de EP (revisão de 20/11: estava longe demais) |
    | Slot central (selo Consumir ou barra de conjuração) | centrado, base 2 px acima do texto do EP | o do sprite |
 
 2. Mais de 10 núcleos: segunda linha 10 px acima da primeira, e o orbe, o EP total, a fome e o slot central
    sobem junto (`10 × (linhas − 1)`), como já acontece hoje.
 3. Saem do HUD: o número do nível (`wispborn.hud.level` + `dna_icon` na linha do nível) e o `+N` de pontos.
-4. `Gui.leftHeight` e `Gui.rightHeight` passam a refletir a nova altura (`h-36` e acima livre), para as
+4. `Gui.leftHeight` e `Gui.rightHeight` passam a refletir a nova altura (`h-32` e acima livre), para as
    bolhas de ar ficarem acima das chamas e não sobreporem nada.
 5. Mana mostra `mana / maxMana` só no grimório; no HUD não há texto de mana.
 
