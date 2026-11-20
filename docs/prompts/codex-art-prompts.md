@@ -97,7 +97,8 @@ ENTREGAS (todas em art/hud/)
 2. sprites/cast_vignette.png: vinheta de tela para a conjuração (V1), 256x256, borda ciano/esmeralda
    translúcida que esvai para totalmente transparente no centro. Será esticada para a tela inteira.
 3. font/sex_male.png, font/sex_female.png, font/dna.png: glifos 7 px de altura (8 com a linha de base),
-   brancos sobre transparente (o jogo colore pelo texto), para uma fonte bitmap.
+   sobre transparente: fêmea rosa `#F48FB1`, macho azul `#64B5F6`, DNA branco.
+   Renderizar os glifos de sexo com cor de texto branca explícita para preservar as cores do PNG.
 4. LAYOUT.md: posição (x, y) e tamanho de cada elemento em pixels de GUI, relativos ao centro inferior
    da tela (x = 0 no centro, y = 0 na borda de baixo, y cresce para cima), mais o painel do hospedeiro
    e do alvo. Regras: vida à esquerda e fome à direita, como no vanilla; DNA e mana ocupam o espaço que

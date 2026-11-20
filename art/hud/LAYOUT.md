@@ -92,8 +92,10 @@ transparent center; it is the only sprite intended to stretch across the screen.
 | `font/sex_female.png` | 5×8 | U+E001 |
 | `font/dna.png` | 5×8 | U+E002 |
 
-Glyph artwork occupies seven rows; the eighth is transparent. Pixels are white
-for runtime text tinting. `font/icons.json` is the ready-to-copy provider descriptor
+Glyph artwork occupies seven rows; the eighth is transparent. Female pixels are
+pink `#F48FB1`, male pixels are blue `#64B5F6`, and DNA remains white. Render gender
+glyph components with explicit white text color so their texture colors are preserved;
+do not inherit the target status color. Tint only the white DNA glyph when needed. `font/icons.json` is the ready-to-copy provider descriptor
 (`height: 8`, `ascent: 7`). During F4 integration place the PNGs in
 `assets/wispborn/textures/font/` and the descriptor in `assets/wispborn/font/icons.json`.
 
@@ -138,3 +140,6 @@ The other mockups show frame zero. No Java HUD implementation is included.
 The refined loop lasts 3.2 seconds. Phase advances by half a texel per frame
 instead of the previous two texels, reducing visible jumps while preserving crisp
 pixel edges. The atlas has no spatial filtering or extra runtime code.
+
+`gender_symbols.png` previews both colored gender glyphs. Gender color is independent
+of infestation eligibility; target name/status keeps the F4 green/gray/red convention.

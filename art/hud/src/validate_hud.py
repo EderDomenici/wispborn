@@ -50,7 +50,8 @@ def main():
     for name,width in [('sex_male',7),('sex_female',5),('dna',5)]:
         image=Image.open(ROOT/'font'/f'{name}.png')
         assert image.mode=='RGBA' and image.size==(width,8)
-        assert all(p in ((0,0,0,0),(255,255,255,255)) for p in image.getdata())
+        color={'sex_male':(100,181,246,255),'sex_female':(244,143,177,255),'dna':(255,255,255,255)}[name]
+        assert all(p in ((0,0,0,0),color) for p in image.getdata())
         assert image.getchannel('A').crop((0,7,width,8)).getbbox() is None
     providers=json.loads((ROOT/'font/icons.json').read_text())['providers']
     assert [p['chars'] for p in providers]==[[chr(0xE000+i)] for i in range(3)]
@@ -66,7 +67,7 @@ def main():
         # Every 2x2 output block must be identical: GUI scale 2, no smoothing.
         reduced=image.resize((427,240),Image.Resampling.NEAREST)
         assert reduced.resize(image.size,Image.Resampling.NEAREST).tobytes()==image.tobytes()
-    print(f'PASS: {len(required)} sprite names/dimensions from F4, RGBA/alpha, 3 white glyphs,')
+    print(f'PASS: {len(required)} sprite names/dimensions from F4, RGBA/alpha, 3 correctly colored glyphs,')
     print('font codepoints, transparent vignette center and nearest-neighbor mockups.')
 
 

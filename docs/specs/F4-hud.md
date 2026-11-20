@@ -52,6 +52,9 @@ Provider `bitmap` com glifos em PNG na Área de Uso Privado:
 
 Componentes usam `Style.withFont(ResourceLocation.fromNamespaceAndPath(MOD_ID, "icons"))` para esses
 caracteres. A placa da F2 e o painel do alvo passam a usar os glifos.
+Os PNGs de sexo já têm cor: fêmea rosa `#F48FB1`, macho azul `#64B5F6`.
+O componente do glifo deve usar cor branca explícita (`0xFFFFFF`), sem herdar a cor
+de infestabilidade do texto ao redor. DNA permanece branco para tintura pelo texto.
 
 ## Regras
 
@@ -85,7 +88,8 @@ caracteres. A placa da F2 e o painel do alvo passam a usar os glifos.
      `no_ep` quando `hostEpFactor == 0`.
    - `possess_target` (já existe): migrar para `target_frame`, `target_ok`/`target_blocked`, glifo do
      sexo e `cast_bar_*`.
-7. A placa sobre os mobs (F2) passa a usar os glifos e a cor por situação, calculada no client com o
+7. A placa sobre os mobs (F2) passa a usar os glifos de sexo nas cores fixas acima.
+   O nome/indicador usa a cor por situação, calculada no client com o
    nível do wisp: verde = infestável e rende EP; cinza = infestável sem EP (`EpMath.levelFactor == 0`);
    vermelho = forte demais. Os parâmetros vêm da config de servidor, que o NeoForge sincroniza com o client.
 

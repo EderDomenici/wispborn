@@ -216,7 +216,13 @@ def make_glyphs():
       'sex_male':['....###','.....##','.###.#.','#...#..','#...#..','#...#..','.###...','.......'],
       'sex_female':['.###.','#...#','#...#','.###.','..#..','.###.','..#..','.....'],
       'dna':['#...#','.###.','..#..','.###.','#...#','.###.','..#..','.....']}
-    glyphs={name:save(icon(rows,{'#':'#ffffff'}),'font',name) for name,rows in patterns.items()}
+    colors={'sex_male':'#64b5f6','sex_female':'#f48fb1','dna':'#ffffff'}
+    glyphs={name:save(icon(rows,{'#':colors[name]}),'font',name) for name,rows in patterns.items()}
+    preview=Image.new('RGBA',(180,64),'#111e2a')
+    for name,label,x in [('sex_female','FEMEA',12),('sex_male','MACHO',100)]:
+        preview.alpha_composite(glyphs[name].resize((glyphs[name].width*4,32),Image.Resampling.NEAREST),(x+4,8))
+        text(preview,label,x,48,color=colors[name])
+    preview.resize((720,256),Image.Resampling.NEAREST).save(ROOT/'gender_symbols.png')
     providers=[{'type':'bitmap','file':f'wispborn:font/{name}.png','ascent':7,'height':8,'chars':[chr(0xE000+i)]}
                for i,name in enumerate(patterns)]
     (ROOT/'font/icons.json').write_text(json.dumps({'providers':providers},indent=2)+'\n')
