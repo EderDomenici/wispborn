@@ -27,8 +27,13 @@ import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 @EventBusSubscriber(modid = WispbornMod.MOD_ID, value = Dist.CLIENT)
 public final class WispRenderHandler {
     private static WispPlayerRenderer renderer;
+    private static boolean renderingGrimoirePortrait = false;
 
     private WispRenderHandler() {
+    }
+
+    public static void setRenderingGrimoirePortrait(boolean rendering) {
+        renderingGrimoirePortrait = rendering;
     }
 
     @SubscribeEvent
@@ -40,17 +45,17 @@ public final class WispRenderHandler {
     public static void onRenderPlayerPre(RenderPlayerEvent.Pre event) {
         Player player = event.getEntity();
         FormState state = player.getData(ModAttachments.FORM);
-        if (state.type() == FormType.HOST) {
+        if (state.type() == FormType.HOST && !renderingGrimoirePortrait) {
             event.setCanceled(true);
             return;
         }
-        if (state.type() != FormType.WISP) {
+        if (state.type() != FormType.WISP && !(state.type() == FormType.HOST && renderingGrimoirePortrait)) {
             return;
         }
 
         event.setCanceled(true);
 
-        if (renderer == null || player.isInvisible() || !(player instanceof AbstractClientPlayer clientPlayer)) {
+        if (renderer == null || (player.isInvisible() && !renderingGrimoirePortrait) || !(player instanceof AbstractClientPlayer clientPlayer)) {
             return;
         }
 

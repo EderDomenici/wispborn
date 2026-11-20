@@ -1,5 +1,6 @@
 package dev.eder.wispborn.client;
 
+import dev.eder.wispborn.client.grimoire.GrimoireScreen;
 import dev.eder.wispborn.network.CastStatePayload;
 import dev.eder.wispborn.network.SyncFormPayload;
 import dev.eder.wispborn.network.SyncMobTraitsPayload;
@@ -49,5 +50,8 @@ public final class ClientPayloadHandler {
 
     public static void handleSyncWispState(SyncWispStatePayload payload, IPayloadContext context) {
         ClientWispState.set(payload);
+        if (Minecraft.getInstance().screen instanceof GrimoireScreen grimoire) {
+            grimoire.onStateSynced(payload);
+        }
     }
 }

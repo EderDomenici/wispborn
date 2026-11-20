@@ -2,6 +2,7 @@ package dev.eder.wispborn.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.eder.wispborn.WispbornMod;
+import dev.eder.wispborn.client.grimoire.GrimoireScreen;
 import dev.eder.wispborn.form.FormManager;
 import dev.eder.wispborn.host.HostManager;
 import dev.eder.wispborn.host.InfestResult;
@@ -38,6 +39,13 @@ public final class KeyBindings {
             CATEGORY
     );
 
+    public static final KeyMapping GRIMOIRE = new KeyMapping(
+            "key.wispborn.grimoire",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_K,
+            CATEGORY
+    );
+
     private static boolean holdActive = false;
 
     private KeyBindings() {
@@ -47,6 +55,7 @@ public final class KeyBindings {
     public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
         event.register(POSSESS);
         event.register(CONSUME);
+        event.register(GRIMOIRE);
     }
 
     @SubscribeEvent
@@ -54,12 +63,27 @@ public final class KeyBindings {
         Minecraft mc = Minecraft.getInstance();
         Player localPlayer = mc.player;
         if (localPlayer == null || mc.screen != null) {
+            while (GRIMOIRE.consumeClick()) {
+                // Drena cliques acumulados enquanto outra tela está aberta
+            }
             if (holdActive || ClientPossession.isCasting()) {
                 PacketDistributor.sendToServer(PossessCancelPayload.INSTANCE);
                 ClientPossession.clearCast();
                 holdActive = false;
             }
             return;
+        }
+
+        while (GRIMOIRE.consumeClick()) {
+            if (FormManager.isParasite(localPlayer)) {
+                mc.setScreen(new GrimoireScreen());
+                if (holdActive || ClientPossession.isCasting()) {
+                    PacketDistributor.sendToServer(PossessCancelPayload.INSTANCE);
+                    ClientPossession.clearCast();
+                    holdActive = false;
+                }
+                return;
+            }
         }
 
         while (CONSUME.consumeClick()) {
