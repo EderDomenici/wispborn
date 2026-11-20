@@ -195,7 +195,39 @@ Páginas Traços, Aspectos, Habilidades e Bestiário; cor do wisp por traço; fe
 pessoa (V1); mudança de qualquer regra de jogo.
 
 ## Dúvidas do implementador
-_(preencher se houver)_
+Nenhuma. A arte A4 (`art/hud/sprites/` e `art/hud/grimoire/`) passou no `validate_hud.py` sem pendências e `InventoryScreen.renderEntityInInventoryFollowsMouse` aciona `RenderPlayerEvent.Pre` normalmente (com flag em `WispRenderHandler` para também exibir o modelo 3D do wisp quando o grimório é aberto durante a possessão na forma `HOST`).
 
 ## Relatório de implementação
-_(preencher ao terminar)_
+
+### Arquivos criados
+- `src/main/java/dev/eder/wispborn/progress/StatDelta.java` — Record imutável `(int absorption, int efficiency, int reserve, int vitality)` com `ZERO`, `get(Stat)`, `with(Stat, int)`, `total()` e `STREAM_CODEC` (`4 × VAR_INT`).
+- `src/main/java/dev/eder/wispborn/progress/BatchAllocateResult.java` — Enum `OK`, `EMPTY`, `NEGATIVE`, `NOT_ENOUGH_POINTS`, `OVER_MAX`.
+- `src/main/java/dev/eder/wispborn/progress/AllocationRules.java` — Função pura `check(int availablePoints, WispStats current, StatDelta delta, int maxPerStat)` respeitando a precedência da spec (`NEGATIVE` → `EMPTY` → `NOT_ENOUGH_POINTS` → `OVER_MAX` → `OK`).
+- `src/main/java/dev/eder/wispborn/progress/PendingAllocation.java` — Estado mutável puro de distribuição pendente para a UI (`canAdd`, `add`, `canRemove`, `remove`, `pending`, `total`, `remainingPoints`, `hasPending`, `clear`, `toDelta`, `rebase`).
+- `src/main/java/dev/eder/wispborn/network/AllocateStatsPayload.java` — Payload play-to-server `wispborn:allocate_stats` com `StatDelta`.
+- `src/main/java/dev/eder/wispborn/client/grimoire/GrimoireSprites.java` — Constantes `ResourceLocation` dos 19 sprites `wispborn:grimoire/*`.
+- `src/main/java/dev/eder/wispborn/client/grimoire/GrimoireScreen.java` — Tela do Grimório (`316×200`) dividida nos 5 blocos (`renderHeader`, `renderPortrait`, `renderBars`, `renderAttributes`, `renderFooter`), 100% em `GuiGraphics.blitSprite` e `Font` (sem `fill` ou gradiente).
+- `src/main/resources/assets/wispborn/textures/gui/sprites/hud/dna_orb.png` e `src/main/resources/assets/wispborn/textures/gui/sprites/grimoire/*` — Sprites e `.png.mcmeta` da A4 copiados para o atlas de GUI.
+- `src/test/java/dev/eder/wispborn/progress/AllocationRulesTest.java` e `PendingAllocationTest.java` — Testes unitários JUnit 5 cobrindo todos os cenários da spec.
+
+### Arquivos modificados
+- `src/main/java/dev/eder/wispborn/progress/WispStats.java` — Adicionados `STREAM_CODEC` e `plus(StatDelta)`.
+- `src/main/java/dev/eder/wispborn/network/SyncWispStatePayload.java` — Adicionados `WispStats stats` e `int maxPerStat` ao payload e a `DEFAULT`.
+- `src/main/java/dev/eder/wispborn/progress/ProgressManager.java` — Implementado `allocateBatch(ServerPlayer, StatDelta)` validando parasita e `AllocationRules.check`, aplicando tudo de uma vez com `refreshStats` e `syncState(player, true)`, ou enviando `wispborn.grimoire.allocate.<resultado>` na action bar; `syncState` envia `stats` e `maxPerStat`.
+- `src/main/java/dev/eder/wispborn/network/ModPayloads.java` — Registrado `AllocateStatsPayload` (C2S).
+- `src/main/java/dev/eder/wispborn/client/hud/HudSprites.java` e `WispHud.java` — Adicionado `HudSprites.DNA_ORB`; HUD inferior reposicionado em 200 px (`cx-100..cx+100`) na paleta B com `dna_bar_*` (`200×6` em `h-14`), `core_*` (`cx-100, h-28`), `dna_orb` (`19×19` em `cx-9, h-34`), EP total em `#FFF6D8` (`cx, h-43`), `hunger_*` (`cx+20, h-36`), `mana_bar_*` (`80×6` em `cx+20, h-26` sem texto), slot central com base em `h-45`, remoção de nível e `+N` do HUD e ajuste de `Gui.leftHeight`/`Gui.rightHeight`.
+- `src/main/java/dev/eder/wispborn/client/KeyBindings.java` — Adicionada tecla `GRIMOIRE` (`key.wispborn.grimoire`, padrão `K`) que abre `GrimoireScreen` apenas se o jogador local for parasita e não houver outra tela aberta.
+- `src/main/java/dev/eder/wispborn/client/ClientPayloadHandler.java` — `handleSyncWispState` notifica `GrimoireScreen.onStateSynced` quando a tela está aberta (regra 13).
+- `src/main/java/dev/eder/wispborn/client/WispRenderHandler.java` — Flag `renderingGrimoirePortrait` para que o retrato 3D do Grimório renderize o modelo do wisp mesmo quando aberto dentro de um hospedeiro (`FormType.HOST`, jogador invisível).
+- `src/main/resources/assets/wispborn/textures/gui/sprites/hud/*` — Sprites do HUD atualizados para a paleta B (A4).
+- `src/main/resources/assets/wispborn/lang/pt_br.json` e `en_us.json` — Adicionadas todas as chaves do Grimório, dicas, formatos de efeito e mensagens de erro de alocação.
+- `src/test/java/dev/eder/wispborn/network/PossessionPayloadsTest.java` — Atualizado round-trip de `SyncWispStatePayload` e adicionado round-trip de `AllocateStatsPayload`.
+
+### Decisões tomadas
+- **Zero `fill` ou gradiente no Grimório:** `GrimoireScreen.renderBackground` foi sobrescrito vazio para impedir o `fillGradient` escuro padrão do `Screen` vanilla, mantendo 100% da renderização em `GuiGraphics.blitSprite` e `Font`.
+- **Retrato 3D na forma `HOST`:** como o jogador em `HOST` fica invisível e `WispRenderHandler.onRenderPlayerPre` cancela a renderização no mundo, `GrimoireScreen.renderPortrait` envolve `InventoryScreen.renderEntityInInventoryFollowsMouse` com `WispRenderHandler.setRenderingGrimoirePortrait(true/false)` para que o modelo 3D do wisp apareça no retrato tanto em `WISP` quanto em `HOST`.
+- **Legenda do contador de pontos:** `wispborn.grimoire.points` (`"pontos livres"` / `"points left"`) é quebrada com `font.split(..., 40)` sob a caixa `38×28` em `(270, 24)` conforme `art/hud/LAYOUT.md`, evitando colisão com as barras de recursos (`x = 146..266`).
+
+### O que não foi feito
+- Páginas Traços, Aspectos, Habilidades e Bestiário (exibidas apenas como abas desativadas, fora de escopo).
+- Checklist manual in-game (`./gradlew runClient`), a cargo de Eder.

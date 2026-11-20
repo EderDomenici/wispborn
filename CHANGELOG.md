@@ -4,6 +4,40 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 
 ---
 
+## [F5-hud-b-grimorio] — HUD na Paleta B e Grimório (`feat/F5-hud-b-grimorio`)
+
+**Spec de referência:** `docs/specs/F5-hud-b-grimorio.md`, `docs/superpowers/specs/2026-11-20-hud-b-grimorio-design.md` e `art/hud/LAYOUT.md`
+
+### 1. Resumo das Alterações (`feat/F4-hud..feat/F5-hud-b-grimorio`)
+- **Alocação de atributos em lote validada no servidor (`StatDelta`, `BatchAllocateResult`, `AllocationRules`, `PendingAllocation`, `AllocateStatsPayload`, `ProgressManager.allocateBatch`):** regras puras testadas via JUnit 5 para validação no servidor (`NEGATIVE` → `EMPTY` → `NOT_ENOUGH_POINTS` → `OVER_MAX` → `OK`) e estado pendente mutável no cliente com `rebase` automático ao receber `SyncWispStatePayload` (que agora inclui `WispStats stats` e `int maxPerStat`).
+- **HUD inferior reposicionado em 200 px na paleta B (`WispHud`, `HudSprites` + sprites A4):** `dna_bar_*` (`200×6`) na base (`cx-100, h-14`), núcleos `core_*` à esquerda (`cx-100, h-28`), `dna_orb` (`19×19`) no centro (`cx-9, h-34`) com EP total em `#FFF6D8` acima (`cx, h-43`), chamas `hunger_*` à direita (`cx+20, h-36`) sobre `mana_bar_*` (`80×6` em `cx+20, h-26`, sem texto), slot central (selo Consumir ou barra de conjuração) 2 px acima do EP total (`h-45`), remoção de nível e `+N` do HUD e ajuste de `Gui.leftHeight`/`Gui.rightHeight`.
+- **Grimório — página do Wisp (`KeyBindings.GRIMOIRE` em `K`, `GrimoireSprites`, `GrimoireScreen`):** painel `316×200` centrado, 100% em `GuiGraphics.blitSprite` e `Font` (sem `fill` ou gradiente), com cabeçalho e 5 abas (`Wisp` ativa com `tab_underline`, demais desativadas em `#6F655A`), retrato 3D do wisp seguindo o mouse (`InventoryScreen.renderEntityInInventoryFollowsMouse`, funcional tanto em `WISP` quanto em `HOST`), barras de EP/Vida/Mana/Fome (`120×5`), contador de pontos livres (`points_box_active`/`points_box_empty`), 4 linhas de atributo com efeito calculado via `StatMath` + `WispbornConfig`, 10 pips (`pip_filled`/`pip_pending`/`pip_empty`) e botões `−`, `+`, `Cancelar` e `Confirmar`.
+
+### 2. Detalhamento por Arquivo
+
+| Arquivo | Ação | Detalhes da Implementação |
+|---|---|---|
+| `src/main/java/dev/eder/wispborn/progress/{StatDelta,BatchAllocateResult,AllocationRules,PendingAllocation,WispStats,ProgressManager}.java` | Criado/Mod. | Records/enums/regras puras de alocação em lote, `WispStats.STREAM_CODEC` + `plus(StatDelta)` e `ProgressManager.allocateBatch`. |
+| `src/main/java/dev/eder/wispborn/network/{AllocateStatsPayload,SyncWispStatePayload,ModPayloads}.java` | Criado/Mod. | Payload C2S `wispborn:allocate_stats` e inclusão de `stats` e `maxPerStat` em `SyncWispStatePayload`. |
+| `src/main/java/dev/eder/wispborn/client/hud/{HudSprites,WispHud}.java` | Modificado | `HudSprites.DNA_ORB`, layout inferior compacto de 200 px e cores da paleta B. |
+| `src/main/java/dev/eder/wispborn/client/grimoire/{GrimoireSprites,GrimoireScreen}.java` | Criado | Constantes `wispborn:grimoire/*` e tela do Grimório dividida em 5 métodos de renderização sem `fill`. |
+| `src/main/java/dev/eder/wispborn/client/{KeyBindings,ClientPayloadHandler,WispRenderHandler}.java` | Modificado | Tecla `K` (`key.wispborn.grimoire`), `onStateSynced` no `handleSyncWispState` e suporte ao retrato 3D do wisp quando em `HOST`. |
+| `src/main/resources/assets/wispborn/textures/gui/sprites/{hud,grimoire}/*` | Criado/Mod. | 26 sprites do HUD na paleta B + 19 sprites do Grimório (com `.png.mcmeta` de animação e nine-slice). |
+| `src/main/resources/assets/wispborn/lang/{pt_br,en_us}.json` | Modificado | Traduções da tecla, abas, rótulos, dicas, formatos de efeito e erros de alocação do Grimório. |
+| `src/test/java/dev/eder/wispborn/{progress/AllocationRulesTest,progress/PendingAllocationTest,network/PossessionPayloadsTest}.java` | Criado/Mod. | Testes unitários JUnit 5 cobrindo `AllocationRules`, `PendingAllocation` e `StreamCodec` dos payloads. |
+| `docs/specs/F5-hud-b-grimorio.md` | Modificado | Preenchido "Dúvidas do implementador" e "Relatório de implementação". |
+
+### 3. Evidências de Verificação
+
+- **`./gradlew test --rerun-tasks --no-daemon`:** `BUILD SUCCESSFUL in 9s`
+- **`./gradlew build --no-daemon`:** `BUILD SUCCESSFUL in 6s`
+- **`./gradlew runServer --no-daemon`:** servidor dedicado inicializa até `Done` sem referenciar classes de `client/`.
+
+### 4. Pendências
+- [ ] **Checklist manual in-game (`./gradlew runClient`):** validação visual do HUD na paleta B, abertura do Grimório (`K`), retrato 3D do wisp, distribuição de pontos pendentes e escalas de GUI a cargo de Eder.
+
+---
+
 ## [F4-hud] — HUD Temático em Sprites (`feat/F4-hud`)
 
 **Spec de referência:** `docs/specs/F4-hud.md` e `art/hud/LAYOUT.md`
