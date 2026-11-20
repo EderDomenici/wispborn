@@ -22,7 +22,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
@@ -70,15 +69,19 @@ public final class WispHud {
             VanillaGuiLayers.JUMP_METER
     );
 
-    private static final int COLOR_TEXT_PRIMARY = 0xE6F7F2;
-    private static final int COLOR_MANA_TEXT = 0xD0CAFF;
-    private static final int COLOR_POINTS_TEXT = 0x8BE8BD;
-    private static final int COLOR_CONSUME_PROMPT = 0xC7FFE8;
-    private static final int COLOR_TEXT_MUTED = 0xA7C9C4;
-    private static final int COLOR_INFEST_OK = 0x55DCA0;
-    private static final int COLOR_INFEST_FAIL = 0xFF7B7B;
+    private static final int COLOR_TEXT_PRIMARY = 0xF3EAD6;
+    private static final int COLOR_TEXT_MUTED = 0xB5A88F;
+    private static final int COLOR_EP_TOTAL = 0xFFF6D8;
+    private static final int COLOR_CONSUME_PROMPT = 0xFFF6D8;
+    private static final int COLOR_INFEST_OK = 0xA8C46A;
+    private static final int COLOR_INFEST_FAIL = 0xD0563C;
 
-    /** Layout revisado em 20/11/2026: painel do hospedeiro no topo, selo e conjuração no centro inferior. */
+    private static final int DNA_BAR_W = 200;
+    private static final int DNA_BAR_H = 6;
+    private static final int MANA_BAR_W = 80;
+    private static final int MANA_BAR_H = 6;
+    private static final int DNA_ORB_SIZE = 19;
+
     private static final int HOST_FRAME_W = 128;
     private static final int HOST_FRAME_H = 24;
     private static final int HOST_BAR_W = 118;
@@ -91,8 +94,8 @@ public final class WispHud {
     private static final int CONSUME_BADGE_H = 16;
     private static final int CAST_BAR_W = 132;
     private static final int CAST_BAR_H = 4;
-    /** Topo da linha do nível (DNA + "Nv") medido da base da tela; o slot central fica logo acima. */
-    private static final int BOTTOM_SLOT_OFFSET = 56;
+    /** Base do slot central (selo Consumir / barra de conjuração), 2 px acima do texto do EP total (h-43). */
+    private static final int BOTTOM_SLOT_OFFSET = 45;
 
     private static final RandomSource RANDOM = RandomSource.create();
     private static int lastHealth = 0;
@@ -160,8 +163,8 @@ public final class WispHud {
         for (int i = 0; i < totalIcons; i++) {
             int row = i / 10;
             int col = i % 10;
-            int sx = cx - 91 + col * 8;
-            int sy = h - 44 - row * 10;
+            int sx = cx - 100 + col * 8;
+            int sy = h - 28 - row * 10;
             graphics.blitSprite(containerSprite, sx, sy, 9, 9);
             if (states[i] == 2) {
                 graphics.blitSprite(HudSprites.CORE_FULL, sx, sy, 9, 9);
@@ -171,7 +174,7 @@ public final class WispHud {
         }
         RenderSystem.disableBlend();
 
-        mc.gui.leftHeight = 54 + (rows - 1) * 10;
+        mc.gui.leftHeight = 38 + (rows - 1) * 10;
     }
 
     private static void renderWispHunger(GuiGraphics graphics, DeltaTracker deltaTracker) {
@@ -189,11 +192,12 @@ public final class WispHud {
 
         int cx = graphics.guiWidth() / 2;
         int h = graphics.guiHeight();
+        int extraRowsShift = 10 * (healthRows(player) - 1);
 
         RenderSystem.enableBlend();
         for (int i = 0; i < 10; i++) {
-            int sx = cx + 11 + i * 8;
-            int sy = h - 44;
+            int sx = cx + 20 + i * 8;
+            int sy = h - 36 - extraRowsShift;
             if (saturation <= 0.0F && guiTicks % (foodLevel * 3 + 1) == 0) {
                 sy += RANDOM.nextInt(3) - 1;
             }
@@ -207,7 +211,7 @@ public final class WispHud {
         }
         RenderSystem.disableBlend();
 
-        mc.gui.rightHeight = 54;
+        mc.gui.rightHeight = 46 + extraRowsShift;
     }
 
     private static void renderWispMana(GuiGraphics graphics, DeltaTracker deltaTracker) {
@@ -220,19 +224,17 @@ public final class WispHud {
         SyncWispStatePayload state = ClientWispState.get();
         int cx = graphics.guiWidth() / 2;
         int h = graphics.guiHeight();
-        int barX = cx - 91;
-        int barY = h - 12;
+        int extraRowsShift = 10 * (healthRows(player) - 1);
+        int barX = cx + 20;
+        int barY = h - 26 - extraRowsShift;
 
         RenderSystem.enableBlend();
-        graphics.blitSprite(HudSprites.MANA_BAR_BACKGROUND, barX, barY, 182, 9);
-        int fill = HudMath.progressWidth(state.mana(), state.maxMana(), 182);
+        graphics.blitSprite(HudSprites.MANA_BAR_BACKGROUND, barX, barY, MANA_BAR_W, MANA_BAR_H);
+        int fill = HudMath.progressWidth(state.mana(), state.maxMana(), MANA_BAR_W);
         if (fill > 0) {
-            graphics.blitSprite(HudSprites.MANA_BAR_PROGRESS, 182, 9, 0, 0, barX, barY, fill, 9);
+            graphics.blitSprite(HudSprites.MANA_BAR_PROGRESS, MANA_BAR_W, MANA_BAR_H, 0, 0, barX, barY, fill, MANA_BAR_H);
         }
         RenderSystem.disableBlend();
-
-        Component manaText = Component.translatable("wispborn.hud.mana", state.mana(), state.maxMana());
-        graphics.drawCenteredString(mc.font, manaText, cx, h - 21, COLOR_MANA_TEXT);
     }
 
     private static void renderWispDna(GuiGraphics graphics, DeltaTracker deltaTracker) {
@@ -245,36 +247,30 @@ public final class WispHud {
         SyncWispStatePayload state = ClientWispState.get();
         int cx = graphics.guiWidth() / 2;
         int h = graphics.guiHeight();
-        int barX = cx - 91;
-        int barY = h - 30;
+        int barX = cx - 100;
+        int barY = h - 14;
 
         int fill;
         if (state.nextLevelEp() < 0) {
-            fill = 182;
+            fill = DNA_BAR_W;
         } else {
             int inLevel = Math.max(0, state.totalEp() - state.levelStartEp());
             int span = Math.max(1, state.nextLevelEp() - state.levelStartEp());
-            fill = HudMath.progressWidth(inLevel, span, 182);
+            fill = HudMath.progressWidth(inLevel, span, DNA_BAR_W);
         }
 
         int extraRowsShift = 10 * (healthRows(player) - 1);
 
         RenderSystem.enableBlend();
-        graphics.blitSprite(HudSprites.DNA_BAR_BACKGROUND, barX, barY, 182, 7);
+        graphics.blitSprite(HudSprites.DNA_BAR_BACKGROUND, barX, barY, DNA_BAR_W, DNA_BAR_H);
         if (fill > 0) {
-            graphics.blitSprite(HudSprites.DNA_BAR_PROGRESS, 182, 7, 0, 0, barX, barY, fill, 7);
+            graphics.blitSprite(HudSprites.DNA_BAR_PROGRESS, DNA_BAR_W, DNA_BAR_H, 0, 0, barX, barY, fill, DNA_BAR_H);
         }
-        graphics.blitSprite(HudSprites.DNA_ICON, cx - 27, h - 54 - extraRowsShift, 9, 9);
+        graphics.blitSprite(HudSprites.DNA_ORB, cx - DNA_ORB_SIZE / 2, h - 34 - extraRowsShift, DNA_ORB_SIZE, DNA_ORB_SIZE);
         RenderSystem.disableBlend();
 
-        Font font = mc.font;
-        Component levelText = Component.translatable("wispborn.hud.level", state.level());
-        graphics.drawString(font, levelText, cx - 14, h - 52 - extraRowsShift, COLOR_TEXT_PRIMARY, true);
-
-        if (state.availablePoints() > 0) {
-            Component ptsText = Component.translatable("wispborn.hud.stat_points", state.availablePoints());
-            graphics.drawString(font, ptsText, cx + 38, h - 52 - extraRowsShift, COLOR_POINTS_TEXT, true);
-        }
+        String totalEpText = Integer.toString(state.totalEp());
+        graphics.drawCenteredString(mc.font, totalEpText, cx, h - 43 - extraRowsShift, COLOR_EP_TOTAL);
     }
 
     /** Painel compacto do hospedeiro no topo central: nome, sexo, nível, % e barra com a marca do piso. */
@@ -346,7 +342,7 @@ public final class WispHud {
         }
     }
 
-    /** Selo "Consumir" no centro inferior, acima da linha do nível, só com o hospedeiro no piso. */
+    /** Selo "Consumir" no centro inferior, 2 px acima do texto do EP total, só com o hospedeiro no piso. */
     private static void renderConsumePrompt(GuiGraphics graphics, DeltaTracker deltaTracker) {
         Minecraft mc = Minecraft.getInstance();
         Player player = activeParasitePlayer(mc);
@@ -382,7 +378,7 @@ public final class WispHud {
         graphics.drawString(font, promptStr, textX, y + 5, COLOR_CONSUME_PROMPT, true);
     }
 
-    /** Barra de conjuração no centro inferior, só enquanto a possessão está sendo conjurada. */
+    /** Barra de conjuração no centro inferior, 2 px acima do texto do EP total, só durante a conjuração. */
     private static void renderCastBar(GuiGraphics graphics, DeltaTracker deltaTracker) {
         Minecraft mc = Minecraft.getInstance();
         Player player = activeParasitePlayer(mc);
@@ -399,7 +395,7 @@ public final class WispHud {
 
         int cx = graphics.guiWidth() / 2;
         int x = cx - CAST_BAR_W / 2;
-        int y = graphics.guiHeight() - BOTTOM_SLOT_OFFSET - 8 - 10 * (healthRows(player) - 1);
+        int y = graphics.guiHeight() - BOTTOM_SLOT_OFFSET - CAST_BAR_H - 10 * (healthRows(player) - 1);
 
         RenderSystem.enableBlend();
         graphics.blitSprite(HudSprites.CAST_BAR_BACKGROUND, x, y, CAST_BAR_W, CAST_BAR_H);
