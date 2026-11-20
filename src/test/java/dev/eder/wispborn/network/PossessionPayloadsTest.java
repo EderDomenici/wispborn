@@ -87,4 +87,17 @@ class PossessionPayloadsTest {
             buf.release();
         }
     }
+
+    @Test
+    void syncWispStatePayloadStreamCodecRoundTrip() {
+        SyncWispStatePayload original = new SyncWispStatePayload(7, 5120, 4500, 6800, 42, 70, 2, true, 0.75F);
+        ByteBuf buf = Unpooled.buffer();
+        try {
+            SyncWispStatePayload.STREAM_CODEC.encode(buf, original);
+            SyncWispStatePayload decoded = SyncWispStatePayload.STREAM_CODEC.decode(buf);
+            assertEquals(original, decoded);
+        } finally {
+            buf.release();
+        }
+    }
 }

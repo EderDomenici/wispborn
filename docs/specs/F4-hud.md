@@ -133,7 +133,7 @@ Menu RPG (nível, fenótipos, árvore de habilidades), tela de atributos, feedba
 pessoa (V1).
 
 ## Dúvidas do implementador
-_(preencher se houver)_
+Nenhuma dúvida.
 
 ## Relatório de implementação
 
@@ -151,3 +151,39 @@ _(preencher se houver)_
   camadas de GUI e testes in-game da F4 ainda pendentes.
 - Verificação: `./gradlew build` aprovado em 2 s; os 30 arquivos de runtime
   correspondem byte a byte às fontes e ao JAR; referências da fonte resolvidas.
+
+### Implementação do HUD e sincronização — 20/11/2026
+
+- **Arquivos criados/alterados:**
+  - `src/main/java/dev/eder/wispborn/network/SyncWispStatePayload.java` e `ModPayloads.java`: payload S2C (`level`, `totalEp`, `levelStartEp`, `nextLevelEp`, `mana`, `maxMana`, `availablePoints`, `hostConsumeReady`, `hostEpFactor`).
+  - `src/main/java/dev/eder/wispborn/progress/{LevelCurve,ProgressManager}.java`, `event/FormEvents.java` e `host/HostManager.java`: adicionado `LevelCurve.levelStartEp`, delta-sync de `SyncWispStatePayload` checado a cada 4 ticks (e em mudanças de EP, mana, atributos e forma) e forçado em login/respawn/troca de dimensão; removido o envio periódico do HUD em texto (`buildWispHud` e `buildHostHud`) da action bar.
+  - `src/main/java/dev/eder/wispborn/client/{ClientWispState,ClientPayloadHandler}.java`: armazenamento do último `SyncWispStatePayload` no client, limpo no logout.
+  - `src/main/java/dev/eder/wispborn/client/hud/{HudSprites,HudMath,WispHud}.java` e `client/WispRenderHandler.java`:
+    - `HudSprites`: constantes `ResourceLocation` dos sprites `wispborn:hud/*` e da fonte `wispborn:icons`.
+    - `HudMath`: funções puras `progressWidth`, `iconStates` e `floorMarkerX`.
+    - `WispHud`: cancela `HOTBAR`, `PLAYER_HEALTH`, `FOOD_LEVEL`, `ARMOR_LEVEL`, `EXPERIENCE_BAR`, `EXPERIENCE_LEVEL`, `SELECTED_ITEM_NAME`, `VEHICLE_HEALTH` e `JUMP_METER` em `RenderGuiLayerEvent.Pre` enquanto parasita; registra `wisp_health`, `wisp_hunger`, `wisp_mana`, `wisp_dna`, `host_panel` e `possess_target` com `registerAbove`, seguindo todas as coordenadas de `art/hud/LAYOUT.md`, recorte sem esticar via `blitSprite(sprite, fullW, fullH, 0, 0, x, y, cropW, fullH)`, piscar de vida e tremor de fome vanilla, e atualização de `Gui.leftHeight` / `Gui.rightHeight`.
+  - `src/main/java/dev/eder/wispborn/traits/Sex.java` e `client/MobNameplateRenderer.java`: `Sex.glyphComponent()` com fonte `wispborn:icons` e cor explícita `0xFFFFFF` (preservando rosa `#F48FB1` / azul `#64B5F6`); placa sobre os mobs colorida por situação (verde `0x55FF55`, cinza `0xAAAAAA` quando `EpMath.levelFactor == 0`, vermelho `0xFF5555` quando forte demais).
+  - `src/test/java/dev/eder/wispborn/client/hud/HudMathTest.java` e `network/PossessionPayloadsTest.java`: testes JUnit 5 de `HudMath` e round-trip de `SyncWispStatePayload`.
+- **Saída final de `./gradlew build`:**
+  ```text
+  > Task :jar
+  > Task :assemble
+  > Task :build
+  BUILD SUCCESSFUL in 6s
+  ```
+- **Saída final de `./gradlew test`:**
+  ```text
+  > Task :compileJava
+  > Task :classes
+  > Task :compileTestJava
+  > Task :testClasses
+  > Task :test
+  BUILD SUCCESSFUL in 21s
+  ```
+- **Saída final de `./gradlew runServer`:**
+  ```text
+  [11:50:50] [Server thread/INFO] [minecraft/DedicatedServer]: Done (1.023s)! For help, type "help"
+  [11:50:50] [Server thread/INFO] [ne.ne.ne.ga.GameTestHooks/]: Enabled Gametest Namespaces: [wispborn]
+  ```
+- **Pendências:**
+  - Validação do checklist manual in-game por Eder (`runClient` / `runClient2`).

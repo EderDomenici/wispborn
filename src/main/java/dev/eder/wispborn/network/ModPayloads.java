@@ -32,6 +32,11 @@ public final class ModPayloads {
                 SyncMobTraitsPayload.STREAM_CODEC,
                 (payload, context) -> ClientPayloadHandler.handleSyncMobTraits(payload, context)
         );
+        registrar.playToClient(
+                SyncWispStatePayload.TYPE,
+                SyncWispStatePayload.STREAM_CODEC,
+                (payload, context) -> ClientPayloadHandler.handleSyncWispState(payload, context)
+        );
         registrar.playToServer(
                 PossessStartPayload.TYPE,
                 PossessStartPayload.STREAM_CODEC,

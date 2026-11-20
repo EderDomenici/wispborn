@@ -4,6 +4,43 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 
 ---
 
+## [F4-hud] — HUD Temático em Sprites (`feat/F4-hud`)
+
+**Spec de referência:** `docs/specs/F4-hud.md` e `art/hud/LAYOUT.md`
+
+### 1. Resumo das Alterações (`main..feat/F4-hud`)
+- **Sincronização de estado (`SyncWispStatePayload` + `ClientWispState`):** envio S2C sob demanda (quando muda, checado a cada 4 ticks e imediatamente em alterações de EP/mana/atributos/forma) e forçado em login, respawn e troca de dimensão.
+- **Fim do HUD em texto periódico:** removidas as chamadas periódicas a `ProgressManager.buildWispHud` (`FormEvents`) e `HostManager.buildHostHud` (`HostManager`), deixando a action bar livre para feedbacks pontuais.
+- **Camadas de HUD em sprites (`client/hud/WispHud`, `HudSprites`, `HudMath`):** cancela `HOTBAR`, `PLAYER_HEALTH`, `FOOD_LEVEL`, `ARMOR_LEVEL`, `EXPERIENCE_BAR`, `EXPERIENCE_LEVEL`, `SELECTED_ITEM_NAME`, `VEHICLE_HEALTH` e `JUMP_METER` enquanto parasita; registra `wisp_health`, `wisp_hunger`, `wisp_mana`, `wisp_dna`, `host_panel` e `possess_target` com `registerAbove`, 100% em `GuiGraphics.blitSprite` e `Font` seguindo `art/hud/LAYOUT.md`, e atualiza `Gui.leftHeight` / `Gui.rightHeight`.
+- **Glifos de sexo e cores nas placas (`Sex.glyphComponent` + `MobNameplateRenderer`):** usa `U+E000`/`U+E001` na fonte `wispborn:icons` com cor explícita `0xFFFFFF` (preservando rosa/azul originais dos PNGs) e colore o nível na placa em verde (`0x55FF55`), cinza (`0xAAAAAA`, `EpMath.levelFactor == 0`) ou vermelho (`0xFF5555`, forte demais).
+
+### 2. Detalhamento por Arquivo
+
+| Arquivo | Ação | Detalhes da Implementação |
+|---|---|---|
+| `src/main/java/dev/eder/wispborn/network/{SyncWispStatePayload,ModPayloads}.java` | Criado/Mod. | Payload S2C `wispborn:sync_wisp_state` registrado em `ModPayloads`. |
+| `src/main/java/dev/eder/wispborn/progress/{LevelCurve,ProgressManager}.java`, `event/FormEvents.java`, `host/HostManager.java` | Modificado | `LevelCurve.levelStartEp`, `ProgressManager.syncState(player, force)` e remoção do HUD periódico na action bar. |
+| `src/main/java/dev/eder/wispborn/client/{ClientWispState,ClientPayloadHandler,WispRenderHandler}.java` | Criado/Mod. | Estado sincronizado no client; camada `possess_target` movida de `WispRenderHandler` para `WispHud`. |
+| `src/main/java/dev/eder/wispborn/client/hud/{HudSprites,HudMath,WispHud}.java` | Criado | Constantes de sprites, matemática pura do HUD e renderização das 6 camadas seguindo `art/hud/LAYOUT.md`. |
+| `src/main/java/dev/eder/wispborn/traits/Sex.java` e `client/MobNameplateRenderer.java` | Modificado | Glifos `U+E000`/`U+E001` na fonte `wispborn:icons` com `0xFFFFFF` e placa colorida por situação. |
+| `src/main/resources/assets/wispborn/lang/{en_us,pt_br}.json` | Modificado | Chaves de texto do HUD (`wispborn.hud.level`, `stat_points`, `mana`, `host.consume_ready`, `host.consume_wait`, `target.ready_cost`). |
+| `src/test/java/dev/eder/wispborn/{client/hud/HudMathTest,network/PossessionPayloadsTest}.java` | Criado/Mod. | Testes unitários JUnit 5 de `HudMath` e round-trip de `SyncWispStatePayload`. |
+| `docs/specs/F4-hud.md` | Modificado | Preenchido "Dúvidas do implementador" e "Relatório de implementação". |
+
+### 3. Evidências de Verificação
+
+- **`./gradlew build --no-daemon`:** `BUILD SUCCESSFUL in 6s`
+- **`./gradlew test --rerun-tasks --no-daemon`:** `BUILD SUCCESSFUL in 21s`
+- **`./gradlew runServer --no-daemon`:**
+  ```text
+  [11:50:50] [Server thread/INFO] [minecraft/DedicatedServer]: Done (1.023s)! For help, type "help"
+  ```
+
+### 4. Pendências
+- [ ] **Checklist manual in-game (`./gradlew runClient` / `runClient2`):** validação visual das camadas do HUD, bolhas de ar, painel do hospedeiro, painel de alvo e cores das placas a cargo de Eder.
+
+---
+
 ## [F3-drain-consume] — Drenagem e Consumo com Nível e Fome (`feat/F3-drain-consume`)
 
 **Spec de referência:** `docs/specs/F3-drain-consume.md` (substitui `M4-drain.md` e `M5-consume.md`)

@@ -27,4 +27,12 @@ public final class LevelCurve {
         }
         return OptionalInt.empty();
     }
+
+    public static int levelStartEp(int level, List<Integer> thresholds) {
+        if (level <= 1 || thresholds.isEmpty()) {
+            return 0;
+        }
+        int index = Math.min(level - 2, thresholds.size() - 1);
+        return thresholds.get(index);
+    }
 }

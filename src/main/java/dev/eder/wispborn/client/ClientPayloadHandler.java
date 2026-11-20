@@ -3,6 +3,7 @@ package dev.eder.wispborn.client;
 import dev.eder.wispborn.network.CastStatePayload;
 import dev.eder.wispborn.network.SyncFormPayload;
 import dev.eder.wispborn.network.SyncMobTraitsPayload;
+import dev.eder.wispborn.network.SyncWispStatePayload;
 import dev.eder.wispborn.network.TargetInfoPayload;
 import dev.eder.wispborn.registry.ModAttachments;
 import dev.eder.wispborn.traits.MobTraits;
@@ -44,5 +45,9 @@ public final class ClientPayloadHandler {
         if (entity instanceof Mob mob) {
             mob.setData(ModAttachments.MOB_TRAITS, new MobTraits(payload.level(), payload.sex()));
         }
+    }
+
+    public static void handleSyncWispState(SyncWispStatePayload payload, IPayloadContext context) {
+        ClientWispState.set(payload);
     }
 }

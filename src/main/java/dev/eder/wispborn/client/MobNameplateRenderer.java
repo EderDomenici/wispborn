@@ -3,11 +3,14 @@ package dev.eder.wispborn.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.eder.wispborn.WispbornMod;
 import dev.eder.wispborn.config.WispbornClientConfig;
+import dev.eder.wispborn.config.WispbornConfig;
+import dev.eder.wispborn.progress.EpMath;
 import dev.eder.wispborn.traits.MobTraits;
 import dev.eder.wispborn.traits.MobTraitsManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.world.entity.EntityAttachment;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.phys.Vec3;
@@ -22,8 +25,12 @@ import java.util.Optional;
 @EventBusSubscriber(modid = WispbornMod.MOD_ID, value = Dist.CLIENT)
 public final class MobNameplateRenderer {
     private static final float NAMETAG_SCALE = 0.025F;
-    private static final int SEE_THROUGH_TEXT_COLOR = 0x20FFFFFF;
-    private static final int NORMAL_TEXT_COLOR = 0xFFFFFFFF;
+    private static final int SEE_THROUGH_BASE_COLOR = 0x20FFFFFF;
+    private static final int NORMAL_BASE_COLOR = 0xFFFFFFFF;
+
+    private static final int COLOR_INFESTABLE_EP = 0x55FF55;
+    private static final int COLOR_INFESTABLE_NO_EP = 0xAAAAAA;
+    private static final int COLOR_TOO_STRONG = 0xFF5555;
 
     private MobNameplateRenderer() {
     }
@@ -66,7 +73,12 @@ public final class MobNameplateRenderer {
         float yOffset = hasVanillaName ? -10.0F : 0.0F;
 
         MobTraits traits = traitsOpt.get();
-        Component label = Component.translatable("wispborn.nameplate.traits", traits.sex().symbol(), traits.level());
+        int statusColor = situationColor(ClientWispState.get().level(), traits.level());
+        Component label = Component.translatable(
+                "wispborn.nameplate.traits",
+                traits.sex().glyphComponent(),
+                traits.level()
+        ).withStyle(Style.EMPTY.withColor(statusColor));
 
         PoseStack poseStack = event.getPoseStack();
         poseStack.pushPose();
@@ -85,7 +97,7 @@ public final class MobNameplateRenderer {
                 label,
                 x,
                 yOffset,
-                SEE_THROUGH_TEXT_COLOR,
+                SEE_THROUGH_BASE_COLOR,
                 false,
                 matrix,
                 event.getMultiBufferSource(),
@@ -98,7 +110,7 @@ public final class MobNameplateRenderer {
                     label,
                     x,
                     yOffset,
-                    NORMAL_TEXT_COLOR,
+                    NORMAL_BASE_COLOR,
                     false,
                     matrix,
                     event.getMultiBufferSource(),
@@ -109,5 +121,19 @@ public final class MobNameplateRenderer {
         }
 
         poseStack.popPose();
+    }
+
+    private static int situationColor(int wispLevel, int mobLevel) {
+        int margin = WispbornConfig.INFEST_LEVEL_GATE_MARGIN.getAsInt();
+        if (mobLevel > wispLevel + margin) {
+            return COLOR_TOO_STRONG;
+        }
+        double factor = EpMath.levelFactor(
+                wispLevel,
+                mobLevel,
+                WispbornConfig.EP_LEVEL_GRACE.getAsInt(),
+                WispbornConfig.EP_FALLOFF_PER_LEVEL.getAsDouble()
+        );
+        return factor <= 0.0D ? COLOR_INFESTABLE_NO_EP : COLOR_INFESTABLE_EP;
     }
 }

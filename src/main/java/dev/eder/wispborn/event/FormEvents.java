@@ -25,6 +25,7 @@ public final class FormEvents {
             HostManager.ensureValidHostState(serverPlayer);
             FormManager.applyModifiers(serverPlayer);
             FormManager.sync(serverPlayer);
+            ProgressManager.syncState(serverPlayer, true);
         }
     }
 
@@ -35,6 +36,7 @@ public final class FormEvents {
             FormManager.applyModifiers(serverPlayer);
             FormManager.sync(serverPlayer);
             ProgressManager.setMana(serverPlayer, ProgressManager.getMaxMana(serverPlayer));
+            ProgressManager.syncState(serverPlayer, true);
         }
     }
 
@@ -42,6 +44,14 @@ public final class FormEvents {
     public static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (event.getEntity() instanceof ServerPlayer serverPlayer) {
             FormManager.sync(serverPlayer);
+            ProgressManager.syncState(serverPlayer, true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof ServerPlayer serverPlayer) {
+            ProgressManager.clearSyncCache(serverPlayer);
         }
     }
 
@@ -76,8 +86,11 @@ public final class FormEvents {
                     );
                     serverPlayer.causeFoodExhaustion(exhaustion);
                 }
-                serverPlayer.displayClientMessage(ProgressManager.buildWispHud(serverPlayer), true);
             }
+        }
+
+        if (serverPlayer.tickCount % 4 == 0) {
+            ProgressManager.syncState(serverPlayer, false);
         }
 
         int starveInterval = WispbornConfig.HUNGER_STARVE_INTERVAL_TICKS.getAsInt();

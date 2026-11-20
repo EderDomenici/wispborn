@@ -2,17 +2,30 @@ package dev.eder.wispborn.progress;
 
 import dev.eder.wispborn.config.WispbornConfig;
 import dev.eder.wispborn.form.FormManager;
+import dev.eder.wispborn.host.DrainMath;
+import dev.eder.wispborn.host.HostManager;
+import dev.eder.wispborn.network.SyncWispStatePayload;
 import dev.eder.wispborn.registry.ModAttachments;
+import dev.eder.wispborn.traits.MobTraits;
+import dev.eder.wispborn.traits.MobTraitsManager;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class ProgressManager {
+    private static final Map<UUID, SyncWispStatePayload> LAST_SYNCED_STATE = new ConcurrentHashMap<>();
+
     private ProgressManager() {
     }
 
@@ -62,12 +75,14 @@ public final class ProgressManager {
             );
         }
 
+        syncState(player, false);
         return gainedEp;
     }
 
     public static void setEp(ServerPlayer player, int total) {
         player.setData(ModAttachments.PROGRESS, new WispProgress(Math.max(0, total)));
         validateStats(player);
+        syncState(player, false);
     }
 
     /**
@@ -94,12 +109,14 @@ public final class ProgressManager {
 
         player.setData(ModAttachments.STATS, stats.with(stat, currentPoints + 1));
         refreshStats(player);
+        syncState(player, false);
         return AllocateResult.OK;
     }
 
     public static void resetStats(ServerPlayer player) {
         player.setData(ModAttachments.STATS, WispStats.ZERO);
         refreshStats(player);
+        syncState(player, false);
     }
 
     public static void refreshStats(ServerPlayer player) {
@@ -135,6 +152,7 @@ public final class ProgressManager {
     public static void setMana(ServerPlayer player, float mana) {
         int maxMana = getMaxMana(player);
         player.setData(ModAttachments.MANA, Math.clamp(mana, 0.0F, (float) maxMana));
+        syncState(player, false);
     }
 
     public static void addMana(ServerPlayer player, float amount) {
@@ -162,20 +180,59 @@ public final class ProgressManager {
                 : Component.translatable("wispborn.hud.max", totalEp);
     }
 
-    public static Component buildWispHud(ServerPlayer player) {
-        MutableComponent hud = Component.translatable(
-                "wispborn.hud.wisp",
-                level(player),
-                epDisplay(player),
-                Math.round(getMana(player)),
-                getMaxMana(player)
-        );
+    public static SyncWispStatePayload computeState(ServerPlayer player) {
+        List<Integer> thresholds = WispbornConfig.levelThresholds();
+        int totalEp = player.getData(ModAttachments.PROGRESS).totalEp();
+        int currentLevel = LevelCurve.levelFor(totalEp, thresholds);
+        int levelStartEp = LevelCurve.levelStartEp(currentLevel, thresholds);
+        int nextLevelEp = LevelCurve.nextThreshold(totalEp, thresholds).orElse(-1);
+        int mana = Math.round(getMana(player));
+        int maxMana = getMaxMana(player);
+        int availablePts = availablePoints(player);
 
-        int availablePoints = availablePoints(player);
-        if (availablePoints > 0) {
-            hud.append(Component.translatable("wispborn.hud.points", availablePoints));
+        boolean hostConsumeReady = false;
+        float hostEpFactor = 1.0F;
+        if (HostManager.isHost(player)) {
+            Optional<LivingEntity> hostOpt = HostManager.hostOf(player);
+            if (hostOpt.isPresent() && hostOpt.get() instanceof Mob mob && mob.isAlive()) {
+                hostConsumeReady = DrainMath.atFloor(
+                        mob.getHealth(),
+                        mob.getMaxHealth(),
+                        WispbornConfig.DRAIN_FLOOR_PERCENT.getAsDouble()
+                );
+                int mobLevel = MobTraitsManager.traitsOf(mob).map(MobTraits::level).orElse(1);
+                hostEpFactor = (float) EpMath.levelFactor(
+                        currentLevel,
+                        mobLevel,
+                        WispbornConfig.EP_LEVEL_GRACE.getAsInt(),
+                        WispbornConfig.EP_FALLOFF_PER_LEVEL.getAsDouble()
+                );
+            }
         }
 
-        return hud;
+        return new SyncWispStatePayload(
+                currentLevel,
+                totalEp,
+                levelStartEp,
+                nextLevelEp,
+                mana,
+                maxMana,
+                availablePts,
+                hostConsumeReady,
+                hostEpFactor
+        );
+    }
+
+    public static void syncState(ServerPlayer player, boolean force) {
+        SyncWispStatePayload next = computeState(player);
+        SyncWispStatePayload previous = LAST_SYNCED_STATE.get(player.getUUID());
+        if (force || !next.equals(previous)) {
+            LAST_SYNCED_STATE.put(player.getUUID(), next);
+            PacketDistributor.sendToPlayer(player, next);
+        }
+    }
+
+    public static void clearSyncCache(ServerPlayer player) {
+        LAST_SYNCED_STATE.remove(player.getUUID());
     }
 }

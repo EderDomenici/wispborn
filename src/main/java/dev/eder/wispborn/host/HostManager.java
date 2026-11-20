@@ -176,7 +176,6 @@ public final class HostManager {
             }
             if (player.tickCount % 20 == 0) {
                 HostStealth.clearPursuers(player);
-                hostOf(player).ifPresent(host -> player.displayClientMessage(buildHostHud(player, host), true));
             }
             return;
         }
@@ -266,6 +265,7 @@ public final class HostManager {
         DRAIN_TICKS.put(player.getUUID(), -1);
         HostStealth.clearPursuers(player);
         syncTargetInfo(player, TargetInfoPayload.NONE);
+        ProgressManager.syncState(player, false);
 
         serverLevel.playSound(
                 null,
@@ -363,7 +363,7 @@ public final class HostManager {
         }
 
         DrainFx.onPulse(player, mob, nextHealth, floorPercent);
-        player.displayClientMessage(buildHostHud(player, mob), true);
+        ProgressManager.syncState(player, false);
     }
 
     public static ConsumeResult tryConsume(ServerPlayer player) {
@@ -483,6 +483,7 @@ public final class HostManager {
 
         FormManager.setForm(player, FormState.WISP);
         player.setInvisible(false);
+        ProgressManager.syncState(player, false);
 
         if (vehicle != null) {
             if (reason == Reason.SNEAK) {

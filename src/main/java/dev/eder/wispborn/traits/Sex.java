@@ -1,9 +1,13 @@
 package dev.eder.wispborn.traits;
 
 import com.mojang.serialization.Codec;
+import dev.eder.wispborn.WispbornMod;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ByIdMap;
 import net.minecraft.util.StringRepresentable;
 
@@ -12,8 +16,11 @@ import java.util.Optional;
 import java.util.function.IntFunction;
 
 public enum Sex implements StringRepresentable {
-    MALE("male", "♂"),
-    FEMALE("female", "♀");
+    MALE("male", "♂", "\uE000"),
+    FEMALE("female", "♀", "\uE001");
+
+    public static final ResourceLocation ICONS_FONT =
+            ResourceLocation.fromNamespaceAndPath(WispbornMod.MOD_ID, "icons");
 
     public static final Codec<Sex> CODEC = StringRepresentable.fromEnum(Sex::values);
     private static final IntFunction<Sex> BY_ID =
@@ -23,10 +30,12 @@ public enum Sex implements StringRepresentable {
 
     private final String serializedName;
     private final String symbol;
+    private final String glyphChar;
 
-    Sex(String serializedName, String symbol) {
+    Sex(String serializedName, String symbol, String glyphChar) {
         this.serializedName = serializedName;
         this.symbol = symbol;
+        this.glyphChar = glyphChar;
     }
 
     @Override
@@ -36,6 +45,15 @@ public enum Sex implements StringRepresentable {
 
     public String symbol() {
         return this.symbol;
+    }
+
+    public String glyphChar() {
+        return this.glyphChar;
+    }
+
+    public Component glyphComponent() {
+        return Component.literal(this.glyphChar)
+                .withStyle(Style.EMPTY.withFont(ICONS_FONT).withColor(0xFFFFFF));
     }
 
     public String translationKey() {
