@@ -4,6 +4,17 @@ Documento de revisão técnica das implementações por spec para auditoria (Cla
 
 ---
 
+## [fix] — Fome do wisp visível dentro do hospedeiro (`fix/host-hunger-bar`)
+
+- O vanilla trata o hospedeiro como montaria: troca a barra de fome pelos corações do mob. Em HOST a fome
+  precisa ficar visível (ela volta a subir dentro do hospedeiro na F3).
+- `mixin/client/GuiMixin.java` (novo, só cliente): `Gui#getPlayerVehicleWithHealth` retorna `null` quando a
+  câmera é um jogador em forma `HOST`. Com isso `FOOD_LEVEL` desenha a fome e `VEHICLE_HEALTH` não desenha nada.
+- `wispborn.mixins.json`: seção `client` com `client.GuiMixin`.
+- Compatível com a F4, que cancela as duas camadas e desenha as próprias.
+
+---
+
 ## [M3c-host-stealth] — Wisp Indetectável Dentro do Hospedeiro (`feat/M3c-host-stealth`)
 
 **Spec de referência:** `docs/specs/M3c-host-stealth.md`
