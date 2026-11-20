@@ -36,6 +36,7 @@
   "wispborn.consume.ok": "Você consumiu %s (+%s EP)",
   "wispborn.consume.ok_no_ep": "Você consumiu %s (fraco demais para evoluir)",
   "wispborn.consume.not_ready": "Ainda resiste: %s%%",
+  "wispborn.consume.blocked": "%s não pode ser consumido (invulnerável)",
   "wispborn.host.died": "O hospedeiro morreu! Você foi expulso.",
   "wispborn.host.left": "Você saiu do hospedeiro.",
   "commands.wispborn.form.success": "Forma de %s alterada para %s",

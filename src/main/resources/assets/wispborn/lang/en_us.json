@@ -36,6 +36,7 @@
   "wispborn.consume.ok": "You consumed %s (+%s EP)",
   "wispborn.consume.ok_no_ep": "You consumed %s (too weak to evolve)",
   "wispborn.consume.not_ready": "Still resists: %s%%",
+  "wispborn.consume.blocked": "%s cannot be consumed (invulnerable)",
   "wispborn.host.died": "Your host died! You were expelled.",
   "wispborn.host.left": "You left the host.",
   "commands.wispborn.form.success": "Set %s form to %s",

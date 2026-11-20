@@ -395,7 +395,12 @@ public final class HostManager {
                 .registryOrThrow(Registries.DAMAGE_TYPE)
                 .getHolderOrThrow(ModDamageTypes.CONSUMED);
         DamageSource source = new DamageSource(consumedType, player);
-        mob.hurt(source, Float.MAX_VALUE);
+        if (!mob.hurt(source, Float.MAX_VALUE)) {
+            // Mob invulnerável (tag Invulnerable, por exemplo): o dano é recusado e nada morre.
+            player.displayClientMessage(
+                    Component.translatable("wispborn.consume.blocked", mob.getType().getDescription()), true);
+            return ConsumeResult.BLOCKED;
+        }
         return ConsumeResult.OK;
     }
 
