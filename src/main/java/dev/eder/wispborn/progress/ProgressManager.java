@@ -17,6 +17,7 @@ import net.minecraft.world.entity.Mob;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -113,6 +114,28 @@ public final class ProgressManager {
         return AllocateResult.OK;
     }
 
+    public static BatchAllocateResult allocateBatch(ServerPlayer player, StatDelta delta) {
+        if (!FormManager.isParasite(player)) {
+            return BatchAllocateResult.EMPTY;
+        }
+
+        WispStats current = player.getData(ModAttachments.STATS);
+        int available = availablePoints(player);
+        int maxPerStat = WispbornConfig.MAX_PER_STAT.get();
+        BatchAllocateResult result = AllocationRules.check(available, current, delta, maxPerStat);
+        if (result != BatchAllocateResult.OK) {
+            String key = "wispborn.grimoire.allocate." + result.name().toLowerCase(Locale.ROOT);
+            player.displayClientMessage(Component.translatable(key), true);
+            syncState(player, true);
+            return result;
+        }
+
+        player.setData(ModAttachments.STATS, current.plus(delta));
+        refreshStats(player);
+        syncState(player, false);
+        return BatchAllocateResult.OK;
+    }
+
     public static void resetStats(ServerPlayer player) {
         player.setData(ModAttachments.STATS, WispStats.ZERO);
         refreshStats(player);
@@ -189,6 +212,8 @@ public final class ProgressManager {
         int mana = Math.round(getMana(player));
         int maxMana = getMaxMana(player);
         int availablePts = availablePoints(player);
+        WispStats stats = player.getData(ModAttachments.STATS);
+        int maxPerStat = WispbornConfig.MAX_PER_STAT.get();
 
         boolean hostConsumeReady = false;
         float hostEpFactor = 1.0F;
@@ -218,6 +243,8 @@ public final class ProgressManager {
                 mana,
                 maxMana,
                 availablePts,
+                stats,
+                maxPerStat,
                 hostConsumeReady,
                 hostEpFactor
         );

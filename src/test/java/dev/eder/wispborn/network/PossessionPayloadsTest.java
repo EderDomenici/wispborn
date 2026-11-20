@@ -1,6 +1,8 @@
 package dev.eder.wispborn.network;
 
 import dev.eder.wispborn.host.InfestResult;
+import dev.eder.wispborn.progress.StatDelta;
+import dev.eder.wispborn.progress.WispStats;
 import dev.eder.wispborn.traits.Sex;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -90,11 +92,36 @@ class PossessionPayloadsTest {
 
     @Test
     void syncWispStatePayloadStreamCodecRoundTrip() {
-        SyncWispStatePayload original = new SyncWispStatePayload(7, 5120, 4500, 6800, 42, 70, 2, true, 0.75F);
+        SyncWispStatePayload original = new SyncWispStatePayload(
+                7,
+                5120,
+                4500,
+                6800,
+                42,
+                70,
+                2,
+                new WispStats(2, 3, 4, 1),
+                10,
+                true,
+                0.75F
+        );
         ByteBuf buf = Unpooled.buffer();
         try {
             SyncWispStatePayload.STREAM_CODEC.encode(buf, original);
             SyncWispStatePayload decoded = SyncWispStatePayload.STREAM_CODEC.decode(buf);
+            assertEquals(original, decoded);
+        } finally {
+            buf.release();
+        }
+    }
+
+    @Test
+    void allocateStatsPayloadStreamCodecRoundTrip() {
+        AllocateStatsPayload original = new AllocateStatsPayload(new StatDelta(1, 0, 2, 1));
+        ByteBuf buf = Unpooled.buffer();
+        try {
+            AllocateStatsPayload.STREAM_CODEC.encode(buf, original);
+            AllocateStatsPayload decoded = AllocateStatsPayload.STREAM_CODEC.decode(buf);
             assertEquals(original, decoded);
         } finally {
             buf.release();

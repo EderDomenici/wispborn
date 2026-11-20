@@ -1,6 +1,7 @@
 package dev.eder.wispborn.network;
 
 import dev.eder.wispborn.WispbornMod;
+import dev.eder.wispborn.progress.WispStats;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -15,11 +16,13 @@ public record SyncWispStatePayload(
         int mana,
         int maxMana,
         int availablePoints,
+        WispStats stats,
+        int maxPerStat,
         boolean hostConsumeReady,
         float hostEpFactor
 ) implements CustomPacketPayload {
     public static final SyncWispStatePayload DEFAULT =
-            new SyncWispStatePayload(1, 0, 0, 300, 50, 50, 0, false, 1.0F);
+            new SyncWispStatePayload(1, 0, 0, 300, 50, 50, 0, WispStats.ZERO, 10, false, 1.0F);
 
     public static final Type<SyncWispStatePayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(WispbornMod.MOD_ID, "sync_wisp_state"));
@@ -34,6 +37,8 @@ public record SyncWispStatePayload(
             int mana = ByteBufCodecs.VAR_INT.decode(buf);
             int maxMana = ByteBufCodecs.VAR_INT.decode(buf);
             int availablePoints = ByteBufCodecs.VAR_INT.decode(buf);
+            WispStats stats = WispStats.STREAM_CODEC.decode(buf);
+            int maxPerStat = ByteBufCodecs.VAR_INT.decode(buf);
             boolean hostConsumeReady = ByteBufCodecs.BOOL.decode(buf);
             float hostEpFactor = ByteBufCodecs.FLOAT.decode(buf);
             return new SyncWispStatePayload(
@@ -44,6 +49,8 @@ public record SyncWispStatePayload(
                     mana,
                     maxMana,
                     availablePoints,
+                    stats,
+                    maxPerStat,
                     hostConsumeReady,
                     hostEpFactor
             );
@@ -58,6 +65,8 @@ public record SyncWispStatePayload(
             ByteBufCodecs.VAR_INT.encode(buf, value.mana());
             ByteBufCodecs.VAR_INT.encode(buf, value.maxMana());
             ByteBufCodecs.VAR_INT.encode(buf, value.availablePoints());
+            WispStats.STREAM_CODEC.encode(buf, value.stats());
+            ByteBufCodecs.VAR_INT.encode(buf, value.maxPerStat());
             ByteBufCodecs.BOOL.encode(buf, value.hostConsumeReady());
             ByteBufCodecs.FLOAT.encode(buf, value.hostEpFactor());
         }
