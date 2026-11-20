@@ -4,7 +4,8 @@
 
 Original pixel sprites for F4 and the V1 casting vignette. Variant A is the initial
 selection for both health and hunger; `variants.png` exposes alternatives for review.
-Art delivery is complete; in-game HUD programming and visual approval remain separate.
+All PNGs were approved by Eder on 2026-11-19 and copied into runtime resources.
+In-game HUD programming and visual testing remain pending.
 
 ## Coordinates
 
@@ -115,8 +116,9 @@ Dependencies: Python 3 and Pillow. Generation uses pixel operations and an origi
 - `review_200.png`: both mockups at 200% for pixel inspection.
 - `vignette_preview.png`: vignette composited over the mockup for review only.
 
-The A2 files remain in `art/hud/`. They are not a claim that F4 or V1 first-person
-effects have been implemented. User-facing strings shown in mockups are examples;
+The editable A2 source files remain in `art/hud/`; approved runtime copies are in
+`src/main/resources/assets/wispborn/`. F4 and V1 first-person effects are not yet
+implemented. User-facing strings shown in mockups are examples;
 production text must come from the mod's language files.
 
 ## Mana and XP/DNA animation revision

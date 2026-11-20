@@ -136,4 +136,18 @@ pessoa (V1).
 _(preencher se houver)_
 
 ## Relatório de implementação
-_(preencher ao terminar)_
+
+### Integração da arte aprovada — 19/11/2026
+
+- Eder aprovou todos os PNGs do pacote A2.
+- Copiados 24 sprites para `assets/wispborn/textures/gui/sprites/hud/`, incluindo
+  a vinheta V1 e as barras animadas de mana/DNA.
+- Copiados os dois `.png.mcmeta` das barras: 64 frames, 1 tick por frame.
+- Copiados três glifos para `assets/wispborn/textures/font/` e o provider para
+  `assets/wispborn/font/icons.json`. Fêmea rosa, macho azul; usar texto branco
+  explícito para preservar essas cores.
+- Mockups, variantes e prévias permanecem em `art/hud/`; não são recursos de runtime.
+- Esta entrega integra os recursos aprovados. Código do HUD, sincronização de estado,
+  camadas de GUI e testes in-game da F4 ainda pendentes.
+- Verificação: `./gradlew build` aprovado em 2 s; os 30 arquivos de runtime
+  correspondem byte a byte às fontes e ao JAR; referências da fonte resolvidas.
