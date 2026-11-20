@@ -10,7 +10,11 @@ public final class StealthRules {
         return targetIsPlayer && targetForm == FormType.HOST;
     }
 
-    public static boolean shouldClear(boolean targetsPlayer, boolean angryAtPlayer, boolean isHostItself) {
-        return (targetsPlayer || angryAtPlayer) && !isHostItself;
+    /**
+     * Inclui o próprio hospedeiro: a limpeza só apaga o que aponta para o jogador, e um hospedeiro com
+     * brain (hoglin, piglin) não passa pelo LivingChangeTargetEvent enquanto mantém a memória de alvo.
+     */
+    public static boolean shouldClear(boolean targetsPlayer, boolean angryAtPlayer) {
+        return targetsPlayer || angryAtPlayer;
     }
 }

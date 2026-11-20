@@ -17,13 +17,10 @@ class StealthRulesTest {
     }
 
     @Test
-    void shouldClearWhenTargetingOrAngryExceptForHostItself() {
-        assertTrue(StealthRules.shouldClear(true, false, false));
-        assertTrue(StealthRules.shouldClear(false, true, false));
-        assertTrue(StealthRules.shouldClear(true, true, false));
-        assertFalse(StealthRules.shouldClear(false, false, false));
-        assertFalse(StealthRules.shouldClear(true, false, true));
-        assertFalse(StealthRules.shouldClear(false, true, true));
-        assertFalse(StealthRules.shouldClear(true, true, true));
+    void shouldClearWhenTargetingOrAngry() {
+        assertTrue(StealthRules.shouldClear(true, false));
+        assertTrue(StealthRules.shouldClear(false, true));
+        assertTrue(StealthRules.shouldClear(true, true));
+        assertFalse(StealthRules.shouldClear(false, false));
     }
 }

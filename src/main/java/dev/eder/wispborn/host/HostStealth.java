@@ -2,7 +2,6 @@ package dev.eder.wispborn.host;
 
 import dev.eder.wispborn.config.WispbornConfig;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.NeutralMob;
 import net.minecraft.world.entity.ai.Brain;
@@ -16,7 +15,8 @@ public final class HostStealth {
     private HostStealth() {
     }
 
-    public static void clearPursuers(ServerPlayer player, LivingEntity host) {
+    /** Limpa alvo e raiva apontados para o jogador em todo mob no raio, inclusive o hospedeiro. */
+    public static void clearPursuers(ServerPlayer player) {
         double radius = WispbornConfig.STEALTH_CLEAR_RADIUS.getAsDouble();
         List<Mob> nearbyMobs = player.serverLevel().getEntitiesOfClass(
                 Mob.class,
@@ -36,9 +36,8 @@ public final class HostStealth {
 
             boolean targetsPlayer = directTarget || brainTarget;
             boolean angryAtPlayer = brainAngry || neutralAngry || wardenAngry;
-            boolean isHostItself = mob == host;
 
-            if (!StealthRules.shouldClear(targetsPlayer, angryAtPlayer, isHostItself)) {
+            if (!StealthRules.shouldClear(targetsPlayer, angryAtPlayer)) {
                 continue;
             }
 

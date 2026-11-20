@@ -16,7 +16,7 @@ Num mundo superplano, um slime continuou seguindo o jogador depois que ele possu
 ## Regras
 1. **Ao entrar no hospedeiro**, no tick em que `HostManager` monta o jogador (fim da conjuração, forma
    vira HOST), limpar a perseguição de todo `Mob` num raio de `stealth.clearRadius` (48) blocos em volta
-   do jogador, exceto o próprio hospedeiro (regras 1 e 3 do bloco seguinte):
+   do jogador, **inclusive o próprio hospedeiro** (revisão de 19/11, ver regra 4):
    - se `mob.getTarget() == player` → `mob.setTarget(null)`;
    - se o mob usa brain e a memória `MemoryModuleType.ATTACK_TARGET` aponta para o jogador → `eraseMemory`;
    - se a memória `MemoryModuleType.ANGRY_AT` (piglin, hoglin) guarda o UUID do jogador → `eraseMemory`;
@@ -30,8 +30,9 @@ Num mundo superplano, um slime continuou seguindo o jogador depois que ele possu
 3. **Rede de segurança**: a cada 20 ticks em HOST, repetir a limpeza da regra 1. Ela cobre caminhos que não
    passam pelo evento, como memórias de brain definidas direto e outros mods.
 4. **O hospedeiro não muda.** Mobs continuam podendo mirar e atacar o hospedeiro. Se ele morrer, o jogador
-   é expulso como no M3. O próprio hospedeiro também não pode mirar o jogador montado nele (regra 2 vale
-   para ele).
+   é expulso como no M3. O próprio hospedeiro também não pode mirar o jogador montado nele: a regra 2 cobre os mobs
+   com goals, e a limpeza da regra 1 cobre os com brain (hoglin, piglin), que mantêm a memória de alvo
+   sem passar pelo evento.
 5. **Ao sair** (qualquer `Reason` de `release`): nada é restaurado. O jogador volta a ser detectável e os
    mobs podem readquiri-lo pelas regras normais (visão, alcance, ser atacado).
 6. Wisp fora do hospedeiro continua sendo alvo normal; esta spec não muda nada em forma WISP.
@@ -44,16 +45,16 @@ Num mundo superplano, um slime continuou seguindo o jogador depois que ele possu
 ## Contratos
 - `host/StealthRules.java` (puro):
   - `static boolean blocksTargeting(boolean targetIsPlayer, FormType targetForm)` → `targetIsPlayer && targetForm == HOST`
-  - `static boolean shouldClear(boolean targetsPlayer, boolean angryAtPlayer, boolean isHostItself)` →
-    `(targetsPlayer || angryAtPlayer) && !isHostItself`. O hospedeiro é limpo pela regra 2, não pela regra 1.
-- `host/HostStealth.java`: `clearPursuers(ServerPlayer player, LivingEntity host)`. Busca com
+  - `static boolean shouldClear(boolean targetsPlayer, boolean angryAtPlayer)` → `targetsPlayer || angryAtPlayer`.
+    (Revisão de 19/11: a exceção do hospedeiro saiu; ela deixava hospedeiros com brain mirando o jogador.)
+- `host/HostStealth.java`: `clearPursuers(ServerPlayer player)`. Busca com
   `level.getEntitiesOfClass(Mob.class, player.getBoundingBox().inflate(raio))`. Chamado por
   `HostManager` ao montar e pelo tick de HOST a cada 20 ticks.
 - `event/HostEvents.java`: handler de `LivingChangeTargetEvent` que usa `StealthRules.blocksTargeting`.
 
 ## Testes (JUnit)
 - `blocksTargeting`: jogador HOST → true; jogador WISP → false; não jogador → false.
-- `shouldClear`: mira no jogador → true; só raiva → true; nenhum → false; é o próprio hospedeiro → false.
+- `shouldClear`: mira no jogador → true; só raiva → true; nenhum → false.
 
 ## Checklist manual
 - [ ] Superplano, Fácil, Sobrevivência. Deixar um slime começar a seguir o wisp e possuir um porco: o slime
