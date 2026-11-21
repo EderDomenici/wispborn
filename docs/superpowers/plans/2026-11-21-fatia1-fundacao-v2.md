@@ -14,7 +14,7 @@ novo), sincronizado pelo `SyncWispStatePayload` ampliado. Cliente só desenha e 
 **Tech Stack:** Minecraft 1.21.1, NeoForge 21.1.x, Java 21, Mojang mappings + Parchment, JUnit 5.
 
 **Spec:** `docs/superpowers/specs/2026-11-20-fagogenia-design.md` (seções 3, 4, 8 e "Mudanças na fundação",
-linhas da fatia 1). Arte: `docs/prompts/A5-fagogenia-art.md` (parte 1 é o contrato de sprites deste plano).
+linhas da fatia 1). Arte: `docs/prompts/A5-fagogenia-art.md` (linhas da fatia 1 nas tabelas de entregas).
 
 **Branch:** `feat/F6-fundacao-v2`, criada da `main` **depois** do merge da F5 (ver Pré-requisitos).
 
@@ -103,7 +103,7 @@ Depois: Eder roda o checklist da F5 no jogo e aprova o merge F4 → F5 → `main
 | `network/DnaCloudMarker.java` (novo) | nuvem vista pelo cliente | 6 |
 | `config/WispbornConfig.java`, `config/WispbornClientConfig.java`, `registry/ModAttachments.java`, `WispbornMod.java` (mod.) | config, attachment, registro de eventos | 2, 4, 5 |
 | `assets/wispborn/lang/en_us.json`, `pt_br.json` (mod.) | textos | 2–6 |
-| `textures/gui/sprites/hud/*`, `grimoire/*` (novos) | sprites da A5 parte 1 | 2, 3, 4, 6 |
+| `textures/gui/sprites/hud/*`, `grimoire/*` (novos) | sprites da fatia 1 na A5 | 2, 3, 4, 6 |
 
 **Sprites:** cada task que usa sprite novo copia o PNG (e o `.png.mcmeta`) de `art/hud/sprites/` ou
 `art/hud/grimoire/` para `src/main/resources/assets/wispborn/textures/gui/sprites/hud/` ou `.../grimoire/`. Se
