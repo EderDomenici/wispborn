@@ -35,4 +35,11 @@ class AllocationRulesTest {
                 AllocationRules.check(6, CURRENT, new StatDelta(0, 0, 6, 0), MAX)
         );
     }
+
+    @Test
+    void rejectsHugeDeltaThatWouldOverflow() {
+        // Cliente modificado manda VAR_INT enormes: a soma dá a volta e ficaria <= pontos disponíveis.
+        StatDelta delta = new StatDelta(Integer.MAX_VALUE, Integer.MAX_VALUE, 2, 0);
+        assertEquals(BatchAllocateResult.OVER_MAX, AllocationRules.check(4, WispStats.ZERO, delta, MAX));
+    }
 }

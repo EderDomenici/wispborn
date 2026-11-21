@@ -15,6 +15,12 @@ public final class AllocationRules {
                 return BatchAllocateResult.NEGATIVE;
             }
         }
+        // Antes de somar: com cada parcela <= maxPerStat, nem total() nem current + delta estouram int.
+        for (Stat stat : Stat.values()) {
+            if (delta.get(stat) > maxPerStat) {
+                return BatchAllocateResult.OVER_MAX;
+            }
+        }
         int total = delta.total();
         if (total == 0) {
             return BatchAllocateResult.EMPTY;
