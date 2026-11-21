@@ -15,8 +15,8 @@ vendo o jogador (como o `SyncFormPayload`).
 **Spec:** `docs/superpowers/specs/2026-11-20-fagogenia-design.md` §6 (inteira), §8 (aba Aparência). Arte:
 `docs/prompts/A5-fagogenia-art.md` (Aparência, máscara de partes e miniaturas de padrão).
 
-**Branch:** `feat/F9-aparencia`, da `main` com a F8 mergeada **e a V1 (modelo A3) rebaseada, validada no jogo e
-mergeada** (spec, Ordem de construção).
+**Branch:** `feat/F9-aparencia`, da `main` com a F8 mergeada **e o modelo A3 (já na `main` desde 19/11)
+validado por Eder no jogo** (spec, Ordem de construção).
 
 ## Global Constraints
 

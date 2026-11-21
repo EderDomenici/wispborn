@@ -12,7 +12,7 @@ o nível do wisp define quais mobs ele infecta e presas fracas demais não dão 
 pode consumi-lo. Subir de nível dá pontos para 4 atributos do parasita (Absorção, Eficiência, Reserva de
 mana, Vitalidade); infestar custa mana. HUD próprio em sprites substitui o vanilla.
 Plano: `docs/PLAN.md`. Design atual: `docs/superpowers/specs/2026-11-17-fundacao-design.md`.
-Specs: `docs/specs/` (M0–M3b feitas; F1–F4 e V1 a fazer; M4/M5 substituídas pela F3; M6 pausada).
+Specs: `docs/specs/` (M0–M3c e F1–F5 feitas; M4/M5 substituídas pela F3; M6 substituída pela F5). Fagogenia: design `docs/superpowers/specs/2026-11-20-fagogenia-design.md`, planos F6–F10 em `docs/superpowers/plans/`.
 Para modelos, animações, efeitos, estruturas e sprites, consulte [o guia de produção de arte](docs/ART_PIPELINE.md).
 
 ## Stack (fixa — não mudar sem pedido explícito)

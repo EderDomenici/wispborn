@@ -48,6 +48,9 @@ linhas da fatia 1). Arte: `docs/prompts/A5-fagogenia-art.md` (linhas da fatia 1 
 
 ### Task 0: Corrigir o estouro de `int` em `AllocationRules` (na branch `feat/F5-hud-b-grimorio`)
 
+> **Feito em 21/11/2026** (commit `88195d2`), e a F5 foi mergeada na `main` no mesmo dia. Pule para o Task 1:
+> `git switch main && git pull && git switch -c feat/F6-fundacao-v2`.
+
 **Files:**
 - Modify: `src/main/java/dev/eder/wispborn/progress/AllocationRules.java`
 - Test: `src/test/java/dev/eder/wispborn/progress/AllocationRulesTest.java`

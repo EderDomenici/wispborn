@@ -250,9 +250,9 @@ Continuam valendo as regras da F4/F5: tudo em sprites PNG na paleta B, texto na 
 | 4. Aparência | Cores e padrões no wisp | Aba Aparência |
 | 5. Metamorfose | Genes, casulo, forma simples (juvenil e alfa depois) | Aba Corpo |
 
-Antes da fatia 1: mergear F4 e F5 (com a correção do estouro de `int` em `AllocationRules`). Antes da fatia 4:
-rebasear a V1 (modelo A3) sobre a `main`, fazer o passo 1 de validação no jogo e mergear; as fatias 4 e 5
-dependem de como o A3 separa núcleo, halo e rastro.
+Antes da fatia 1: mergear F4 e F5 (com a correção do estouro de `int` em `AllocationRules`); feito em 21/11.
+Antes da fatia 4: validar no jogo o modelo A3, que já está na `main` desde 19/11 (versão arredondada); as fatias
+4 e 5 dependem de como o A3 separa núcleo, halo e rastro.
 
 Cada fatia vira uma spec própria (`docs/specs/`), uma de cada vez, como manda o AGENTS.md. O primeiro plano
 cobre só a fatia 1 e o briefing de arte de todas as abas.

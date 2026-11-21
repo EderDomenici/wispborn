@@ -48,15 +48,27 @@ Todos os números ficam em config de servidor ou em JSON de dados.
 | M2 | `specs/M2-level-stats.md` | EP, nível, pontos, atributos, mana, config | feito |
 | M3 | `specs/M3-possession.md` | Possessão como passageiro, custo de mana, saídas | feito |
 | M3b | `specs/M3b-possession-feel.md` | Conjuração, indicador de alvo, som do wisp | feito |
-| M3c | `specs/M3c-host-stealth.md` | Wisp indetectável dentro do hospedeiro (mobs perdem o alvo) | a fazer, depois da F1 |
-| F1 | `specs/F1-born-wisp.md` | Nascer/renascer wisp, fome, inanição | a fazer |
-| F2 | `specs/F2-mob-traits.md` | Nível e sexo dos mobs, fim dos tiers, reprodução macho + fêmea | a fazer |
-| F3 | `specs/F3-drain-consume.md` | Drenagem e consumo com nível e fome | a fazer |
-| F4 | `specs/F4-hud.md` | HUD temático em sprites | a fazer (depende da arte A2) |
-| V1 | `specs/V1-wisp-visual.md` | Brilho do wisp, animação de possessão, feedback em 1ª pessoa | paralelo (arte A3) |
+| M3c | `specs/M3c-host-stealth.md` | Wisp indetectável dentro do hospedeiro (mobs perdem o alvo) | feito |
+| F1 | `specs/F1-born-wisp.md` | Nascer/renascer wisp, fome, inanição | feito |
+| F2 | `specs/F2-mob-traits.md` | Nível e sexo dos mobs, fim dos tiers, reprodução macho + fêmea | feito |
+| F3 | `specs/F3-drain-consume.md` | Drenagem e consumo com nível e fome | feito |
+| F4 | `specs/F4-hud.md` | HUD temático em sprites | feito |
+| F5 | `specs/F5-hud-b-grimorio.md` | HUD na paleta B e grimório (tecla K, aba Wisp) | feito; checklist no jogo pendente |
+| V1 | `specs/V1-wisp-visual.md` | Brilho do wisp, animação de possessão, feedback em 1ª pessoa | arte A3 na `main` desde 19/11; validação no jogo pendente |
 | ~~M4~~ | `specs/M4-drain.md` | — | substituída pela F3 |
 | ~~M5~~ | `specs/M5-consume.md` | — | substituída pela F3 |
-| M6 | `specs/M6-stats-screen.md` | Tela de atributos (tecla K) | pausada; vai para o menu RPG |
+| ~~M6~~ | `specs/M6-stats-screen.md` | — | substituída pelo grimório da F5 |
 
-Pós-fundação: menu RPG (nível, fenótipos, árvore de habilidades) · reprodução do wisp · controle do
-hospedeiro · arquétipo + covil · espécie própria, lacaios, loop de vilão.
+## Fagogenia (fatias verticais, design de 20/11/2026)
+Design: `docs/superpowers/specs/2026-11-20-fagogenia-design.md`. Planos: `docs/superpowers/plans/2026-11-21-fatia*.md`.
+Arte: `docs/prompts/A5-fagogenia-art.md` (HUD e abas) e `docs/prompts/A6-corpos-art.md` (corpos).
+
+| Fatia | Plano | Entrega | Status |
+|---|---|---|---|
+| F6 | `fatia1-fundacao-v2` | EP como moeda, nuvem de DNA, mana como sistema imune, Subir nível | a fazer |
+| F7 | `fatia2-assimilacao` | Trilhas, marcos, liberar com EP, chave de adaptação, aba Bestiário | a fazer |
+| F8 | `fatia3-habilidades` | 3 espaços de ativas, Teia, Pular de corpo, adaptações, aba Habilidades | a fazer |
+| F9 | `fatia4-aparencia` | Padrões e cores no wisp, aba Aparência | a fazer (depende do A3 validado) |
+| F10 | `fatia5-metamorfose` | Genes, casulo, forma simples, aba Corpo | a fazer (depende da arte A6) |
+
+Depois: juvenil e alfa · herança e prole · espécie própria, lacaios, covil, loop de vilão.
