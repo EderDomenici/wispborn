@@ -257,8 +257,9 @@ dependem de como o A3 separa núcleo, halo e rastro.
 Cada fatia vira uma spec própria (`docs/specs/`), uma de cada vez, como manda o AGENTS.md. O primeiro plano
 cobre só a fatia 1 e o briefing de arte de todas as abas.
 
-**Em aberto para o brainstorm da fatia 5:** se o jogador pode sair do corpo de propósito e voltar a ser wisp, e
-como um jogador já com corpo faz casulo dentro de uma criatura.
+**Fatia 5, decidido por Eder em 21/11:** o jogador pode largar o corpo de propósito, e o corpo some (como a morte
+do corpo: sem nuvem, receita guardada). A primeira entrega tem as posturas neutra e quadrúpede. **Ainda em aberto,
+para quando a juvenil entrar:** como um jogador já com corpo faz casulo dentro de uma criatura.
 
 ## Mudanças na fundação
 
